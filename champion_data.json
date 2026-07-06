@@ -1,0 +1,2082 @@
+{
+  "Aatrox": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "Ahri": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "burst",
+      "cc",
+      "mage"
+    ]
+  },
+  "Akali": {
+    "roles": [
+      "mid",
+      "top"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "burst"
+    ]
+  },
+  "Akshan": {
+    "roles": [
+      "mid",
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "marksman",
+      "mobility"
+    ]
+  },
+  "Alistar": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "frontline",
+      "peel",
+      "support",
+      "tank"
+    ]
+  },
+  "Ambessa": {
+    "roles": [
+      "top",
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "engage",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "Amumu": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ap",
+      "cc",
+      "engage",
+      "frontline",
+      "support",
+      "tank"
+    ]
+  },
+  "Anivia": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "dps",
+      "mage"
+    ]
+  },
+  "Annie": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "mage",
+      "support"
+    ]
+  },
+  "Aphelios": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "cc",
+      "dps",
+      "marksman"
+    ]
+  },
+  "Ashe": {
+    "roles": [
+      "adc",
+      "support"
+    ],
+    "tags": [
+      "ad",
+      "cc",
+      "dps",
+      "engage",
+      "marksman",
+      "support"
+    ]
+  },
+  "AurelionSol": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "dps",
+      "engage",
+      "mage"
+    ]
+  },
+  "Aurora": {
+    "roles": [
+      "mid",
+      "top"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "burst",
+      "cc",
+      "mage"
+    ]
+  },
+  "Azir": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "dps",
+      "mage",
+      "marksman"
+    ]
+  },
+  "Bard": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "mage",
+      "peel",
+      "support"
+    ]
+  },
+  "Belveth": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "dps",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "Blitzcrank": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "frontline",
+      "support",
+      "tank"
+    ]
+  },
+  "Brand": {
+    "roles": [
+      "jungle",
+      "mid",
+      "support"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "mage",
+      "support"
+    ]
+  },
+  "Braum": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "frontline",
+      "peel",
+      "support",
+      "tank"
+    ]
+  },
+  "Briar": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "Caitlyn": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "dps",
+      "marksman",
+      "poke"
+    ]
+  },
+  "Camille": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "engage",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "Cassiopeia": {
+    "roles": [
+      "mid",
+      "top"
+    ],
+    "tags": [
+      "ap",
+      "cc",
+      "dps",
+      "mage"
+    ]
+  },
+  "Chogath": {
+    "roles": [
+      "top",
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "cc",
+      "engage",
+      "frontline",
+      "mage",
+      "tank"
+    ]
+  },
+  "Corki": {
+    "roles": [
+      "mid",
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "ap",
+      "mage",
+      "marksman",
+      "poke"
+    ]
+  },
+  "Darius": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Diana": {
+    "roles": [
+      "mid",
+      "jungle"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "burst",
+      "engage",
+      "fighter"
+    ]
+  },
+  "Draven": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "burst",
+      "marksman"
+    ]
+  },
+  "DrMundo": {
+    "roles": [
+      "top",
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Ekko": {
+    "roles": [
+      "mid",
+      "jungle"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "burst",
+      "mage"
+    ]
+  },
+  "Elise": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "burst",
+      "engage",
+      "mage"
+    ]
+  },
+  "Evelynn": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "burst",
+      "mage"
+    ]
+  },
+  "Ezreal": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "dps",
+      "mage",
+      "marksman",
+      "poke"
+    ]
+  },
+  "Fiddlesticks": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "engage",
+      "mage",
+      "support"
+    ]
+  },
+  "Fiora": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "dps",
+      "fighter"
+    ]
+  },
+  "Fizz": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "burst",
+      "fighter"
+    ]
+  },
+  "Galio": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "cc",
+      "engage",
+      "frontline",
+      "mage",
+      "tank"
+    ]
+  },
+  "Gangplank": {
+    "roles": [
+      "top",
+      "mid"
+    ],
+    "tags": [
+      "ad",
+      "burst",
+      "fighter",
+      "poke"
+    ]
+  },
+  "Garen": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Gnar": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "cc",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Gragas": {
+    "roles": [
+      "top",
+      "jungle",
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "cc",
+      "engage",
+      "fighter",
+      "frontline",
+      "mage"
+    ]
+  },
+  "Graves": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "burst",
+      "fighter",
+      "marksman"
+    ]
+  },
+  "Gwen": {
+    "roles": [
+      "top",
+      "jungle"
+    ],
+    "tags": [
+      "ap",
+      "dps",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "Hecarim": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Heimerdinger": {
+    "roles": [
+      "mid",
+      "top"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "mage",
+      "poke",
+      "support"
+    ]
+  },
+  "Hwei": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "mage",
+      "poke",
+      "support"
+    ]
+  },
+  "Illaoi": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Irelia": {
+    "roles": [
+      "top",
+      "mid"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "engage",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "Ivern": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "cc",
+      "enchanter",
+      "mage",
+      "peel",
+      "support",
+      "sustain"
+    ]
+  },
+  "Janna": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "enchanter",
+      "mage",
+      "peel",
+      "support",
+      "sustain"
+    ]
+  },
+  "JarvanIV": {
+    "roles": [
+      "jungle",
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "cc",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Jax": {
+    "roles": [
+      "top",
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "engage",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "Jayce": {
+    "roles": [
+      "top",
+      "mid"
+    ],
+    "tags": [
+      "ad",
+      "fighter",
+      "marksman",
+      "poke"
+    ]
+  },
+  "Jhin": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "burst",
+      "cc",
+      "mage",
+      "marksman"
+    ]
+  },
+  "Jinx": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "dps",
+      "marksman"
+    ]
+  },
+  "Kaisa": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "ap",
+      "dps",
+      "mage",
+      "marksman"
+    ]
+  },
+  "Kalista": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "dps",
+      "marksman"
+    ]
+  },
+  "Karma": {
+    "roles": [
+      "support",
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "mage",
+      "peel",
+      "poke",
+      "support",
+      "sustain"
+    ]
+  },
+  "Karthus": {
+    "roles": [
+      "jungle",
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "dps",
+      "mage"
+    ]
+  },
+  "Kassadin": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "burst",
+      "dps",
+      "mage"
+    ]
+  },
+  "Katarina": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "burst",
+      "mage"
+    ]
+  },
+  "Kayle": {
+    "roles": [
+      "top",
+      "mid"
+    ],
+    "tags": [
+      "ad",
+      "ap",
+      "dps",
+      "mage",
+      "marksman"
+    ]
+  },
+  "Kayn": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "fighter"
+    ]
+  },
+  "Kennen": {
+    "roles": [
+      "top",
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "engage",
+      "mage"
+    ]
+  },
+  "Khazix": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "burst"
+    ]
+  },
+  "Kindred": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "dps",
+      "marksman"
+    ]
+  },
+  "Kled": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "engage",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "KogMaw": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "ap",
+      "dps",
+      "mage",
+      "marksman"
+    ]
+  },
+  "KSante": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Leblanc": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "burst",
+      "mage"
+    ]
+  },
+  "LeeSin": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "engage",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "Leona": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "frontline",
+      "support",
+      "tank"
+    ]
+  },
+  "Lillia": {
+    "roles": [
+      "jungle",
+      "top"
+    ],
+    "tags": [
+      "ap",
+      "dps",
+      "fighter",
+      "mage"
+    ]
+  },
+  "Lissandra": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "engage",
+      "mage"
+    ]
+  },
+  "Locke": {
+    "roles": [],
+    "tags": [
+      "assassin",
+      "mage"
+    ]
+  },
+  "Lucian": {
+    "roles": [
+      "adc",
+      "mid"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "burst",
+      "marksman"
+    ]
+  },
+  "Lulu": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "enchanter",
+      "mage",
+      "peel",
+      "support",
+      "sustain"
+    ]
+  },
+  "Lux": {
+    "roles": [
+      "support",
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "mage",
+      "poke",
+      "support"
+    ]
+  },
+  "Malphite": {
+    "roles": [
+      "top",
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "cc",
+      "engage",
+      "frontline",
+      "mage",
+      "tank"
+    ]
+  },
+  "Malzahar": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "dps",
+      "mage"
+    ]
+  },
+  "Maokai": {
+    "roles": [
+      "jungle",
+      "top",
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "frontline",
+      "support",
+      "tank"
+    ]
+  },
+  "MasterYi": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "dps",
+      "fighter"
+    ]
+  },
+  "Mel": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "mage",
+      "peel",
+      "poke",
+      "support"
+    ]
+  },
+  "Milio": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "enchanter",
+      "mage",
+      "peel",
+      "support",
+      "sustain"
+    ]
+  },
+  "MissFortune": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "burst",
+      "mage",
+      "marksman"
+    ]
+  },
+  "MonkeyKing": {
+    "roles": [
+      "top",
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Mordekaiser": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ap",
+      "fighter",
+      "frontline",
+      "mage"
+    ]
+  },
+  "Morgana": {
+    "roles": [
+      "support",
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "cc",
+      "mage",
+      "peel",
+      "support"
+    ]
+  },
+  "Naafiri": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "burst",
+      "fighter"
+    ]
+  },
+  "Nami": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "enchanter",
+      "mage",
+      "peel",
+      "support",
+      "sustain"
+    ]
+  },
+  "Nasus": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Nautilus": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "frontline",
+      "support",
+      "tank"
+    ]
+  },
+  "Neeko": {
+    "roles": [
+      "mid",
+      "support"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "engage",
+      "mage",
+      "support"
+    ]
+  },
+  "Nidalee": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "burst",
+      "mage"
+    ]
+  },
+  "Nilah": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "fighter",
+      "marksman"
+    ]
+  },
+  "Nocturne": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "engage",
+      "fighter"
+    ]
+  },
+  "Nunu": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ap",
+      "cc",
+      "engage",
+      "frontline",
+      "mage",
+      "tank"
+    ]
+  },
+  "Olaf": {
+    "roles": [
+      "top",
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Orianna": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "mage",
+      "peel",
+      "support"
+    ]
+  },
+  "Ornn": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Pantheon": {
+    "roles": [
+      "top",
+      "mid",
+      "jungle",
+      "support"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "engage",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "Poppy": {
+    "roles": [
+      "top",
+      "jungle"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Pyke": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "cc",
+      "engage",
+      "support"
+    ]
+  },
+  "Qiyana": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "burst"
+    ]
+  },
+  "Quinn": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "dps",
+      "marksman"
+    ]
+  },
+  "Rakan": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "enchanter",
+      "engage",
+      "peel",
+      "support"
+    ]
+  },
+  "Rammus": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "frontline",
+      "tank"
+    ]
+  },
+  "RekSai": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Rell": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "frontline",
+      "support",
+      "tank"
+    ]
+  },
+  "Renata": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "enchanter",
+      "mage",
+      "peel",
+      "support"
+    ]
+  },
+  "Renekton": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Rengar": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "burst",
+      "fighter"
+    ]
+  },
+  "Riven": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "Rumble": {
+    "roles": [
+      "top",
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "fighter",
+      "frontline",
+      "mage"
+    ]
+  },
+  "Ryze": {
+    "roles": [
+      "mid",
+      "top"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "dps",
+      "mage"
+    ]
+  },
+  "Samira": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "burst",
+      "marksman"
+    ]
+  },
+  "Sejuani": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Senna": {
+    "roles": [
+      "adc",
+      "support"
+    ],
+    "tags": [
+      "ad",
+      "marksman",
+      "peel",
+      "support",
+      "sustain"
+    ]
+  },
+  "Seraphine": {
+    "roles": [
+      "adc",
+      "support",
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "cc",
+      "mage",
+      "peel",
+      "support",
+      "sustain"
+    ]
+  },
+  "Sett": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Shaco": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "burst"
+    ]
+  },
+  "Shen": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Shyvana": {
+    "roles": [
+      "jungle",
+      "top"
+    ],
+    "tags": [
+      "ap",
+      "dps",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Singed": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ap",
+      "engage",
+      "frontline",
+      "mage",
+      "tank"
+    ]
+  },
+  "Sion": {
+    "roles": [
+      "top",
+      "mid"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Sivir": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "dps",
+      "marksman"
+    ]
+  },
+  "Skarner": {
+    "roles": [
+      "top",
+      "jungle"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Smolder": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "dps",
+      "mage",
+      "marksman",
+      "poke"
+    ]
+  },
+  "Sona": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "enchanter",
+      "mage",
+      "peel",
+      "support",
+      "sustain"
+    ]
+  },
+  "Soraka": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "enchanter",
+      "mage",
+      "peel",
+      "support",
+      "sustain"
+    ]
+  },
+  "Swain": {
+    "roles": [
+      "support",
+      "mid",
+      "top"
+    ],
+    "tags": [
+      "ap",
+      "cc",
+      "fighter",
+      "frontline",
+      "mage",
+      "support"
+    ]
+  },
+  "Sylas": {
+    "roles": [
+      "mid",
+      "top"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "burst",
+      "fighter",
+      "mage"
+    ]
+  },
+  "Syndra": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "mage"
+    ]
+  },
+  "TahmKench": {
+    "roles": [
+      "top",
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "frontline",
+      "peel",
+      "support",
+      "tank"
+    ]
+  },
+  "Taliyah": {
+    "roles": [
+      "jungle",
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "mage",
+      "support"
+    ]
+  },
+  "Talon": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "burst"
+    ]
+  },
+  "Taric": {
+    "roles": [
+      "support",
+      "top"
+    ],
+    "tags": [
+      "cc",
+      "frontline",
+      "peel",
+      "support",
+      "sustain",
+      "tank"
+    ]
+  },
+  "Teemo": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ap",
+      "mage",
+      "marksman",
+      "poke"
+    ]
+  },
+  "Thresh": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "frontline",
+      "peel",
+      "support",
+      "tank"
+    ]
+  },
+  "Tristana": {
+    "roles": [
+      "adc",
+      "mid"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "burst",
+      "marksman"
+    ]
+  },
+  "Trundle": {
+    "roles": [
+      "top",
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Tryndamere": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "dps",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "TwistedFate": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "mage",
+      "marksman"
+    ]
+  },
+  "Twitch": {
+    "roles": [
+      "adc",
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "dps",
+      "marksman"
+    ]
+  },
+  "Udyr": {
+    "roles": [
+      "top",
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Urgot": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Varus": {
+    "roles": [
+      "adc",
+      "mid"
+    ],
+    "tags": [
+      "ad",
+      "ap",
+      "cc",
+      "mage",
+      "marksman",
+      "poke"
+    ]
+  },
+  "Vayne": {
+    "roles": [
+      "top",
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "dps",
+      "marksman"
+    ]
+  },
+  "Veigar": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "mage"
+    ]
+  },
+  "Velkoz": {
+    "roles": [
+      "mid",
+      "support"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "mage",
+      "poke",
+      "support"
+    ]
+  },
+  "Vex": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "mage"
+    ]
+  },
+  "Vi": {
+    "roles": [
+      "jungle",
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "engage",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "Viego": {
+    "roles": [
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "dps",
+      "fighter",
+      "frontline"
+    ]
+  },
+  "Viktor": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "dps",
+      "mage"
+    ]
+  },
+  "Vladimir": {
+    "roles": [
+      "top",
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "fighter",
+      "frontline",
+      "mage"
+    ]
+  },
+  "Volibear": {
+    "roles": [
+      "top",
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Warwick": {
+    "roles": [
+      "top",
+      "jungle"
+    ],
+    "tags": [
+      "ad",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Xayah": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "cc",
+      "dps",
+      "marksman"
+    ]
+  },
+  "Xerath": {
+    "roles": [
+      "mid",
+      "support"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "mage",
+      "poke",
+      "support"
+    ]
+  },
+  "XinZhao": {
+    "roles": [
+      "jungle",
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Yasuo": {
+    "roles": [
+      "top",
+      "mid"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "dps",
+      "fighter"
+    ]
+  },
+  "Yone": {
+    "roles": [
+      "top",
+      "mid"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "dps",
+      "fighter"
+    ]
+  },
+  "Yorick": {
+    "roles": [
+      "top"
+    ],
+    "tags": [
+      "ad",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Yunara": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "burst",
+      "marksman"
+    ]
+  },
+  "Yuumi": {
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "enchanter",
+      "mage",
+      "peel",
+      "support",
+      "sustain"
+    ]
+  },
+  "Zaahen": {
+    "roles": [
+      "mid",
+      "top"
+    ],
+    "tags": [
+      "ap",
+      "assassin",
+      "dps",
+      "fighter"
+    ]
+  },
+  "Zac": {
+    "roles": [
+      "jungle",
+      "top"
+    ],
+    "tags": [
+      "cc",
+      "engage",
+      "fighter",
+      "frontline",
+      "tank"
+    ]
+  },
+  "Zed": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ad",
+      "assassin",
+      "burst"
+    ]
+  },
+  "Zeri": {
+    "roles": [
+      "adc"
+    ],
+    "tags": [
+      "ad",
+      "dps",
+      "marksman"
+    ]
+  },
+  "Ziggs": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "mage",
+      "poke"
+    ]
+  },
+  "Zilean": {
+    "roles": [
+      "support",
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "cc",
+      "mage",
+      "peel",
+      "support",
+      "sustain"
+    ]
+  },
+  "Zoe": {
+    "roles": [
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "mage",
+      "poke"
+    ]
+  },
+  "Zyra": {
+    "roles": [
+      "support",
+      "mid"
+    ],
+    "tags": [
+      "ap",
+      "burst",
+      "cc",
+      "mage",
+      "support"
+    ]
+  }
+}

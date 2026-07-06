@@ -1,0 +1,14 @@
+{
+  "carry_jg_engage_sup": {
+    "games": 3196,
+    "wins": 1653
+  },
+  "frontline_jg_enchanter": {
+    "games": 3658,
+    "wins": 1859
+  },
+  "other": {
+    "games": 34292,
+    "wins": 17065
+  }
+}

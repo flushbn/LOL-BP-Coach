@@ -1,0 +1,1034 @@
+{
+  "Aatrox": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Ahri": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Akali": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Akshan": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Alistar": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 100,
+    "ap": 0
+  },
+  "Ambessa": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Amumu": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 100
+  },
+  "Anivia": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Annie": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Aphelios": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Ashe": {
+    "frontline": 0,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "AurelionSol": {
+    "frontline": 0,
+    "engage": 100,
+    "peel": 0,
+    "ap": 100
+  },
+  "Aurora": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Azir": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Bard": {
+    "frontline": 0,
+    "engage": 100,
+    "peel": 100,
+    "ap": 0
+  },
+  "Belveth": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Blitzcrank": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Brand": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Braum": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 100,
+    "ap": 0
+  },
+  "Briar": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Caitlyn": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Camille": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Cassiopeia": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Chogath": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 100
+  },
+  "Corki": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Darius": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Diana": {
+    "frontline": 0,
+    "engage": 100,
+    "peel": 0,
+    "ap": 100
+  },
+  "DrMundo": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Draven": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Ekko": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Elise": {
+    "frontline": 0,
+    "engage": 100,
+    "peel": 0,
+    "ap": 100
+  },
+  "Evelynn": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Ezreal": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Fiddlesticks": {
+    "frontline": 0,
+    "engage": 100,
+    "peel": 0,
+    "ap": 100
+  },
+  "Fiora": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Fizz": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Galio": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 100
+  },
+  "Gangplank": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Garen": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Gnar": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Gragas": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 100
+  },
+  "Graves": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Gwen": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Hecarim": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Heimerdinger": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Hwei": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Illaoi": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Irelia": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Ivern": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 0
+  },
+  "Janna": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 0
+  },
+  "JarvanIV": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Jax": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Jayce": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Jhin": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Jinx": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "KSante": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Kaisa": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Kalista": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Karma": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 100
+  },
+  "Karthus": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Kassadin": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Katarina": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Kayle": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Kayn": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Kennen": {
+    "frontline": 0,
+    "engage": 100,
+    "peel": 0,
+    "ap": 100
+  },
+  "Khazix": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Kindred": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Kled": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "KogMaw": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Leblanc": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "LeeSin": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Leona": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Lillia": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Lissandra": {
+    "frontline": 0,
+    "engage": 100,
+    "peel": 0,
+    "ap": 100
+  },
+  "Lucian": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Lulu": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 0
+  },
+  "Lux": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Malphite": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 100
+  },
+  "Malzahar": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Maokai": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "MasterYi": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Mel": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 100
+  },
+  "Milio": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 0
+  },
+  "MissFortune": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "MonkeyKing": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Mordekaiser": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Morgana": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 100
+  },
+  "Naafiri": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Nami": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 0
+  },
+  "Nasus": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Nautilus": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Neeko": {
+    "frontline": 0,
+    "engage": 100,
+    "peel": 0,
+    "ap": 100
+  },
+  "Nidalee": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Nilah": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Nocturne": {
+    "frontline": 0,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Nunu": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 100
+  },
+  "Olaf": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Orianna": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 100
+  },
+  "Ornn": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Pantheon": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Poppy": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Pyke": {
+    "frontline": 0,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Qiyana": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Quinn": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Rakan": {
+    "frontline": 0,
+    "engage": 100,
+    "peel": 100,
+    "ap": 0
+  },
+  "Rammus": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "RekSai": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Rell": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Renata": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 0
+  },
+  "Renekton": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Rengar": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Riven": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Rumble": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Ryze": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Samira": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Sejuani": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Senna": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 0
+  },
+  "Seraphine": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 100
+  },
+  "Sett": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Shaco": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Shen": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Shyvana": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Singed": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 100
+  },
+  "Sion": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Sivir": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Skarner": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Smolder": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Sona": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 0
+  },
+  "Soraka": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 0
+  },
+  "Swain": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Sylas": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Syndra": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "TahmKench": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 100,
+    "ap": 0
+  },
+  "Taliyah": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Talon": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Taric": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 100,
+    "ap": 0
+  },
+  "Teemo": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Thresh": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 100,
+    "ap": 0
+  },
+  "Tristana": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Trundle": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Tryndamere": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "TwistedFate": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Twitch": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Udyr": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Urgot": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Varus": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Vayne": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Veigar": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Velkoz": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Vex": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Vi": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Viego": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Viktor": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Vladimir": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Volibear": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Warwick": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Xayah": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Xerath": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "XinZhao": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Yasuo": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Yone": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Yorick": {
+    "frontline": 100,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Yunara": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Yuumi": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 0
+  },
+  "Zaahen": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Zac": {
+    "frontline": 100,
+    "engage": 100,
+    "peel": 0,
+    "ap": 0
+  },
+  "Zed": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Zeri": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 0
+  },
+  "Ziggs": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Zilean": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 100,
+    "ap": 100
+  },
+  "Zoe": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  },
+  "Zyra": {
+    "frontline": 0,
+    "engage": 0,
+    "peel": 0,
+    "ap": 100
+  }
+}

@@ -1,0 +1,14 @@
+﻿{
+  "timestamp": 0,
+  "role": "",
+  "target_role": "",
+  "ally": [],
+  "enemy": [],
+  "bans": [],
+  "recommendations": [],
+  "lane_recommendations": [],
+  "role_inference": {},
+  "inferred_lane_opponent": "",
+  "coach": {},
+  "prepick": {}
+}

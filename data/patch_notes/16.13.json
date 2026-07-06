@@ -1,0 +1,115 @@
+{
+  "patch": "16.13",
+  "riot_patch": "26.13",
+  "source": "Riot Games official patch notes",
+  "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-13-notes/",
+  "champion_changes": [
+    {
+      "champion": "Aphelios",
+      "type": "buff",
+      "description": "基础表现与武器循环体验加强，偏向下路后期输出。",
+      "impact_tags": ["adc", "late_game", "dps"]
+    },
+    {
+      "champion": "KaiSa",
+      "type": "buff",
+      "description": "输出能力加强，提升下路与混合伤害威胁。",
+      "impact_tags": ["adc", "burst", "scaling"]
+    },
+    {
+      "champion": "Draven",
+      "type": "buff",
+      "description": "对线压制与滚雪球能力加强。",
+      "impact_tags": ["adc", "early_game", "snowball"]
+    },
+    {
+      "champion": "Olaf",
+      "type": "buff",
+      "description": "持续作战能力加强，适合上路与打野前中期对抗。",
+      "impact_tags": ["top", "jungle", "duel"]
+    },
+    {
+      "champion": "Poppy",
+      "type": "buff",
+      "description": "功能性与对抗突进阵容的价值提升。",
+      "impact_tags": ["top", "jungle", "anti_dash", "frontline"]
+    },
+    {
+      "champion": "Qiyana",
+      "type": "buff",
+      "description": "刺杀与游走节奏加强。",
+      "impact_tags": ["mid", "assassin", "roam"]
+    },
+    {
+      "champion": "Bard",
+      "type": "nerf",
+      "description": "游走与功能强度下调。",
+      "impact_tags": ["support", "roam", "utility"]
+    },
+    {
+      "champion": "Brand",
+      "type": "nerf",
+      "description": "持续输出与清线压制下调。",
+      "impact_tags": ["mid", "support", "damage_over_time"]
+    },
+    {
+      "champion": "Cassiopeia",
+      "type": "nerf",
+      "description": "持续输出强度下调。",
+      "impact_tags": ["mid", "dps", "scaling"]
+    },
+    {
+      "champion": "KSante",
+      "type": "nerf",
+      "description": "坦度与单挑压制力下调。",
+      "impact_tags": ["top", "frontline", "duel"]
+    },
+    {
+      "champion": "RekSai",
+      "type": "nerf",
+      "description": "前期节奏与野区压制下调。",
+      "impact_tags": ["jungle", "early_game", "gank"]
+    },
+    {
+      "champion": "Rumble",
+      "type": "nerf",
+      "description": "对线消耗与团战爆发下调。",
+      "impact_tags": ["top", "mid", "burst"]
+    },
+    {
+      "champion": "Senna",
+      "type": "nerf",
+      "description": "远程消耗与成长收益下调。",
+      "impact_tags": ["support", "adc", "scaling"]
+    },
+    {
+      "champion": "Sion",
+      "type": "nerf",
+      "description": "坦度与分推稳定性下调。",
+      "impact_tags": ["top", "frontline", "splitpush"]
+    }
+  ],
+  "item_changes": [
+    {
+      "item": "Doran's Shield",
+      "type": "nerf",
+      "description": "防御型出门装续航下调，远程消耗型对线压力相对提升。",
+      "impact_tags": ["laning", "sustain", "top", "mid"]
+    }
+  ],
+  "rune_changes": [],
+  "system_changes": [
+    {
+      "name": "Practice Tool Last Hit",
+      "type": "adjust",
+      "description": "补刀练习相关体验调整，不直接改变 BP 评分。",
+      "impact_tags": ["practice"]
+    }
+  ],
+  "meta_impacts": [
+    "下路射手改动较多，Kai'Sa、Draven、Aphelios 的版本解释权重上升。",
+    "Poppy 加强后，对突进阵容与 Yasuo、Qiyana 等位移英雄的战术价值提升。",
+    "部分高功能支援与持续输出英雄下调，推荐时需要区分实证强度与版本削弱风险。",
+    "防御型续航出门装下调后，对线压制与远程消耗英雄的前期影响更明显。"
+  ]
+}
