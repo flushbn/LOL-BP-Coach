@@ -1,0 +1,60 @@
+<svg width="1100" height="650" viewBox="0 0 1100 650" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1100" height="650" rx="28" fill="#0B1020"/>
+  <rect x="24" y="24" width="1052" height="602" rx="22" fill="#111827" stroke="#263244" stroke-width="2"/>
+  <text x="54" y="72" fill="#F9FAFB" font-family="Microsoft YaHei, Arial" font-size="30" font-weight="700">LoL BP Coach</text>
+  <text x="54" y="105" fill="#9CA3AF" font-family="Microsoft YaHei, Arial" font-size="15">BP 识别 · 英雄推荐 · 对线分析 · 战术教练</text>
+  <rect x="54" y="132" width="188" height="456" rx="16" fill="#0F172A" stroke="#233044"/>
+  <text x="80" y="174" fill="#E5E7EB" font-family="Microsoft YaHei, Arial" font-size="19" font-weight="700">导航</text>
+  <rect x="76" y="202" width="142" height="40" rx="10" fill="#2563EB"/>
+  <text x="101" y="228" fill="#FFFFFF" font-family="Microsoft YaHei, Arial" font-size="16">英雄推荐</text>
+  <text x="101" y="284" fill="#CBD5E1" font-family="Microsoft YaHei, Arial" font-size="16">对线分析</text>
+  <text x="101" y="338" fill="#CBD5E1" font-family="Microsoft YaHei, Arial" font-size="16">战术教练</text>
+  <text x="101" y="392" fill="#CBD5E1" font-family="Microsoft YaHei, Arial" font-size="16">我的数据</text>
+  <text x="80" y="548" fill="#22C55E" font-family="Microsoft YaHei, Arial" font-size="15">● 已连接</text>
+  <text x="80" y="572" fill="#94A3B8" font-family="Microsoft YaHei, Arial" font-size="14">当前分路：打野</text>
+
+  <rect x="270" y="132" width="500" height="456" rx="16" fill="#0F172A" stroke="#233044"/>
+  <text x="298" y="174" fill="#F9FAFB" font-family="Microsoft YaHei, Arial" font-size="22" font-weight="700">综合推荐 Top 10</text>
+  <g font-family="Microsoft YaHei, Arial">
+    <rect x="298" y="202" width="210" height="76" rx="14" fill="#172033"/>
+    <circle cx="336" cy="240" r="24" fill="#334155"/>
+    <text x="376" y="233" fill="#F9FAFB" font-size="18" font-weight="700">盲僧</text>
+    <text x="376" y="258" fill="#93C5FD" font-size="14">综合 86 · Lane +3</text>
+    <rect x="532" y="202" width="210" height="76" rx="14" fill="#172033"/>
+    <circle cx="570" cy="240" r="24" fill="#334155"/>
+    <text x="610" y="233" fill="#F9FAFB" font-size="18" font-weight="700">蔚</text>
+    <text x="610" y="258" fill="#93C5FD" font-size="14">综合 84 · 熟练 +4</text>
+    <rect x="298" y="296" width="210" height="76" rx="14" fill="#172033"/>
+    <circle cx="336" cy="334" r="24" fill="#334155"/>
+    <text x="376" y="327" fill="#F9FAFB" font-size="18" font-weight="700">皇子</text>
+    <text x="376" y="352" fill="#93C5FD" font-size="14">综合 82 · 开团</text>
+    <rect x="532" y="296" width="210" height="76" rx="14" fill="#172033"/>
+    <circle cx="570" cy="334" r="24" fill="#334155"/>
+    <text x="610" y="327" fill="#F9FAFB" font-size="18" font-weight="700">赵信</text>
+    <text x="610" y="352" fill="#93C5FD" font-size="14">综合 80 · 节奏</text>
+    <rect x="298" y="390" width="210" height="76" rx="14" fill="#172033"/>
+    <circle cx="336" cy="428" r="24" fill="#334155"/>
+    <text x="376" y="421" fill="#F9FAFB" font-size="18" font-weight="700">猴子</text>
+    <text x="376" y="446" fill="#93C5FD" font-size="14">综合 78 · 团战</text>
+    <rect x="532" y="390" width="210" height="76" rx="14" fill="#172033"/>
+    <circle cx="570" cy="428" r="24" fill="#334155"/>
+    <text x="610" y="421" fill="#F9FAFB" font-size="18" font-weight="700">大树</text>
+    <text x="610" y="446" fill="#93C5FD" font-size="14">综合 76 · 前排</text>
+  </g>
+
+  <rect x="792" y="132" width="254" height="456" rx="16" fill="#0F172A" stroke="#233044"/>
+  <text x="820" y="174" fill="#F9FAFB" font-family="Microsoft YaHei, Arial" font-size="22" font-weight="700">战术教练</text>
+  <text x="820" y="215" fill="#CBD5E1" font-family="Microsoft YaHei, Arial" font-size="16">路线强弱</text>
+  <text x="820" y="247" fill="#22C55E" font-family="Microsoft YaHei, Arial" font-size="15">上路：优势，可反蹲</text>
+  <text x="820" y="276" fill="#F59E0B" font-family="Microsoft YaHei, Arial" font-size="15">中路：均势，控视野</text>
+  <text x="820" y="305" fill="#EF4444" font-family="Microsoft YaHei, Arial" font-size="15">下路：劣势，避免硬打</text>
+  <line x1="820" y1="335" x2="1016" y2="335" stroke="#263244"/>
+  <text x="820" y="374" fill="#CBD5E1" font-family="Microsoft YaHei, Arial" font-size="16">节奏计划</text>
+  <text x="820" y="406" fill="#E5E7EB" font-family="Microsoft YaHei, Arial" font-size="15">✓ 3:30 争夺上河蟹</text>
+  <text x="820" y="435" fill="#E5E7EB" font-family="Microsoft YaHei, Arial" font-size="15">✓ 6:00 优先小龙视野</text>
+  <text x="820" y="464" fill="#E5E7EB" font-family="Microsoft YaHei, Arial" font-size="15">✓ 中期抱团推进</text>
+  <rect x="820" y="508" width="88" height="36" rx="10" fill="#1D4ED8"/>
+  <text x="846" y="532" fill="#FFFFFF" font-family="Microsoft YaHei, Arial" font-size="15">定格</text>
+  <rect x="920" y="508" width="88" height="36" rx="10" fill="#334155"/>
+  <text x="946" y="532" fill="#FFFFFF" font-family="Microsoft YaHei, Arial" font-size="15">新局</text>
+</svg>
