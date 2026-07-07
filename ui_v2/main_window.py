@@ -228,11 +228,11 @@ class MainWindow(QMainWindow):
         bar.setMaximumHeight(64)
         layout = QHBoxLayout(bar)
         layout.setContentsMargins(14, 8, 14, 8)
-        layout.setSpacing(12)
+        layout.setSpacing(8)
 
-        title = QLabel("LoL BP Coach")
+        title = QLabel("LoL BP")
         title.setObjectName("AppTitle")
-        title.setMinimumWidth(135)
+        title.setFixedWidth(92)
         layout.addWidget(title)
 
         role_label = QLabel("位置")
