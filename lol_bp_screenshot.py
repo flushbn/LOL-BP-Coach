@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import ctypes
 import os
 import time
@@ -817,9 +817,6 @@ def recommend_loop(target_role):
                     "recommendation_status": "calculating" if phase == "recognized" else phase,
                 },
             })
-            if phase == "recognized":
-                existing["recommendations"] = []
-                existing["lane_recommendations"] = []
             state_path.parent.mkdir(parents=True, exist_ok=True)
             payload = json.dumps(existing, ensure_ascii=False)
             state_path.write_text(payload, encoding="utf-8")
@@ -1253,3 +1250,4 @@ if __name__ == "__main__":
 
 ALLY_BAN_SLOTS: list[tuple[str, int, int, int, int]] = [["ally_ban_1", 64, 45, 55, 55], ["ally_ban_2", 64, 142, 55, 55], ["ally_ban_3", 64, 239, 55, 55], ["ally_ban_4", 64, 336, 55, 55], ["ally_ban_5", 64, 433, 55, 55]]
 ENEMY_BAN_SLOTS: list[tuple[str, int, int, int, int]] = [["enemy_ban_1", 1430, 45, 55, 55], ["enemy_ban_2", 1430, 142, 55, 55], ["enemy_ban_3", 1430, 239, 55, 55], ["enemy_ban_4", 1430, 336, 55, 55], ["enemy_ban_5", 1430, 433, 55, 55]]
+

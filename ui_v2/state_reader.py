@@ -1,4 +1,4 @@
-﻿"""Read the single UI state source: data/live_state.json."""
+"""Read the single UI state source: data/live_state.json."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def read_state() -> dict[str, Any]:
     try:
         if not LIVE_STATE_PATH.exists():
             return dict(EMPTY_STATE)
-        raw = LIVE_STATE_PATH.read_text(encoding="utf-8").strip()
+        raw = LIVE_STATE_PATH.read_text(encoding="utf-8-sig").strip()
         if not raw:
             return dict(EMPTY_STATE)
         data = json.loads(raw)
@@ -42,4 +42,3 @@ def read_state() -> dict[str, Any]:
         return state
     except Exception:
         return dict(EMPTY_STATE)
-
