@@ -895,7 +895,7 @@ def recommend_loop(target_role):
                                     print(sug)
                                 all_excluded = list(set(ally + all_bans + enemy))
                                 all_recs = engine.recommend(ally_picks=ally, enemy_picks=enemy, bans=all_excluded, target_role=effective_role, top_n=15)
-                                recs = list(all_recs[:5])
+                                recs = list(all_recs[:10])
                                 if recs:
                                     # Add mechanic bonus champs that arent already in top 5
                                     existing = set(r["champion"] for r in recs)
@@ -1039,7 +1039,7 @@ def recommend_loop(target_role):
                                         "recommendation_status": "ready",
                                     }
                                 }
-                                for r in recs[:5]:
+                                for r in recs[:10]:
                                     ls["recommendations"].append({
                                         "champion": r.get("champion", ""),
                                         "champion_cn": r.get("champion_cn", ""),

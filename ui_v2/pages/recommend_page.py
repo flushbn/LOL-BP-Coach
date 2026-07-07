@@ -1,7 +1,7 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QLabel, QSplitter, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QGridLayout, QLabel, QScrollArea, QSplitter, QVBoxLayout, QWidget
 
 from analysis.hero_detail_context import HeroDetailContextBuilder
 from ui_v2.components.hero_detail_panel import HeroDetailPanel
@@ -39,29 +39,52 @@ class RecommendPage(QWidget):
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(10)
 
-        self.cards = [HeroCard() for _ in range(5)]
-        for card in self.cards:
+        self.card_area = QScrollArea()
+        self.card_area.setWidgetResizable(True)
+        self.card_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.card_area.setStyleSheet("QScrollArea{border:none;background:transparent}")
+        self.card_container = QWidget()
+        self.card_grid = QGridLayout(self.card_container)
+        self.card_grid.setContentsMargins(0, 0, 0, 0)
+        self.card_grid.setHorizontalSpacing(10)
+        self.card_grid.setVerticalSpacing(10)
+        self.card_grid.setColumnStretch(0, 1)
+        self.card_grid.setColumnStretch(1, 1)
+
+        self.cards = [HeroCard() for _ in range(10)]
+        for index, card in enumerate(self.cards):
             card.clicked.connect(self.on_hero_click)
-            left_layout.addWidget(card)
+            self.card_grid.addWidget(card, index // 2, index % 2)
+        self.card_area.setWidget(self.card_container)
+        left_layout.addWidget(self.card_area, 1)
 
         self.empty = QLabel("请选择英雄或搜索英雄")
         self.empty.setObjectName("MutedText")
         self.empty.setWordWrap(True)
         left_layout.addWidget(self.empty)
-        left_layout.addStretch()
         splitter.addWidget(left)
 
         self.detail = HeroDetailPanel()
         self.detail.hide()
         splitter.addWidget(self.detail)
-        splitter.setSizes([520, 520])
+        splitter.setSizes([720, 420])
 
     def render(self, state: dict):
         self._state = state or {}
-        self._recs = self._state.get("recommendations", [])[:5]
+        self._recs = self._state.get("recommendations", [])[:10]
         self.empty.setVisible(not self._recs)
         if not self._recs:
-            self.empty.setText("请选择英雄或搜索英雄")
+            recognition = self._state.get("recognition", {}) or {}
+            if recognition:
+                ally = self._state.get("ally", []) or []
+                enemy = self._state.get("enemy", []) or []
+                bans = self._state.get("bans", []) or []
+                message = recognition.get("message", "等待识别")
+                self.empty.setText(
+                    f"{message}\n己方: {', '.join(ally) or '暂无'}\n敌方: {', '.join(enemy) or '暂无'}\nBan: {', '.join(bans) or '暂无'}"
+                )
+            else:
+                self.empty.setText("请选择英雄或搜索英雄")
 
         for index, card in enumerate(self.cards):
             if index < len(self._recs):
@@ -110,4 +133,3 @@ class RecommendPage(QWidget):
             if str(rec.get("champion", "")).lower() == target:
                 return index
         return -1
-
