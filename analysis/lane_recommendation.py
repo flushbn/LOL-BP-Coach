@@ -142,6 +142,7 @@ class LaneRecommendation:
         top_n: int = 5,
         use_role_gate: bool = True,
         use_v21: bool = True,
+        advantages_only: bool = True,
     ) -> List[dict]:
         """Get TopN lane picks against a specific enemy champion.
 
@@ -179,6 +180,8 @@ class LaneRecommendation:
 
                 # Role Gate
                 if use_role_gate and result["role_score"] < self.ROLE_GATE_MIN:
+                    continue
+                if advantages_only and float(result.get("delta", 0) or 0) <= 0:
                     continue
 
                 score_field = "v21_score" if use_v21 else "v1_score"

@@ -136,13 +136,16 @@ class LanePage(QWidget):
         self.card_area.setWidget(self.card_container)
         layout.addWidget(self.card_area, 1)
 
-        self.empty = QLabel("暂无对线推荐：等待识别敌方对位英雄")
+        self.empty = QLabel("暂无对线优势推荐：等待识别敌方对位英雄，或当前没有明显优势选择")
         self.empty.setObjectName("MutedText")
         self.empty.setWordWrap(True)
         layout.addWidget(self.empty)
 
     def render(self, state: dict):
-        recs = state.get("lane_recommendations", [])[:10]
+        recs = [
+            rec for rec in state.get("lane_recommendations", [])
+            if _is_positive_delta(rec.get("delta", 0))
+        ][:10]
         inferred_opponent = state.get("inferred_lane_opponent", "")
         enemy = inferred_opponent
         for rec in recs:
@@ -192,6 +195,13 @@ def _format_delta(value) -> str:
         return f"{float(value):+.1f}%"
     except Exception:
         return str(value)
+
+
+def _is_positive_delta(value) -> bool:
+    try:
+        return float(value or 0) > 0
+    except Exception:
+        return False
 
 
 def _format_games(value) -> str:

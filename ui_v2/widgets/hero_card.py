@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap
@@ -46,7 +46,7 @@ class HeroCard(QFrame):
     def render(self, data: dict):
         raw_champion = data.get("champion") or data.get("champion_cn") or "Unknown"
         self._champion_key = str(raw_champion)
-        champion = champion_display_name(data.get("champion_cn") or data.get("champion") or "Unknown")
+        champion = _safe_display_name(data)
         score = data.get("final_score", data.get("score", ""))
         lane_bonus = data.get("lane_bonus", 0)
         comfort_bonus = data.get("comfort_bonus", 0)
@@ -56,8 +56,8 @@ class HeroCard(QFrame):
 
         tags: list[str] = []
         if isinstance(reasons, list):
-            tags.extend(str(reason) for reason in reasons[:2] if reason)
-        elif reasons:
+            tags.extend(str(reason) for reason in reasons[:2] if reason and not _looks_broken_text(str(reason)))
+        elif reasons and not _looks_broken_text(str(reasons)):
             tags.append(str(reasons))
         if confidence.get("meta") == "high":
             tags.append("✔ 实证数据")
@@ -100,3 +100,18 @@ class HeroCard(QFrame):
         self.avatar.clear()
         self.avatar.setText(display_name[:2])
 
+
+def _safe_display_name(data: dict) -> str:
+    champion_key = str(data.get("champion") or "")
+    champion_cn = str(data.get("champion_cn") or "")
+    if champion_cn and not _looks_broken_text(champion_cn):
+        return champion_cn
+    return champion_display_name(champion_key or champion_cn or "Unknown")
+
+
+def _looks_broken_text(text: str) -> bool:
+    clean = str(text or "").strip()
+    if not clean:
+        return False
+    question_count = clean.count("?") + clean.count("？")
+    return question_count >= max(2, len(clean) // 2)
