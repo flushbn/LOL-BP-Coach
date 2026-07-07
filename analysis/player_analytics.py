@@ -6,6 +6,7 @@ from typing import Dict, List, Optional, Tuple
 ROOT = Path(__file__).resolve().parent.parent
 MATCH_SESSIONS_PATH = ROOT / "data" / "match_sessions.json"
 PLAYER_PROFILE_PATH = ROOT / "data" / "player_profile.json"
+PLAYER_BASELINE_PATH = ROOT / "data" / "player_baseline.json"
 
 # Champion archetype classification
 ARCHETYPE_MAP = {
@@ -31,6 +32,34 @@ def _load_sessions() -> List[Dict]:
         return [_normalize_session(session) for session in data if isinstance(session, dict)]
     except Exception:
         return []
+
+
+def _load_baseline_stats() -> Dict[str, Dict]:
+    try:
+        if not PLAYER_BASELINE_PATH.exists():
+            return {}
+        raw = PLAYER_BASELINE_PATH.read_text(encoding="utf-8-sig")
+        data = json.loads(raw) if raw.strip() else {}
+        if not isinstance(data, dict):
+            return {}
+        normalized: Dict[str, Dict] = {}
+        for hero, payload in data.items():
+            if not isinstance(payload, dict):
+                continue
+            key = _normalize_hero_key(hero)
+            games = max(0, int(payload.get("games", 0) or 0))
+            wins = max(0, min(games, int(payload.get("wins", 0) or 0)))
+            if games <= 0:
+                continue
+            normalized[key] = {
+                "games": games,
+                "wins": wins,
+                "last_played": int(payload.get("last_played", 0) or 0),
+                "source": "baseline",
+            }
+        return normalized
+    except Exception:
+        return {}
 
 
 def _normalize_session(session: Dict) -> Dict:
@@ -62,14 +91,18 @@ def _normalize_hero_key(hero: str) -> str:
 class PlayerAnalytics:
     def __init__(self):
         self._sessions: List[Dict] = _load_sessions()
+        self._baseline: Dict[str, Dict] = _load_baseline_stats()
 
     def refresh(self):
         self._sessions = _load_sessions()
+        self._baseline = _load_baseline_stats()
 
     # === 1. Overall Stats ===
     def get_overall_stats(self) -> Dict:
-        total = len(self._sessions)
-        wins = sum(1 for s in self._sessions if s.get("result") == "WIN")
+        baseline_games = sum(item.get("games", 0) for item in self._baseline.values())
+        baseline_wins = sum(item.get("wins", 0) for item in self._baseline.values())
+        total = len(self._sessions) + baseline_games
+        wins = sum(1 for s in self._sessions if s.get("result") == "WIN") + baseline_wins
         wr = round(wins / total * 100, 1) if total > 0 else 0.0
 
         # Recent 30 games
@@ -90,17 +123,25 @@ class PlayerAnalytics:
             "winrate": wr,
             "recent30_wr": wr30,
             "recent7d_wr": wr_w,
+            "baseline_games": baseline_games,
         }
 
     # === 2. Hero Pool ===
     def get_hero_pool(self, top_n: int = 10) -> List[Dict]:
         heroes: Dict[str, Dict] = {}
+        for h, b in self._baseline.items():
+            heroes[h] = {
+                "games": int(b.get("games", 0) or 0),
+                "wins": int(b.get("wins", 0) or 0),
+                "last_played": int(b.get("last_played", 0) or 0),
+                "baseline_games": int(b.get("games", 0) or 0),
+            }
         for s in self._sessions:
             h = s.get("hero", "")
             if not h:
                 continue
             if h not in heroes:
-                heroes[h] = {"games": 0, "wins": 0, "last_played": 0}
+                heroes[h] = {"games": 0, "wins": 0, "last_played": 0, "baseline_games": 0}
             heroes[h]["games"] += 1
             if s.get("result") == "WIN":
                 heroes[h]["wins"] += 1
@@ -117,6 +158,7 @@ class PlayerAnalytics:
                 "wins": d["wins"],
                 "winrate": wr,
                 "last_played": d["last_played"],
+                "baseline_games": d.get("baseline_games", 0),
             })
 
         pool.sort(key=lambda x: -x["games"])
@@ -197,6 +239,10 @@ class PlayerAnalytics:
     def get_style(self) -> Dict:
         arch_counts: Dict[str, int] = {}
         arch_wins: Dict[str, int] = {}
+        for h, b in self._baseline.items():
+            arch = ARCHETYPE_MAP.get(h, "其他")
+            arch_counts[arch] = arch_counts.get(arch, 0) + int(b.get("games", 0) or 0)
+            arch_wins[arch] = arch_wins.get(arch, 0) + int(b.get("wins", 0) or 0)
         for s in self._sessions:
             h = s.get("hero", "")
             arch = ARCHETYPE_MAP.get(h, "其他")

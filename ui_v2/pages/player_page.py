@@ -7,18 +7,20 @@ from pathlib import Path
 
 from PySide6.QtWidgets import (
     QComboBox,
+    QDoubleSpinBox,
     QGroupBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
+    QSpinBox,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
     QWidget,
 )
 
-from analysis.player_analytics import MATCH_SESSIONS_PATH, PlayerAnalytics
+from analysis.player_analytics import MATCH_SESSIONS_PATH, PLAYER_BASELINE_PATH, PlayerAnalytics
 from analysis.personalized_recommender import refresh_profile
 from utils.champion_names import champion_display_name
 
@@ -88,6 +90,47 @@ class PlayerPage(QWidget):
         record_layout.addWidget(self.record_status)
         layout.addWidget(self.record_box)
 
+        self.baseline_box = QGroupBox("导入软件使用前的英雄胜率")
+        baseline_layout = QVBoxLayout(self.baseline_box)
+        baseline_layout.setSpacing(8)
+
+        baseline_form = QHBoxLayout()
+        self.baseline_hero_input = QLineEdit()
+        self.baseline_hero_input.setPlaceholderText("英雄名，例如：李青 / LeeSin")
+        baseline_form.addWidget(QLabel("英雄"))
+        baseline_form.addWidget(self.baseline_hero_input, 1)
+
+        self.baseline_games_input = QSpinBox()
+        self.baseline_games_input.setRange(1, 9999)
+        self.baseline_games_input.setValue(20)
+        baseline_form.addWidget(QLabel("历史场次"))
+        baseline_form.addWidget(self.baseline_games_input)
+
+        self.baseline_winrate_input = QDoubleSpinBox()
+        self.baseline_winrate_input.setRange(0.0, 100.0)
+        self.baseline_winrate_input.setDecimals(1)
+        self.baseline_winrate_input.setSingleStep(1.0)
+        self.baseline_winrate_input.setValue(50.0)
+        baseline_form.addWidget(QLabel("胜率%"))
+        baseline_form.addWidget(self.baseline_winrate_input)
+        baseline_layout.addLayout(baseline_form)
+
+        baseline_actions = QHBoxLayout()
+        self.import_baseline_button = QPushButton("导入/更新历史胜率")
+        self.import_baseline_button.clicked.connect(self.import_baseline_stats)
+        self.fill_baseline_current_button = QPushButton("填入识别英雄")
+        self.fill_baseline_current_button.clicked.connect(self.fill_baseline_current_hero)
+        baseline_actions.addWidget(self.import_baseline_button)
+        baseline_actions.addWidget(self.fill_baseline_current_button)
+        baseline_actions.addStretch()
+        baseline_layout.addLayout(baseline_actions)
+
+        self.baseline_status = QLabel("适合填写你使用软件前已有的英雄池数据，例如：李青 50场 60%。")
+        self.baseline_status.setObjectName("MutedText")
+        self.baseline_status.setWordWrap(True)
+        baseline_layout.addWidget(self.baseline_status)
+        layout.addWidget(self.baseline_box)
+
         self.summary = QLabel("暂无玩家数据")
         self.summary.setObjectName("CoachGrades")
         self.summary.setWordWrap(True)
@@ -119,6 +162,14 @@ class PlayerPage(QWidget):
         else:
             self.record_status.setText("当前没有识别到己方英雄，请手动输入。")
 
+    def fill_baseline_current_hero(self):
+        ally = self._state.get("ally", []) or []
+        if ally:
+            self.baseline_hero_input.setText(champion_display_name(ally[-1]))
+            self.baseline_status.setText(f"已填入己方最近识别英雄：{champion_display_name(ally[-1])}")
+        else:
+            self.baseline_status.setText("当前没有识别到己方英雄，请手动输入。")
+
     def record_match(self, result: str):
         raw_hero = self.hero_input.text().strip()
         hero = self._normalize_hero(raw_hero)
@@ -147,6 +198,36 @@ class PlayerPage(QWidget):
             f"已记录：{champion_display_name(hero)} / {self.role_combo.currentText()} / {result_text}"
         )
 
+    def import_baseline_stats(self):
+        raw_hero = self.baseline_hero_input.text().strip()
+        hero = self._normalize_hero(raw_hero)
+        if not hero:
+            self.baseline_status.setText("请先输入英雄名，再导入历史胜率。")
+            return
+
+        games = int(self.baseline_games_input.value())
+        winrate = float(self.baseline_winrate_input.value())
+        wins = round(games * winrate / 100.0)
+        baseline = self._load_baseline_stats()
+        baseline[hero] = {
+            "games": games,
+            "wins": wins,
+            "winrate": round(wins / games * 100, 1) if games else 0.0,
+            "last_played": 0,
+            "source": "manual",
+        }
+        PLAYER_BASELINE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        PLAYER_BASELINE_PATH.write_text(
+            json.dumps(baseline, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+        refresh_profile()
+        self.refresh_player_data()
+        self.baseline_status.setText(
+            f"已导入：{champion_display_name(hero)} / {games}场 / {round(wins / games * 100, 1)}% 胜率"
+        )
+
     def refresh_player_data(self):
         self._analytics.refresh()
         overall = self._analytics.get_overall_stats()
@@ -161,8 +242,8 @@ class PlayerPage(QWidget):
             caution = ", ".join(champion_display_name(item["champion"]) for item in insights.get("caution", [])[:3]) or "暂无"
             self.summary.setText(
                 "\n".join([
-                    f"总场次：{overall['games']}　总胜率：{overall['winrate']}%　最近30场：{overall['recent30_wr']}%",
-                    f"最近7天：{overall['recent7d_wr']}%　状态趋势：{trend.get('trend', '暂无')}",
+                    f"总场次：{overall['games']}　总胜率：{overall['winrate']}%　导入历史：{overall.get('baseline_games', 0)}场",
+                    f"最近30场：{overall['recent30_wr']}%　最近7天：{overall['recent7d_wr']}%　状态趋势：{trend.get('trend', '暂无')}",
                     f"最佳位置：{best.get('pos') or '暂无'} {best.get('wr', 0)}%　风格：{style.get('style_description', '暂无')}",
                     f"核心英雄：{core}",
                     f"谨慎选择：{caution}",
@@ -176,7 +257,7 @@ class PlayerPage(QWidget):
         for row, hero in enumerate(heroes):
             values = [
                 champion_display_name(hero.get("champion", "")),
-                hero.get("games", ""),
+                self._format_games(hero),
                 f"{hero.get('winrate', '')}%",
                 self._format_time(hero.get("last_played", 0)),
             ]
@@ -193,6 +274,16 @@ class PlayerPage(QWidget):
             return data if isinstance(data, list) else []
         except Exception:
             return []
+
+    def _load_baseline_stats(self) -> dict:
+        try:
+            if not PLAYER_BASELINE_PATH.exists():
+                return {}
+            raw = PLAYER_BASELINE_PATH.read_text(encoding="utf-8-sig")
+            data = json.loads(raw) if raw.strip() else {}
+            return data if isinstance(data, dict) else {}
+        except Exception:
+            return {}
 
     def _normalize_hero(self, text: str) -> str:
         if not text:
@@ -234,6 +325,14 @@ class PlayerPage(QWidget):
             return datetime.fromtimestamp(float(timestamp)).strftime("%Y-%m-%d")
         except Exception:
             return ""
+
+    @staticmethod
+    def _format_games(hero: dict) -> str:
+        games = hero.get("games", "")
+        baseline_games = int(hero.get("baseline_games", 0) or 0)
+        if baseline_games:
+            return f"{games}（导入{baseline_games}）"
+        return str(games)
 
 
 def _compact(text: str) -> str:

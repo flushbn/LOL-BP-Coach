@@ -8,6 +8,7 @@ class PlayerProfile:
         base = Path(__file__).resolve().parent.parent
         self._profile_path = profile_path or (base / "data" / "player_profile.json")
         self._sessions_path = sessions_path or (base / "data" / "match_sessions.json")
+        self._baseline_path = base / "data" / "player_baseline.json"
         self._profile = {}
         self.load()
 
@@ -33,6 +34,13 @@ class PlayerProfile:
         except:
             return
         agg = {}
+        baseline = self._load_baseline()
+        for hero, data in baseline.items():
+            agg[hero] = {
+                "games": int(data.get("games", 0) or 0),
+                "wins": int(data.get("wins", 0) or 0),
+                "last_played": int(data.get("last_played", 0) or 0),
+            }
         for s in sessions:
             hero = _normalize_hero_key(s.get("hero", ""))
             if not hero:
@@ -47,6 +55,31 @@ class PlayerProfile:
                 agg[hero]["last_played"] = ts
         self._profile = agg
         self.save()
+
+    def _load_baseline(self):
+        try:
+            if not self._baseline_path.exists():
+                return {}
+            raw = self._baseline_path.read_text(encoding="utf-8-sig")
+            data = json.loads(raw) if raw.strip() else {}
+            if not isinstance(data, dict):
+                return {}
+            baseline = {}
+            for hero, payload in data.items():
+                if not isinstance(payload, dict):
+                    continue
+                key = _normalize_hero_key(hero)
+                games = max(0, int(payload.get("games", 0) or 0))
+                wins = max(0, min(games, int(payload.get("wins", 0) or 0)))
+                if games:
+                    baseline[key] = {
+                        "games": games,
+                        "wins": wins,
+                        "last_played": int(payload.get("last_played", 0) or 0),
+                    }
+            return baseline
+        except:
+            return {}
 
     def get_comfort(self, champion, min_games=3):
         info = self._profile.get(champion, {})
