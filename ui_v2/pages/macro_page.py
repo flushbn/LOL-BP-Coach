@@ -23,7 +23,7 @@ class MacroPage(QWidget):
         hint_text = {
             "lane": "只看三路线权、击杀潜力、防守价值和打野处理建议。",
             "plan": "只看前中期路线、资源优先级和风险提醒。",
-        }.get(mode, "重点看哪路线优、哪路要保、打野前中期怎么走。")
+        }.get(mode, "整合展示三路线权、打野处理建议、前中期路线和资源优先级。")
         hint = QLabel(hint_text)
         hint.setObjectName("MutedText")
         hint.setWordWrap(True)

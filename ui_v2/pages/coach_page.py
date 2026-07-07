@@ -44,7 +44,7 @@ class CoachPage(QWidget):
         title.setObjectName("PageTitle")
         layout.addWidget(title)
 
-        subtitle = QLabel("先看双方阵容能力，再看差异和建议。路线强弱与前中期节奏已拆到“路线节奏”页。")
+        subtitle = QLabel("整合展示阵容能力、双方差异和最终战术建议。路线与节奏请看“战术·路线节奏”。")
         subtitle.setObjectName("MutedText")
         subtitle.setWordWrap(True)
         layout.addWidget(subtitle)
