@@ -32,6 +32,8 @@ INTERVAL_SECONDS = 0.5
 
 # PyInstaller support
 BASE = Path(sys._MEIPASS) if getattr(sys,"frozen",False) else Path(__file__).parent
+if str(BASE / "core") not in sys.path:
+    sys.path.insert(0, str(BASE / "core"))
 TEMPLATE_DIR = BASE / "img" / "champion"
 TEMPLATE_EXTENSIONS = (".png", ".jpg", ".jpeg")
 

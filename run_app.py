@@ -10,6 +10,9 @@ from PySide6.QtWidgets import QApplication
 ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+CORE = ROOT / "core"
+if str(CORE) not in sys.path:
+    sys.path.insert(0, str(CORE))
 
 from ui_v2.main_window import MainWindow
 
