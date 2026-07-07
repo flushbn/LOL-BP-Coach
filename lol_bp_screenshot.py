@@ -652,6 +652,51 @@ def summarize_results(results: List[SlotResult]) -> Dict[str, List[str]]:
     return summary
 
 
+def split_preselected_ally(ally_picks: List[str], target_role: str) -> Tuple[List[str], Optional[str]]:
+    """Separate the current player's hover/pre-pick from locked ally picks.
+
+    LoL Client shows the champion currently selected by the player in the ally
+    pick column before it is locked. If we treat that as a locked ally, the
+    champion disappears from recommendations. V1 keeps the most role-matching
+    ally champion as a pre-pick candidate and does not exclude it from the pool.
+    """
+    if not ally_picks or not target_role:
+        return list(ally_picks or []), None
+
+    role_key = {
+        "TOP": "TOP",
+        "JUNGLE": "JUNGLE",
+        "MID": "MIDDLE",
+        "MIDDLE": "MIDDLE",
+        "ADC": "BOTTOM",
+        "BOTTOM": "BOTTOM",
+        "SUPPORT": "UTILITY",
+        "UTILITY": "UTILITY",
+    }.get(str(target_role).upper())
+    if not role_key:
+        return list(ally_picks), None
+
+    try:
+        role_data_path = BASE / "data" / "role_data.json"
+        role_data = json.loads(role_data_path.read_text(encoding="utf-8-sig"))
+    except Exception:
+        role_data = {}
+
+    best_index = -1
+    best_score = 0
+    for index, champion in enumerate(ally_picks):
+        score = int((role_data.get(champion, {}) or {}).get(role_key, 0) or 0)
+        if score > best_score:
+            best_score = score
+            best_index = index
+
+    if best_index < 0 or best_score < 55:
+        return list(ally_picks), None
+
+    locked = [champion for index, champion in enumerate(ally_picks) if index != best_index]
+    return locked, ally_picks[best_index]
+
+
 def draw_results(client_image: np.ndarray, results: List[SlotResult]) -> np.ndarray:
     preview = client_image.copy()
 
@@ -868,8 +913,11 @@ def recommend_loop(target_role):
                             enemy = summary.get("enemy_picks", [])
                             ally_bans_list = summary.get("ally_bans", [])
                             enemy_bans_list = summary.get("enemy_bans", [])
+                            locked_ally, detected_preselect = split_preselected_ally(ally, effective_role)
+                            logic_summary = dict(summary)
+                            logic_summary["ally_picks"] = locked_ally
                             write_recognition_snapshot(
-                                summary,
+                                logic_summary,
                                 effective_role,
                                 phase="recognized",
                                 message="已识别 BP，正在计算推荐",
@@ -878,21 +926,21 @@ def recommend_loop(target_role):
                             all_recs = []
                             reverse_map = {v:k for k,v in name_map.items()}
                             all_bans = [reverse_map.get(x, x) for x in set(ally_bans_list + enemy_bans_list)]
-                            if ally or enemy or effective_role:
+                            if locked_ally or enemy or effective_role:
                                 from recommendation_engine import TeamAnalyzer
                                 _team_ana = TeamAnalyzer()
-                                game_state = _team_ana.describe_game_state(ally_picks=ally, enemy_picks=enemy)
+                                game_state = _team_ana.describe_game_state(ally_picks=locked_ally, enemy_picks=enemy)
                                 eng = game_state['enemy_summary']
                                 ally_s = game_state['ally_summary']
                                 print(f"{eng}. {ally_s}")
-                                deficits = _team_ana._detect_missing(ally)
+                                deficits = _team_ana._detect_missing(locked_ally)
                                 if deficits:
                                     print("Deficits:", deficits)
                                 sug = game_state.get('suggestion', '')
                                 if sug:
                                     print(sug)
-                                all_excluded = list(set(ally + all_bans + enemy))
-                                all_recs = engine.recommend(ally_picks=ally, enemy_picks=enemy, bans=all_excluded, target_role=effective_role, top_n=15)
+                                all_excluded = list(set(locked_ally + all_bans + enemy))
+                                all_recs = engine.recommend(ally_picks=locked_ally, enemy_picks=enemy, bans=all_excluded, target_role=effective_role, top_n=15)
                                 recs = list(all_recs[:10])
                                 if recs:
                                     # Add mechanic bonus champs that arent already in top 5
@@ -918,7 +966,7 @@ def recommend_loop(target_role):
                                         except:
                                             break
                                         overlay.set_target_role(effective_role)
-                                        overlay.set_ally_enemy(ally, enemy)
+                                        overlay.set_ally_enemy(locked_ally, enemy)
                                         overlay.update_team_comp(game_state)
                                         overlay.update(recs)
                                         if not overlay.root.winfo_exists():
@@ -927,7 +975,7 @@ def recommend_loop(target_role):
                                         try:
                                             from analysis.lane_recommendation import LanePickRecommender
                                             lpr = LanePickRecommender()
-                                            lane_recs = lpr.get_lane_picks(ally, enemy, effective_role)
+                                            lane_recs = lpr.get_lane_picks(locked_ally, enemy, effective_role)
                                             if lane_recs: print("Lane opponent:", lane_recs[0].get("opponent","?"))
                                             overlay.set_lane_picks(lane_recs)
                                         except: pass
@@ -954,20 +1002,20 @@ def recommend_loop(target_role):
                                 lane_recs_list = []
                                 role_inference_data = {}
                                 inferred_lane_opponent = None
-                                if summary.get("enemy_picks"):
+                                if logic_summary.get("enemy_picks"):
                                     try:
                                         from analysis.role_inference_engine import RoleInferenceEngine
                                         if role_inference_engine is None:
                                             role_inference_engine = RoleInferenceEngine()
                                         _rie = role_inference_engine
-                                        role_inference_data = _rie.infer_roles(summary.get("enemy_picks", []))
+                                        role_inference_data = _rie.infer_roles(logic_summary.get("enemy_picks", []))
                                         if effective_role:
-                                            _inferred_lane = _rie.infer_enemy_lane(summary.get("enemy_picks", []), effective_role)
+                                            _inferred_lane = _rie.infer_enemy_lane(logic_summary.get("enemy_picks", []), effective_role)
                                             inferred_lane_opponent = _inferred_lane.get("champion") if _inferred_lane else None
                                     except Exception as _e:
                                         print(f"ROLE_INFERENCE_ERR: {_e}")
 
-                                if effective_role and summary.get("enemy_picks"):
+                                if effective_role and logic_summary.get("enemy_picks"):
                                     try:
                                         from analysis.lane_recommendation import LaneRecommendation
                                         if lane_recommender is None:
@@ -975,7 +1023,7 @@ def recommend_loop(target_role):
                                         _lr = lane_recommender
                                         _lane_bundle = _lr.get_recommendations_for_draft(
                                             role=effective_role,
-                                            enemy_picks=summary.get("enemy_picks", []),
+                                            enemy_picks=logic_summary.get("enemy_picks", []),
                                             top_n=5,
                                         )
                                         lane_recs_list = _lane_bundle.get("recommendations", [])
@@ -1002,12 +1050,12 @@ def recommend_loop(target_role):
                                         macro_plan_advisor = MacroPlanAdvisor()
                                     _ba = bilateral_analyzer
                                     _bilateral = _ba.analyze(
-                                        ally_picks=summary.get("ally_picks", []),
-                                        enemy_picks=summary.get("enemy_picks", [])
+                                        ally_picks=logic_summary.get("ally_picks", []),
+                                        enemy_picks=logic_summary.get("enemy_picks", [])
                                     )
                                     _lane_state = lane_state_analyzer.analyze(
-                                        ally_picks=summary.get("ally_picks", []),
-                                        enemy_picks=summary.get("enemy_picks", []),
+                                        ally_picks=logic_summary.get("ally_picks", []),
+                                        enemy_picks=logic_summary.get("enemy_picks", []),
                                         role_inference=role_inference_data,
                                     )
                                     _macro_plan = macro_plan_advisor.build_plan(_lane_state, _bilateral)
@@ -1035,24 +1083,28 @@ def recommend_loop(target_role):
                                 except Exception as _e:
                                     print(f"COACH_ERR: {_e}")
                                 ls = {
-                                    "ally": summary.get("ally_picks", []),
-                                    "enemy": summary.get("enemy_picks", []),
-                                    "bans": summary.get("ally_bans", []) + summary.get("enemy_bans", []),
+                                    "ally": logic_summary.get("ally_picks", []),
+                                    "enemy": logic_summary.get("enemy_picks", []),
+                                    "bans": logic_summary.get("ally_bans", []) + logic_summary.get("enemy_bans", []),
                                     "recommendations": [],
                                     "lane_recommendations": lane_recs_list,
                                     "role_inference": role_inference_data,
                                     "inferred_lane_opponent": inferred_lane_opponent or "",
                                     "coach": coach_data,
-                                    "prepick": {},
+                                    "prepick": {
+                                        "detected": detected_preselect or "",
+                                        "protected": bool(detected_preselect),
+                                        "reason": "疑似当前预选英雄，暂不从推荐列表排除" if detected_preselect else "",
+                                    },
                                     "timestamp": int(time.time()),
                                     "role": effective_role or "",
                                     "target_role": effective_role or "",
                                     "recognition": {
                                         "phase": "ready",
                                         "message": "推荐已更新",
-                                        "ally_count": len(summary.get("ally_picks", [])),
-                                        "enemy_count": len(summary.get("enemy_picks", [])),
-                                        "ban_count": len(summary.get("ally_bans", []) + summary.get("enemy_bans", [])),
+                                        "ally_count": len(logic_summary.get("ally_picks", [])),
+                                        "enemy_count": len(logic_summary.get("enemy_picks", [])),
+                                        "ban_count": len(logic_summary.get("ally_bans", []) + logic_summary.get("enemy_bans", [])),
                                         "last_scan_at": int(time.time()),
                                         "recommendation_status": "ready",
                                     }
