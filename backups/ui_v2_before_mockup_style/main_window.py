@@ -48,67 +48,49 @@ ROLES = [
 
 APP_STYLE = """
 QMainWindow, QWidget {
-    background: #0B1020;
-    color: #E5E7EB;
+    background: #111318;
+    color: #E7EAF0;
     font-family: Microsoft YaHei, Segoe UI, Arial;
-    font-size: 14px;
+    font-size: 13px;
 }
-QFrame#AppShell {
-    background: #111827;
-    border: 2px solid #263244;
-    border-radius: 22px;
-}
-QFrame#TopBar {
-    background: transparent;
-    border: none;
-}
-QFrame#SideBar {
-    background: #0F172A;
-    border: 1px solid #233044;
-    border-radius: 16px;
+QFrame#TopBar, QFrame#SideBar {
+    background: #171A21;
+    border: 1px solid #252A33;
 }
 QLabel#AppTitle {
-    color: #F9FAFB;
-    font-size: 30px;
-    font-weight: 800;
-}
-QLabel#AppSubtitle {
-    color: #9CA3AF;
-    font-size: 14px;
-}
-QLabel#StatusText, QLabel#MutedText {
-    color: #9CA3AF;
-}
-QLabel#NavStatus {
-    color: #22C55E;
+    color: #F2C94C;
+    font-size: 18px;
     font-weight: 700;
 }
+QLabel#StatusText, QLabel#MutedText {
+    color: #AAB2C0;
+}
 QLabel#DetectionStatus {
-    color: #CBD5E1;
-    background: #0F172A;
-    border: 1px solid #233044;
-    border-radius: 12px;
-    padding: 8px 12px;
+    color: #C8D3E6;
+    background: #171A21;
+    border: 1px solid #252A33;
+    border-radius: 6px;
+    padding: 6px 10px;
 }
 QLabel#PatchNotice {
     background: #3A2A12;
-    color: #FACC15;
+    color: #F2C94C;
     border: 1px solid #7A5A20;
-    border-radius: 12px;
+    border-radius: 6px;
     padding: 8px 12px;
     font-weight: 700;
 }
 QLabel#PageTitle {
-    color: #F9FAFB;
-    font-size: 24px;
-    font-weight: 800;
+    color: #F2C94C;
+    font-size: 22px;
+    font-weight: 700;
 }
 QLabel#CoachGrades {
-    color: #E5E7EB;
+    color: #E7EAF0;
     padding: 10px;
-    background: #0F172A;
-    border: 1px solid #233044;
-    border-radius: 12px;
+    background: #171A21;
+    border: 1px solid #252A33;
+    border-radius: 6px;
 }
 QListWidget {
     background: transparent;
@@ -116,124 +98,64 @@ QListWidget {
     outline: none;
 }
 QListWidget::item {
-    padding: 13px 18px;
-    margin: 5px 10px;
-    color: #CBD5E1;
-    border-radius: 10px;
+    padding: 12px 14px;
+    color: #B8C0CC;
+    border-radius: 6px;
 }
 QListWidget::item:selected {
-    background: #2563EB;
+    background: #2D6CDF;
     color: white;
-    font-weight: 700;
 }
 QTableWidget, QTextEdit {
-    background: #0F172A;
-    color: #E5E7EB;
-    border: 1px solid #233044;
-    border-radius: 12px;
-    gridline-color: #233044;
-    padding: 8px;
+    background: #171A21;
+    color: #E7EAF0;
+    border: 1px solid #252A33;
+    border-radius: 6px;
+    gridline-color: #252A33;
 }
 QHeaderView::section {
-    background: #172033;
-    color: #F9FAFB;
+    background: #202532;
+    color: #F2C94C;
     padding: 8px;
     border: none;
 }
 QFrame#HeroCard {
-    background: #172033;
-    border: 1px solid transparent;
-    border-radius: 14px;
-}
-QFrame#HeroCard:hover {
-    background: #1D2940;
-    border: 1px solid #2563EB;
+    background: #171A21;
+    border: 1px solid #252A33;
+    border-radius: 8px;
 }
 QLabel#HeroAvatar {
-    background: #334155;
+    background: #0B0E14;
     color: white;
-    border: none;
-    border-radius: 24px;
+    border: 1px solid #303644;
+    border-radius: 6px;
     font-weight: 700;
 }
 QLabel#HeroName {
-    color: #F9FAFB;
-    font-size: 18px;
-    font-weight: 800;
+    color: #FFFFFF;
+    font-size: 16px;
+    font-weight: 700;
 }
 QLabel#HeroTags {
-    color: #93C5FD;
-    font-size: 13px;
+    color: #AAB2C0;
 }
 QLabel#HeroScore {
-    color: #BFDBFE;
-    font-size: 22px;
+    color: #F2C94C;
+    font-size: 24px;
     font-weight: 800;
 }
 QPushButton#RoleButton {
-    background: #172033;
-    color: #CBD5E1;
-    border: 1px solid #334155;
-    border-radius: 10px;
+    background: #202532;
+    color: #B8C0CC;
+    border: 1px solid #303644;
+    border-radius: 6px;
     padding: 6px 10px;
 }
 QPushButton#RoleButton:checked {
-    background: #2563EB;
+    background: #2D6CDF;
     color: white;
-    border-color: #2563EB;
+    border-color: #2D6CDF;
     font-weight: 700;
-}
-QPushButton {
-    background: #334155;
-    color: #F8FAFC;
-    border: none;
-    border-radius: 10px;
-    padding: 8px 14px;
-    font-weight: 700;
-}
-QPushButton:hover {
-    background: #475569;
-}
-QPushButton:disabled {
-    background: #1E293B;
-    color: #64748B;
-}
-QPushButton#PrimaryButton {
-    background: #2563EB;
-}
-QPushButton#PrimaryButton:hover {
-    background: #1D4ED8;
-}
-QStackedWidget {
-    background: #0F172A;
-    border: 1px solid #233044;
-    border-radius: 16px;
-}
-QLineEdit {
-    background: #172033;
-    color: #F8FAFC;
-    border: 1px solid #334155;
-    border-radius: 12px;
-    padding: 10px 14px;
-    selection-background-color: #2563EB;
-}
-QLineEdit:focus {
-    border: 1px solid #2563EB;
-}
-QScrollBar:vertical {
-    background: #0F172A;
-    width: 10px;
-    margin: 2px;
-}
-QScrollBar::handle:vertical {
-    background: #334155;
-    border-radius: 5px;
-}
-QScrollBar::handle:vertical:hover {
-    background: #475569;
-}
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-    height: 0px;
 }
 """
 
@@ -242,7 +164,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("LoL BP Coach")
-        self.setMinimumSize(1120, 720)
+        self.setMinimumSize(1040, 680)
         self.setStyleSheet(APP_STYLE)
         self.recognition_process: subprocess.Popen | None = None
 
@@ -260,35 +182,27 @@ class MainWindow(QMainWindow):
         root = QWidget()
         self.setCentralWidget(root)
         root_layout = QVBoxLayout(root)
-        root_layout.setContentsMargins(22, 22, 22, 22)
-        root_layout.setSpacing(0)
-
-        shell = QFrame()
-        shell.setObjectName("AppShell")
-        root_layout.addWidget(shell, 1)
-
-        shell_layout = QVBoxLayout(shell)
-        shell_layout.setContentsMargins(28, 22, 28, 28)
-        shell_layout.setSpacing(12)
+        root_layout.setContentsMargins(10, 10, 10, 10)
+        root_layout.setSpacing(10)
 
         self.top_bar = self._build_top_bar()
-        shell_layout.addWidget(self.top_bar)
+        root_layout.addWidget(self.top_bar)
 
         self.detected_status = QLabel("识别状态：等待识别")
         self.detected_status.setObjectName("DetectionStatus")
         self.detected_status.setWordWrap(False)
-        self.detected_status.setMaximumHeight(40)
-        shell_layout.addWidget(self.detected_status)
+        self.detected_status.setMaximumHeight(34)
+        root_layout.addWidget(self.detected_status)
 
         self.patch_notice = QLabel("")
         self.patch_notice.setObjectName("PatchNotice")
         self.patch_notice.setWordWrap(True)
         self.patch_notice.hide()
-        shell_layout.addWidget(self.patch_notice)
+        root_layout.addWidget(self.patch_notice)
 
         body = QHBoxLayout()
-        body.setSpacing(20)
-        shell_layout.addLayout(body, 1)
+        body.setSpacing(10)
+        root_layout.addLayout(body, 1)
 
         self.nav = self._build_nav()
         body.addWidget(self.nav_frame)
@@ -311,20 +225,15 @@ class MainWindow(QMainWindow):
     def _build_top_bar(self) -> QFrame:
         bar = QFrame()
         bar.setObjectName("TopBar")
-        bar.setMinimumHeight(92)
+        bar.setMaximumHeight(64)
         layout = QHBoxLayout(bar)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(12)
+        layout.setContentsMargins(14, 8, 14, 8)
+        layout.setSpacing(8)
 
-        title_box = QVBoxLayout()
-        title_box.setSpacing(4)
-        title = QLabel("LoL BP Coach")
+        title = QLabel("LoL BP")
         title.setObjectName("AppTitle")
-        subtitle = QLabel("BP 识别 · 英雄推荐 · 对线分析 · 战术教练")
-        subtitle.setObjectName("AppSubtitle")
-        title_box.addWidget(title)
-        title_box.addWidget(subtitle)
-        layout.addLayout(title_box, 1)
+        title.setFixedWidth(92)
+        layout.addWidget(title)
 
         role_label = QLabel("位置")
         role_label.setObjectName("StatusText")
@@ -339,7 +248,6 @@ class MainWindow(QMainWindow):
             layout.addWidget(button)
 
         self.start_bp_button = QPushButton("启动识别")
-        self.start_bp_button.setObjectName("PrimaryButton")
         self.start_bp_button.clicked.connect(self.start_recognition)
         layout.addWidget(self.start_bp_button)
 
@@ -353,7 +261,6 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.demo_button)
 
         self.freeze_button = QPushButton("\u5b9a\u683c")
-        self.freeze_button.setObjectName("PrimaryButton")
         self.freeze_button.setToolTip("\u5b9a\u683c\u5f53\u524d\u63a8\u8350\u548c\u6218\u672f\uff0c\u540e\u7eed\u8bc6\u522b\u4e0d\u4f1a\u8986\u76d6\u754c\u9762")
         self.freeze_button.clicked.connect(self.freeze_current_result)
         layout.addWidget(self.freeze_button)
@@ -376,6 +283,11 @@ class MainWindow(QMainWindow):
         self.connection_status.setObjectName("StatusText")
         self.recognition_status = QLabel("识别未启动")
         self.recognition_status.setObjectName("StatusText")
+        layout.addWidget(self.bp_status)
+        layout.addWidget(self.role_status)
+        layout.addWidget(self.connection_status)
+        layout.addWidget(self.recognition_status)
+        layout.addStretch()
         return bar
 
     def enable_capture_exclusion(self):
@@ -386,28 +298,13 @@ class MainWindow(QMainWindow):
         self.nav_frame = QFrame()
         self.nav_frame.setObjectName("SideBar")
         layout = QVBoxLayout(self.nav_frame)
-        layout.setContentsMargins(10, 20, 10, 12)
-        layout.setSpacing(10)
-
-        nav_title = QLabel("导航")
-        nav_title.setObjectName("PageTitle")
-        layout.addWidget(nav_title)
+        layout.setContentsMargins(8, 8, 8, 8)
 
         nav = QListWidget()
-        nav.setFixedWidth(188)
+        nav.setFixedWidth(160)
         for title, _ in self.pages:
             QListWidgetItem(title, nav)
-        layout.addWidget(nav, 1)
-
-        self.nav_connection_status = QLabel("● 未连接")
-        self.nav_connection_status.setObjectName("NavStatus")
-        self.nav_role_status = QLabel("当前分路：未选择")
-        self.nav_role_status.setObjectName("StatusText")
-        self.nav_recognition_status = QLabel("识别未启动")
-        self.nav_recognition_status.setObjectName("StatusText")
-        layout.addWidget(self.nav_connection_status)
-        layout.addWidget(self.nav_role_status)
-        layout.addWidget(self.nav_recognition_status)
+        layout.addWidget(nav)
         return nav
 
     def poll_state(self):
@@ -424,20 +321,14 @@ class MainWindow(QMainWindow):
         if timestamp:
             updated = datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
             self.connection_status.setText(f"已连接 / {updated}")
-            if hasattr(self, "nav_connection_status"):
-                self.nav_connection_status.setText(f"● 已连接 / {updated}")
         else:
             self.connection_status.setText("未连接")
-            if hasattr(self, "nav_connection_status"):
-                self.nav_connection_status.setText("● 未连接")
 
         if ally or enemy:
             self.bp_status.setText(f"BP状态: 己方 {len(ally)} / 敌方 {len(enemy)}")
         else:
             self.bp_status.setText("BP状态: 等待数据")
         self.role_status.setText(f"当前角色: {role}")
-        if hasattr(self, "nav_role_status"):
-            self.nav_role_status.setText(f"当前分路：{self._role_label(role)}")
         self.detected_status.setText(self._format_detected_status(state))
         for role_id, button in self.role_buttons.items():
             button.setChecked(role_id == role)
@@ -558,14 +449,10 @@ class MainWindow(QMainWindow):
         if self.recognition_process and self.recognition_process.poll() is None:
             self.start_bp_button.setEnabled(False)
             self.stop_bp_button.setEnabled(True)
-            if hasattr(self, "nav_recognition_status"):
-                self.nav_recognition_status.setText("识别运行中")
             return
         if self.recognition_process and self.recognition_process.poll() is not None:
             self.recognition_process = None
             self.recognition_status.setText("识别未运行")
-        if hasattr(self, "nav_recognition_status"):
-            self.nav_recognition_status.setText(self.recognition_status.text())
         self.start_bp_button.setEnabled(True)
         self.stop_bp_button.setEnabled(False)
 
@@ -608,12 +495,6 @@ class MainWindow(QMainWindow):
                 self.patch_notice.hide()
         except Exception:
             self.patch_notice.hide()
-
-    def _role_label(self, role: str) -> str:
-        for role_id, label in ROLES:
-            if role_id == role:
-                return label
-        return role or "未选择"
 
     def closeEvent(self, event):
         self.stop_recognition()

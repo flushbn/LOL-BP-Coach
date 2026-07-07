@@ -16,14 +16,13 @@ class HeroCard(QFrame):
         self.setCursor(Qt.PointingHandCursor)
         self.setObjectName("HeroCard")
         self.setFrameShape(QFrame.StyledPanel)
-        self.setMinimumHeight(86)
 
         root = QHBoxLayout(self)
         root.setContentsMargins(12, 10, 12, 10)
         root.setSpacing(12)
 
         self.avatar = QLabel("")
-        self.avatar.setFixedSize(50, 50)
+        self.avatar.setFixedSize(56, 56)
         self.avatar.setAlignment(Qt.AlignCenter)
         self.avatar.setObjectName("HeroAvatar")
         root.addWidget(self.avatar)

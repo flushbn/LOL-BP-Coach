@@ -25,14 +25,13 @@ class LanePickCard(QFrame):
         super().__init__(parent)
         self.setObjectName("HeroCard")
         self.setFrameShape(QFrame.StyledPanel)
-        self.setMinimumHeight(92)
 
         root = QHBoxLayout(self)
         root.setContentsMargins(12, 10, 12, 10)
         root.setSpacing(12)
 
         self.avatar = QLabel("")
-        self.avatar.setFixedSize(50, 50)
+        self.avatar.setFixedSize(52, 52)
         self.avatar.setAlignment(Qt.AlignCenter)
         self.avatar.setObjectName("HeroAvatar")
         root.addWidget(self.avatar)

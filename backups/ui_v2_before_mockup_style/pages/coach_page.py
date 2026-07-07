@@ -82,19 +82,18 @@ class CoachPage(QWidget):
         group.setStyleSheet(
             """
             QGroupBox {
-                color: #F9FAFB;
-                font-weight: 800;
-                border: 1px solid #233044;
-                border-radius: 14px;
+                color: #F2C94C;
+                font-weight: 700;
+                border: 1px solid #252A33;
+                border-radius: 8px;
                 margin-top: 12px;
-                padding-top: 12px;
-                background: #0F172A;
+                padding-top: 10px;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
                 left: 12px;
-                padding: 0 8px;
-                background: #0F172A;
+                padding: 0 6px;
+                background: #111318;
             }
             """
         )
