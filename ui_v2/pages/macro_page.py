@@ -5,17 +5,26 @@ from PySide6.QtWidgets import QGroupBox, QLabel, QSplitter, QTextEdit, QVBoxLayo
 
 
 class MacroPage(QWidget):
-    def __init__(self):
+    def __init__(self, mode: str = "all"):
         super().__init__()
+        self.mode = mode
         layout = QVBoxLayout(self)
         layout.setContentsMargins(14, 14, 14, 14)
         layout.setSpacing(8)
 
-        title = QLabel("路线节奏")
+        title_text = {
+            "lane": "路线强弱",
+            "plan": "节奏计划",
+        }.get(mode, "路线节奏")
+        title = QLabel(title_text)
         title.setObjectName("PageTitle")
         layout.addWidget(title)
 
-        hint = QLabel("拆分自战术页：重点看哪路线优、哪路要保、打野前中期怎么走。")
+        hint_text = {
+            "lane": "只看三路线权、击杀潜力、防守价值和打野处理建议。",
+            "plan": "只看前中期路线、资源优先级和风险提醒。",
+        }.get(mode, "重点看哪路线优、哪路要保、打野前中期怎么走。")
+        hint = QLabel(hint_text)
         hint.setObjectName("MutedText")
         hint.setWordWrap(True)
         layout.addWidget(hint)
@@ -27,18 +36,22 @@ class MacroPage(QWidget):
         lane_group = self._build_group("路线强弱分析")
         self.lane_state = self._build_scroll_text("暂无路线强弱分析")
         lane_group.layout().addWidget(self.lane_state)
-        splitter.addWidget(lane_group)
+        if mode in ("all", "lane"):
+            splitter.addWidget(lane_group)
 
         plan_group = self._build_group("节奏计划")
         self.macro_plan = self._build_scroll_text("暂无节奏计划")
         plan_group.layout().addWidget(self.macro_plan)
-        splitter.addWidget(plan_group)
+        if mode in ("all", "plan"):
+            splitter.addWidget(plan_group)
         splitter.setSizes([360, 300])
 
     def render(self, state: dict):
         coach = state.get("coach", {}) or {}
-        self._render_lane_state(coach)
-        self._render_macro_plan(coach)
+        if self.mode in ("all", "lane"):
+            self._render_lane_state(coach)
+        if self.mode in ("all", "plan"):
+            self._render_macro_plan(coach)
 
     def _build_group(self, title: str) -> QGroupBox:
         group = QGroupBox(title)
