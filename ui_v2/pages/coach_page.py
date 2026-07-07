@@ -23,18 +23,16 @@ class CoachPage(QWidget):
         lane_title.setObjectName("SectionTitle")
         layout.addWidget(lane_title)
 
-        self.lane_state = QTextEdit()
-        self.lane_state.setReadOnly(True)
-        self.lane_state.setPlaceholderText("暂无路线强弱分析")
-        layout.addWidget(self.lane_state, 2)
+        self.lane_state = self._build_scroll_text("暂无路线强弱分析")
+        self.lane_state.setMinimumHeight(300)
+        layout.addWidget(self.lane_state, 3)
 
         advice_title = QLabel("战术建议")
         advice_title.setObjectName("SectionTitle")
         layout.addWidget(advice_title)
 
-        self.advice = QTextEdit()
-        self.advice.setReadOnly(True)
-        self.advice.setPlaceholderText("暂无战术建议")
+        self.advice = self._build_scroll_text("暂无战术建议")
+        self.advice.setMinimumHeight(140)
         layout.addWidget(self.advice, 1)
 
     def render(self, state: dict):
@@ -42,6 +40,13 @@ class CoachPage(QWidget):
         self._render_grades(coach)
         self._render_lane_state(coach)
         self._render_advice(coach)
+
+    def _build_scroll_text(self, placeholder: str) -> QTextEdit:
+        widget = QTextEdit()
+        widget.setReadOnly(True)
+        widget.setPlaceholderText(placeholder)
+        widget.setLineWrapMode(QTextEdit.WidgetWidth)
+        return widget
 
     def _render_grades(self, coach: dict):
         dims = [
@@ -71,7 +76,7 @@ class CoachPage(QWidget):
         lane_state = coach.get("lane_state", {}) or {}
         lanes = lane_state.get("lanes", []) or []
         if not lanes:
-            self.lane_state.setPlainText("暂无路线强弱分析")
+            self._set_text_preserving_scroll(self.lane_state, "暂无路线强弱分析")
             return
 
         chunks: list[str] = []
@@ -94,7 +99,7 @@ class CoachPage(QWidget):
                 )
             )
 
-        self.lane_state.setPlainText("\n\n".join(chunks))
+        self._set_text_preserving_scroll(self.lane_state, "\n\n".join(chunks))
 
     def _render_advice(self, coach: dict):
         advice = coach.get("advice", "")
@@ -107,4 +112,17 @@ class CoachPage(QWidget):
             advice_lines.extend(str(advice).splitlines())
         advice_lines.extend(str(item) for item in lane_summary if item)
 
-        self.advice.setPlainText("\n".join(advice_lines))
+        self._set_text_preserving_scroll(self.advice, "\n".join(advice_lines))
+
+    @staticmethod
+    def _set_text_preserving_scroll(widget: QTextEdit, text: str):
+        if widget.toPlainText() == text:
+            return
+        bar = widget.verticalScrollBar()
+        old_value = bar.value()
+        was_at_bottom = old_value >= bar.maximum() - 2
+        widget.setPlainText(text)
+        if was_at_bottom:
+            widget.verticalScrollBar().setValue(widget.verticalScrollBar().maximum())
+        else:
+            widget.verticalScrollBar().setValue(min(old_value, widget.verticalScrollBar().maximum()))
