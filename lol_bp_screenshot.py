@@ -775,6 +775,7 @@ def recommend_loop(target_role):
     bilateral_analyzer = None
     coach_advisor = None
     lane_state_analyzer = None
+    macro_plan_advisor = None
 
     def read_selected_role():
         try:
@@ -985,12 +986,15 @@ def recommend_loop(target_role):
                                     from analysis.team_analyzer import BilateralTeamAnalyzer
                                     from analysis.coach_advisor import CoachAdvisor
                                     from analysis.lane_state_analyzer import LaneStateAnalyzer
+                                    from analysis.macro_plan_advisor import MacroPlanAdvisor
                                     if bilateral_analyzer is None:
                                         bilateral_analyzer = BilateralTeamAnalyzer()
                                     if coach_advisor is None:
                                         coach_advisor = CoachAdvisor()
                                     if lane_state_analyzer is None:
                                         lane_state_analyzer = LaneStateAnalyzer()
+                                    if macro_plan_advisor is None:
+                                        macro_plan_advisor = MacroPlanAdvisor()
                                     _ba = bilateral_analyzer
                                     _bilateral = _ba.analyze(
                                         ally_picks=summary.get("ally_picks", []),
@@ -1001,6 +1005,7 @@ def recommend_loop(target_role):
                                         enemy_picks=summary.get("enemy_picks", []),
                                         role_inference=role_inference_data,
                                     )
+                                    _macro_plan = macro_plan_advisor.build_plan(_lane_state, _bilateral)
                                     _ca = coach_advisor
                                     _ally_grades_obj = {}
                                     for _k in ["frontline","engage","peel","burst","dps","lategame"]:
@@ -1020,6 +1025,7 @@ def recommend_loop(target_role):
                                         "comparison": comparison_out,
                                         "advice": "\n".join(_combined.get("advice", [])[:5]),
                                         "lane_state": _lane_state,
+                                        "macro_plan": _macro_plan,
                                     }
                                 except Exception as _e:
                                     print(f"COACH_ERR: {_e}")

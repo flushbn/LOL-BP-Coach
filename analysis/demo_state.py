@@ -12,6 +12,7 @@ if str(ROOT) not in sys.path:
 from analysis.coach_advisor import CoachAdvisor
 from analysis.lane_recommendation import LaneRecommendation
 from analysis.lane_state_analyzer import LaneStateAnalyzer
+from analysis.macro_plan_advisor import MacroPlanAdvisor
 from analysis.role_inference_engine import RoleInferenceEngine
 from analysis.team_analyzer import BilateralTeamAnalyzer
 from recommendation_engine_v3 import RecommendationEngine
@@ -149,6 +150,7 @@ def _build_coach(ally: list[str], enemy: list[str], role_inference: dict) -> dic
             enemy_picks=enemy,
             role_inference=role_inference,
         )
+        macro_plan = MacroPlanAdvisor().build_plan(lane_state, bilateral)
         dim_map = {
             "frontline": "frontline",
             "engage": "engage",
@@ -163,14 +165,17 @@ def _build_coach(ally: list[str], enemy: list[str], role_inference: dict) -> dic
             "comparison": bilateral.get("comparison", {}),
             "advice": "\n".join(combined.get("advice", [])[:5]),
             "lane_state": lane_state,
+            "macro_plan": macro_plan,
         }
     except Exception:
+        lane_state = LaneStateAnalyzer().analyze(ally, enemy, role_inference)
         return {
             "ally": {"frontline": "A", "engage": "A", "protect": "B", "burst": "B", "dps": "A", "late": "B"},
             "enemy": {"frontline": "B", "engage": "A", "protect": "B", "burst": "A", "dps": "A", "late": "B"},
             "comparison": {},
             "advice": "中路与下路可主动找机会\n上路优先反蹲，防止亚索发育",
-            "lane_state": LaneStateAnalyzer().analyze(ally, enemy, role_inference),
+            "lane_state": lane_state,
+            "macro_plan": MacroPlanAdvisor().build_plan(lane_state, {}),
         }
 
 
