@@ -1,10 +1,18 @@
 from __future__ import annotations
 
+import json
+from functools import lru_cache
+from pathlib import Path
+
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
 from utils.champion_assets import champion_icon_path
 from utils.champion_names import champion_display_name
+from utils.game_terms_zh import items_zh
+
+
+ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 class HeroCard(QFrame):
@@ -16,14 +24,13 @@ class HeroCard(QFrame):
         self.setCursor(Qt.PointingHandCursor)
         self.setObjectName("HeroCard")
         self.setFrameShape(QFrame.StyledPanel)
-        self.setMinimumHeight(86)
 
         root = QHBoxLayout(self)
         root.setContentsMargins(12, 10, 12, 10)
         root.setSpacing(12)
 
         self.avatar = QLabel("")
-        self.avatar.setFixedSize(50, 50)
+        self.avatar.setFixedSize(56, 56)
         self.avatar.setAlignment(Qt.AlignCenter)
         self.avatar.setObjectName("HeroAvatar")
         root.addWidget(self.avatar)
@@ -72,6 +79,9 @@ class HeroCard(QFrame):
             tags.append(f"Comfort {comfort_bonus:+}")
         if patch_reason:
             tags.append(f"版本: {patch_reason}")
+        quick_build = _quick_build(raw_champion)
+        if quick_build:
+            tags.append("装备: " + " → ".join(items_zh(quick_build[:3])))
 
         self._set_avatar(raw_champion, champion)
         self.name.setText(str(champion))
@@ -116,3 +126,29 @@ def _looks_broken_text(text: str) -> bool:
         return False
     question_count = clean.count("?") + clean.count("？")
     return question_count >= max(2, len(clean) // 2)
+
+
+@lru_cache(maxsize=1)
+def _champion_data() -> dict:
+    path = ROOT / "champion_data.json"
+    try:
+        return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+    except Exception:
+        return {}
+
+
+def _quick_build(champion: str) -> list[str]:
+    tags = set(_champion_data().get(str(champion), {}).get("tags", []))
+    if "tank" in tags or "frontline" in tags:
+        return ["Sunfire Aegis", "Thornmail", "Kaenic Rookern"]
+    if "marksman" in tags or "dps" in tags:
+        return ["Infinity Edge", "Rapid Firecannon", "Lord Dominik's Regards"]
+    if "mage" in tags or "ap" in tags:
+        return ["Luden's Companion", "Shadowflame", "Rabadon's Deathcap"]
+    if "assassin" in tags:
+        return ["Youmuu's Ghostblade", "The Collector", "Serylda's Grudge"]
+    if "support" in tags or "enchanter" in tags:
+        return ["Moonstone Renewer", "Redemption", "Mikael's Blessing"]
+    if "fighter" in tags:
+        return ["Trinity Force", "Sterak's Gage", "Death's Dance"]
+    return []

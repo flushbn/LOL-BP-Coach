@@ -4,11 +4,12 @@ import threading
 
 from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
 
 from analysis.build_recommendation import BuildRecommendationEngine
 from analysis.lolalytics_client import LolalyticsClient
 from analysis.rune_recommendation import RuneRecommendationEngine
+from ui_v2.components.hero_search_bar import HeroSearchBar
 from utils.champion_assets import champion_icon_path, champion_key
 from utils.champion_names import champion_display_name
 from utils.game_terms_zh import item_zh, items_zh, rune_zh, runes_zh
@@ -124,6 +125,8 @@ class SelectedChampionsPage(QWidget):
         super().__init__()
         self._signature = ""
         self._loading_signature = ""
+        self._last_state: dict = {}
+        self._manual_champions: list[str] = []
         self._cards: dict[str, SelectedChampionCard] = {}
         self._signals = _LoadoutSignals()
         self._signals.loaded.connect(self._on_loaded)
@@ -140,6 +143,16 @@ class SelectedChampionsPage(QWidget):
         hint.setObjectName("MutedText")
         hint.setWordWrap(True)
         layout.addWidget(hint)
+
+        search_row = QHBoxLayout()
+        self.search = HeroSearchBar()
+        self.search.setPlaceholderText("手动添加已选英雄：输入中文名或英文名，回车添加")
+        self.search.hero_selected.connect(self.add_manual_champion)
+        search_row.addWidget(self.search, 1)
+        clear_button = QPushButton("清空手动")
+        clear_button.clicked.connect(self.clear_manual_champions)
+        search_row.addWidget(clear_button)
+        layout.addLayout(search_row)
 
         self.status = QLabel("等待识别己方已选英雄")
         self.status.setObjectName("CoachGrades")
@@ -158,7 +171,8 @@ class SelectedChampionsPage(QWidget):
         layout.addWidget(self.scroll, 1)
 
     def render(self, state: dict):
-        ally = [champion_key(item) for item in (state.get("ally", []) or []) if champion_key(item)]
+        self._last_state = state or {}
+        ally = self._combined_champions(state)
         enemy = [champion_key(item) for item in (state.get("enemy", []) or []) if champion_key(item)]
         role = str(state.get("role") or state.get("target_role") or "")
         signature = "|".join(ally) + "::" + "|".join(enemy) + "::" + role
@@ -171,6 +185,27 @@ class SelectedChampionsPage(QWidget):
             return
         self.status.setText(f"已识别己方 {len(ally)} 个英雄，正在后台加载符文和出装...")
         self._start_loading(signature, ally, enemy, role)
+
+    def add_manual_champion(self, champion: str):
+        key = champion_key(champion)
+        if not key:
+            self.status.setText("未找到该英雄，请换中文名或英文名再试。")
+            return
+        if key not in self._manual_champions:
+            self._manual_champions.append(key)
+        self.search.clear()
+        self._signature = ""
+        self.render(self._last_state or {})
+        self.status.setText(f"已手动添加：{champion_display_name(key)}")
+
+    def clear_manual_champions(self):
+        self._manual_champions = []
+        self._signature = ""
+        self.render(self._last_state or {})
+
+    def _combined_champions(self, state: dict) -> list[str]:
+        detected = [champion_key(item) for item in ((state or {}).get("ally", []) or []) if champion_key(item)]
+        return list(dict.fromkeys(detected + self._manual_champions))
 
     def _render_cards(self, ally: list[str], role: str):
         self._clear_layout()
