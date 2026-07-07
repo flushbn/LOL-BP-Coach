@@ -1,8 +1,12 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 import time
 from datetime import datetime
+from pathlib import Path
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
@@ -26,8 +30,11 @@ from ui_v2.pages.recommend_page import RecommendPage
 from ui_v2.pages.update_page import UpdatePage
 from ui_v2.state_reader import LIVE_STATE_PATH, read_state
 from analysis.data_patch_manager import DataPatchManager
+from utils.champion_names import champion_display_name
+from utils.window_capture_exclusion import exclude_window_from_capture
 
 
+ROOT = Path(__file__).resolve().parent.parent
 LIVE_DRAFT_PATH = LIVE_STATE_PATH.with_name("live_draft.json")
 ROLES = [
     ("TOP", "上路"),
@@ -56,6 +63,13 @@ QLabel#AppTitle {
 }
 QLabel#StatusText, QLabel#MutedText {
     color: #AAB2C0;
+}
+QLabel#DetectionStatus {
+    color: #C8D3E6;
+    background: #171A21;
+    border: 1px solid #252A33;
+    border-radius: 6px;
+    padding: 6px 10px;
 }
 QLabel#PatchNotice {
     background: #3A2A12;
@@ -151,6 +165,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("LoL BP Coach")
         self.setMinimumSize(1040, 680)
         self.setStyleSheet(APP_STYLE)
+        self.recognition_process: subprocess.Popen | None = None
 
         self.update_page = UpdatePage()
         self.update_page.status_changed.connect(self.check_patch_notice)
@@ -171,6 +186,13 @@ class MainWindow(QMainWindow):
 
         self.top_bar = self._build_top_bar()
         root_layout.addWidget(self.top_bar)
+
+        self.detected_status = QLabel("识别状态：等待识别")
+        self.detected_status.setObjectName("DetectionStatus")
+        self.detected_status.setWordWrap(False)
+        self.detected_status.setMaximumHeight(34)
+        root_layout.addWidget(self.detected_status)
+
         self.patch_notice = QLabel("")
         self.patch_notice.setObjectName("PatchNotice")
         self.patch_notice.setWordWrap(True)
@@ -197,18 +219,20 @@ class MainWindow(QMainWindow):
         self.timer.start(500)
         self.poll_state()
         QTimer.singleShot(200, self.check_patch_notice)
+        QTimer.singleShot(300, self.enable_capture_exclusion)
 
     def _build_top_bar(self) -> QFrame:
         bar = QFrame()
         bar.setObjectName("TopBar")
+        bar.setMaximumHeight(64)
         layout = QHBoxLayout(bar)
-        layout.setContentsMargins(14, 10, 14, 10)
-        layout.setSpacing(18)
+        layout.setContentsMargins(14, 8, 14, 8)
+        layout.setSpacing(12)
 
         title = QLabel("LoL BP Coach")
         title.setObjectName("AppTitle")
+        title.setMinimumWidth(135)
         layout.addWidget(title)
-        layout.addStretch()
 
         role_label = QLabel("位置")
         role_label.setObjectName("StatusText")
@@ -222,16 +246,33 @@ class MainWindow(QMainWindow):
             self.role_buttons[role] = button
             layout.addWidget(button)
 
+        self.start_bp_button = QPushButton("启动识别")
+        self.start_bp_button.clicked.connect(self.start_recognition)
+        layout.addWidget(self.start_bp_button)
+
+        self.stop_bp_button = QPushButton("停止识别")
+        self.stop_bp_button.clicked.connect(self.stop_recognition)
+        self.stop_bp_button.setEnabled(False)
+        layout.addWidget(self.stop_bp_button)
+
         self.bp_status = QLabel("BP状态: 等待数据")
         self.bp_status.setObjectName("StatusText")
         self.role_status = QLabel("当前角色: 未选择")
         self.role_status.setObjectName("StatusText")
         self.connection_status = QLabel("未连接")
         self.connection_status.setObjectName("StatusText")
+        self.recognition_status = QLabel("识别未启动")
+        self.recognition_status.setObjectName("StatusText")
         layout.addWidget(self.bp_status)
         layout.addWidget(self.role_status)
         layout.addWidget(self.connection_status)
+        layout.addWidget(self.recognition_status)
+        layout.addStretch()
         return bar
+
+    def enable_capture_exclusion(self):
+        if exclude_window_from_capture(int(self.winId())):
+            self.recognition_status.setText("识别窗口隔离已启用")
 
     def _build_nav(self) -> QListWidget:
         self.nav_frame = QFrame()
@@ -249,6 +290,7 @@ class MainWindow(QMainWindow):
     def poll_state(self):
         state = read_state()
         self.render(state)
+        self.update_recognition_status()
 
     def render(self, state: dict):
         timestamp = int(state.get("timestamp") or 0)
@@ -267,6 +309,7 @@ class MainWindow(QMainWindow):
         else:
             self.bp_status.setText("BP状态: 等待数据")
         self.role_status.setText(f"当前角色: {role}")
+        self.detected_status.setText(self._format_detected_status(state))
         for role_id, button in self.role_buttons.items():
             button.setChecked(role_id == role)
 
@@ -291,6 +334,105 @@ class MainWindow(QMainWindow):
         LIVE_DRAFT_PATH.write_text(json.dumps(draft, ensure_ascii=False), encoding="utf-8")
         self.render(state)
 
+    def start_recognition(self):
+        self.update_recognition_status()
+        if self.recognition_process and self.recognition_process.poll() is None:
+            return
+
+        state = read_state()
+        role = state.get("role") or state.get("target_role") or ""
+        valid_roles = {item[0] for item in ROLES}
+        if role not in valid_roles:
+            self.recognition_status.setText("请先选择位置")
+            return
+
+        self.change_role(role)
+        self._write_recognition_status(
+            role,
+            phase="starting",
+            message="识别已启动，等待扫描 LOL BP 界面",
+            recommendation_status="waiting",
+        )
+        env = os.environ.copy()
+        env["LOL_NO_OVERLAY"] = "1"
+        env["LOL_HIDE_CAPTURE"] = "1"
+        env["PYTHONIOENCODING"] = "utf-8"
+        creationflags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+        log_path = ROOT / "logs" / "recognition.log"
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        log_file = log_path.open("a", encoding="utf-8")
+        self.recognition_process = subprocess.Popen(
+            [sys.executable, str(ROOT / "lol_bp_screenshot.py"), "--recommend", role],
+            cwd=str(ROOT),
+            env=env,
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            creationflags=creationflags,
+        )
+        self.start_bp_button.setEnabled(False)
+        self.stop_bp_button.setEnabled(True)
+        self.recognition_status.setText(f"识别运行中: {role}")
+
+    def stop_recognition(self):
+        if self.recognition_process and self.recognition_process.poll() is None:
+            self.recognition_process.terminate()
+            try:
+                self.recognition_process.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                self.recognition_process.kill()
+        self.recognition_process = None
+        self.start_bp_button.setEnabled(True)
+        self.stop_bp_button.setEnabled(False)
+        self.recognition_status.setText("识别已停止")
+        state = read_state()
+        self._write_recognition_status(
+            state.get("role") or state.get("target_role") or "",
+            phase="stopped",
+            message="识别已停止",
+            recommendation_status="stopped",
+        )
+
+    def update_recognition_status(self):
+        if self.recognition_process and self.recognition_process.poll() is None:
+            self.start_bp_button.setEnabled(False)
+            self.stop_bp_button.setEnabled(True)
+            return
+        if self.recognition_process and self.recognition_process.poll() is not None:
+            self.recognition_process = None
+            self.recognition_status.setText("识别未运行")
+        self.start_bp_button.setEnabled(True)
+        self.stop_bp_button.setEnabled(False)
+
+    def _write_recognition_status(self, role: str, phase: str, message: str, recommendation_status: str):
+        state = read_state()
+        state["role"] = role
+        state["target_role"] = role
+        state["timestamp"] = int(time.time())
+        state["recognition"] = {
+            "phase": phase,
+            "message": message,
+            "recommendation_status": recommendation_status,
+            "ally_count": len(state.get("ally", []) or []),
+            "enemy_count": len(state.get("enemy", []) or []),
+            "ban_count": len(state.get("bans", []) or []),
+            "last_scan_at": int(time.time()),
+        }
+        LIVE_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        payload = json.dumps(state, ensure_ascii=False)
+        LIVE_STATE_PATH.write_text(payload, encoding="utf-8")
+        LIVE_DRAFT_PATH.write_text(payload, encoding="utf-8")
+
+    def _format_detected_status(self, state: dict) -> str:
+        recognition = state.get("recognition", {}) or {}
+        message = recognition.get("message") or "等待识别"
+        ally = [champion_display_name(item) for item in state.get("ally", [])]
+        enemy = [champion_display_name(item) for item in state.get("enemy", [])]
+        bans = [champion_display_name(item) for item in state.get("bans", [])]
+        ally_text = ", ".join(ally) if ally else "暂无"
+        enemy_text = ", ".join(enemy) if enemy else "暂无"
+        bans_text = ", ".join(bans[:8]) if bans else "暂无"
+        return f"识别状态: {message} | 己方: {ally_text} | 敌方: {enemy_text} | Ban: {bans_text}"
+
     def check_patch_notice(self):
         try:
             status = DataPatchManager().get_status()
@@ -304,3 +446,6 @@ class MainWindow(QMainWindow):
         except Exception:
             self.patch_notice.hide()
 
+    def closeEvent(self, event):
+        self.stop_recognition()
+        super().closeEvent(event)

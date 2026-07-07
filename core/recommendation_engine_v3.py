@@ -1,8 +1,6 @@
-﻿import json
+import json
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 from core.recommendation_engine import TeamAnalyzer
 from core.counter_analyzer import CounterAnalyzer
@@ -18,6 +16,10 @@ from analysis.patch_notes_engine import PatchNotesEngine
 from utils.champion_names import champion_display_name
 
 
+ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = ROOT / "data"
+
+
 class RecommendationEngine:
     """V2 engine with refined scoring: Counter*0.35 + Meta*0.35 + Role*0.20 + Synergy*0.10."""
 
@@ -31,6 +33,7 @@ class RecommendationEngine:
 
         # Load role_data.json for RoleScore
         self._role_data: Dict[str, Dict[str, int]] = {}
+        self._mainstream_roles: Dict[str, List[str]] = {}
         # Synergy V2 data
         self._synergy_v2: Dict[str, Dict[str, float]] = {}
         self._synergy_v2_absolute = False
@@ -42,20 +45,24 @@ class RecommendationEngine:
             if "champions" in _raw_synergy:
                 self._synergy_v2_absolute = True
                 self._use_synergy_v2 = True
-        role_path = PROJECT_ROOT / "data" / "role_data.json"
+        role_path = DATA_DIR / "role_data.json"
         if role_path.exists():
             with open(role_path, "r", encoding="utf-8") as f:
                 self._role_data = json.load(f)
+        mainstream_role_path = DATA_DIR / "champion_roles.json"
+        if mainstream_role_path.exists():
+            with open(mainstream_role_path, "r", encoding="utf-8") as f:
+                self._mainstream_roles = json.load(f)
         # V6: Bot Lane Pair Data
         self._botlane_pairs = {}
-        blp_path = PROJECT_ROOT / "data" / "botlane_pair_data.json"
+        blp_path = DATA_DIR / "botlane_pair_data.json"
         if blp_path.exists():
             with open(blp_path, "r", encoding="utf-8") as _f:
                 self._botlane_pairs = json.load(_f)
 
         # V6: Jungle-Support archetype data
         self._jg_sup_data = {}
-        jsd_path = PROJECT_ROOT / "data" / "jungle_support_data.json"
+        jsd_path = DATA_DIR / "jungle_support_data.json"
         if jsd_path.exists():
             with open(jsd_path, "r", encoding="utf-8") as _f:
                 self._jg_sup_data = json.load(_f)
@@ -69,7 +76,7 @@ class RecommendationEngine:
         # Display-only Chinese names. Internal champion keys remain English.
 
     def _resolve_synergy_path(self) -> Path:
-        data_dir = PROJECT_ROOT / "data"
+        data_dir = DATA_DIR
         patch_file = data_dir / "patch_version.json"
         try:
             if patch_file.exists():
@@ -107,8 +114,20 @@ class RecommendationEngine:
     def _role_score(self, champion: str, target_role: str) -> int:
         if not target_role:
             return 100
-        pos_map = {"Top": "TOP", "Jungle": "JUNGLE", "Mid": "MIDDLE",
-                   "ADC": "BOTTOM", "Support": "UTILITY"}
+        pos_map = {
+            "TOP": "TOP",
+            "Top": "TOP",
+            "JUNGLE": "JUNGLE",
+            "Jungle": "JUNGLE",
+            "MID": "MIDDLE",
+            "MIDDLE": "MIDDLE",
+            "Mid": "MIDDLE",
+            "ADC": "BOTTOM",
+            "BOTTOM": "BOTTOM",
+            "SUPPORT": "UTILITY",
+            "UTILITY": "UTILITY",
+            "Support": "UTILITY",
+        }
         riot_pos = pos_map.get(target_role, "")
         if not riot_pos:
             return 50
@@ -123,6 +142,25 @@ class RecommendationEngine:
         if pct >= 10:
             return 50
         return 0
+
+    def _is_mainstream_role(self, champion: str, target_role: str) -> bool:
+        if not target_role:
+            return True
+        role_map = {
+            "TOP": "Top",
+            "JUNGLE": "Jungle",
+            "MID": "Mid",
+            "MIDDLE": "Mid",
+            "ADC": "ADC",
+            "BOTTOM": "ADC",
+            "SUPPORT": "Support",
+            "UTILITY": "Support",
+        }
+        normalized_role = role_map.get(target_role, target_role)
+        roles = self._mainstream_roles.get(champion)
+        if not roles:
+            return True
+        return any(normalized_role.lower() == role.lower() for role in roles)
 
     # --- MetaScore (refined) ---
     def _meta_score(self, champion: str) -> int:
@@ -165,6 +203,7 @@ class RecommendationEngine:
 
         _lane_enemy = find_enemy_lane_champion(enemy_picks, target_role or "", self._role_data) if target_role else None
         _ROLE_TO_BONUS = {"TOP":"TOP","JUNGLE":"JUNGLE","MID":"MID","BOTTOM":"BOTTOM","UTILITY":"UTILITY"}
+        ally_missing_orig = self.team._detect_missing(ally_picks)
         results = []
         for champ in list(candidates):
             if champ in excluded:
@@ -183,6 +222,10 @@ class RecommendationEngine:
 
             # V2: RoleScore
             role_score = self._role_score(champ, target_role) if target_role else 100
+            if target_role and role_score < 70:
+                continue
+            if target_role and not self._is_mainstream_role(champ, target_role):
+                continue
 
             # TeamCompScore
             simulated = ally_picks + [champ]
@@ -190,7 +233,6 @@ class RecommendationEngine:
             tc_score = self._teamcomp_score(analysis["ally"])
 
             # V6: Comp fit bonus - boost champs that fix team deficits
-            ally_missing_orig = self.team._detect_missing(ally_picks)
             champ_tags = self.team._get_champion(champ).get("tags", [])
             comp_fit_bonus = 0
             dim_map = {"frontline": ["tank","frontline","bruiser"], "engage": ["engage"], "cc": ["cc","control"], "ap": ["ap","mage"], "peel": ["peel","support"]}
@@ -329,11 +371,12 @@ class RecommendationEngine:
         pick_slot: int = 0,
     ) -> List[Dict]:
         ranked = self.rank(ally_picks, enemy_picks, target_role, bans, top_n * 3, pick_slot)
+        tactical_analyzer = None
         try:
             from analysis.tactical_analyzer import TacticalAnalyzer
-            _get_tactical = lambda: TacticalAnalyzer()
+            tactical_analyzer = TacticalAnalyzer()
         except:
-            _get_tactical = lambda: None
+            tactical_analyzer = None
         seen = set()
         picks = []
 
@@ -371,7 +414,7 @@ class RecommendationEngine:
                 reasons.append(patch_reason)
 
             cn_name = champion_display_name(champ)
-            ta = _get_tactical(); tac = ta.analyze(ally_picks, enemy_picks, champ) if ta else {"reasons":[],"strengths":[],"warnings":[]}
+            tac = tactical_analyzer.analyze(ally_picks, enemy_picks, champ) if tactical_analyzer else {"reasons":[],"strengths":[],"warnings":[]}
             picks.append({
                 "champion": champ,
                 "champion_cn": cn_name,
@@ -402,4 +445,3 @@ class RecommendationEngine:
             if len(picks) >= top_n:
                 break
         return picks
-

@@ -1,9 +1,14 @@
 ﻿"""Lane Bonus V1 — Convert Lolalytics matchup delta to a -5~+5 bonus."""
 
+import json
+from pathlib import Path
 from typing import Dict, List, Optional
 from analysis.lolalytics_client import LolalyticsClient
 from analysis.role_inference_engine import RoleInferenceEngine
 
+ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = ROOT / "data"
+_LOCAL_COUNTER_CACHE: Optional[dict] = None
 
 # Role name → role_data.json key
 _ROLE_TO_KEY = {
@@ -32,6 +37,95 @@ _ROLE_TO_LANE = {
     "Support": "support",
     "UTILITY": "support",
 }
+
+_ROLE_TO_COUNTER_ROLE = {
+    "Top": "TOP",
+    "TOP": "TOP",
+    "Jungle": "JUNGLE",
+    "JUNGLE": "JUNGLE",
+    "Mid": "MID",
+    "MID": "MID",
+    "MIDDLE": "MID",
+    "ADC": "ADC",
+    "BOTTOM": "ADC",
+    "Support": "SUPPORT",
+    "SUPPORT": "SUPPORT",
+    "UTILITY": "SUPPORT",
+}
+
+
+def _load_local_counter_data() -> dict:
+    global _LOCAL_COUNTER_CACHE
+    if _LOCAL_COUNTER_CACHE is not None:
+        return _LOCAL_COUNTER_CACHE
+
+    patch = None
+    patch_file = DATA_DIR / "patch_version.json"
+    try:
+        if patch_file.exists():
+            patch = json.loads(patch_file.read_text(encoding="utf-8")).get("current_patch")
+    except Exception:
+        patch = None
+
+    candidates = []
+    if patch:
+        candidates.append(DATA_DIR / str(patch) / "counter_data.json")
+    candidates.append(DATA_DIR / "counter_data.json")
+
+    for path in candidates:
+        try:
+            if path.exists():
+                raw = json.loads(path.read_text(encoding="utf-8"))
+                _LOCAL_COUNTER_CACHE = raw.get("champions", raw)
+                return _LOCAL_COUNTER_CACHE
+        except Exception:
+            continue
+    _LOCAL_COUNTER_CACHE = {}
+    return _LOCAL_COUNTER_CACHE
+
+
+def _lookup_key(data: dict, name: str) -> Optional[str]:
+    if not name:
+        return None
+    if name in data:
+        return name
+    lowered = name.lower()
+    for key in data:
+        if key.lower() == lowered:
+            return key
+    return None
+
+
+def _local_matchup(champion: str, opponent: str, role: str) -> Optional[dict]:
+    data = _load_local_counter_data()
+    champion_key = _lookup_key(data, champion)
+    if not champion_key:
+        return None
+
+    opponents = data.get(champion_key, {}) or {}
+    opponent_key = _lookup_key(opponents, opponent)
+    if not opponent_key:
+        return None
+
+    payload = opponents.get(opponent_key)
+    if not isinstance(payload, dict):
+        return None
+
+    expected_role = _ROLE_TO_COUNTER_ROLE.get(role)
+    payload_role = str(payload.get("role", "")).upper()
+    if expected_role and payload_role and payload_role != expected_role:
+        return None
+
+    delta = payload.get("winrate_delta", payload.get("delta"))
+    if delta is None:
+        return None
+    return {
+        "champion": champion_key,
+        "opponent": opponent_key,
+        "delta": float(delta),
+        "games": int(payload.get("games", 0) or 0),
+        "source": "local_counter_data",
+    }
 
 
 def find_enemy_lane_champion(
@@ -111,7 +205,9 @@ def get_lane_bonus(
         own_client = True
 
     try:
-        matchup = client.get_matchup(champion, enemy_lane_champion, lane=lane)
+        matchup = _local_matchup(champion, enemy_lane_champion, role)
+        if matchup is None:
+            matchup = client.get_matchup(champion, enemy_lane_champion, lane=lane)
         if matchup is None:
             return {"lane_bonus": 0, "lane_reason": ""}
         delta = matchup.get("delta", 0.0)
@@ -120,4 +216,3 @@ def get_lane_bonus(
         return {"lane_bonus": bonus, "lane_reason": reason}
     except Exception:
         return {"lane_bonus": 0, "lane_reason": ""}
-

@@ -1,4 +1,4 @@
-﻿"""Lane Recommendation V2.1
+"""Lane Recommendation V2.1
 
 Role Gate + improved scoring formula.
 Filters out off-role champions using Riot match data.
@@ -11,6 +11,7 @@ from typing import List, Optional
 
 from analysis.lolalytics_client import LolalyticsClient
 from analysis.role_inference_engine import RoleInferenceEngine
+from analysis.lane_bonus import _load_local_counter_data, _local_matchup
 
 
 class LaneRecommendation:
@@ -35,6 +36,7 @@ class LaneRecommendation:
         self.client = client or LolalyticsClient()
         self.role_inference = RoleInferenceEngine()
         self.max_workers = max_workers
+        self._has_local_counter_data = bool(_load_local_counter_data())
         base = Path(__file__).resolve().parent
 
         # champion -> roles mapping
@@ -109,7 +111,9 @@ class LaneRecommendation:
     def _fetch_one(self, champ: str, enemy: str, lane: str,
                    role_key: str) -> Optional[dict]:
         try:
-            matchup = self.client.get_matchup(champ, enemy, lane=lane)
+            matchup = _local_matchup(champ, enemy, role_key)
+            if matchup is None and not self._has_local_counter_data:
+                matchup = self.client.get_matchup(champ, enemy, lane=lane)
             if matchup is None:
                 return None
             delta = matchup.get("delta", 0.0)
@@ -243,4 +247,3 @@ class LaneRecommendation:
         after = self.get_recommendations(role, enemy_lane_champion,
                                          top_n=top_n, use_role_gate=True, use_v21=True)
         return {"before": before, "after": after}
-
