@@ -1,6 +1,36 @@
 from __future__ import annotations
 
-from PySide6.QtWidgets import QLabel, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QGroupBox, QLabel, QSplitter, QTextEdit, QVBoxLayout, QWidget
+
+
+DIMENSIONS = [
+    ("frontline", "前排"),
+    ("engage", "开团"),
+    ("protect", "保护"),
+    ("burst", "爆发"),
+    ("dps", "持续输出"),
+    ("late", "后期"),
+]
+
+COMPARISON_LABELS = {
+    "frontline": "前排",
+    "engage": "开团",
+    "peel": "保护",
+    "protect": "保护",
+    "burst": "爆发",
+    "dps": "持续输出",
+    "late": "后期",
+    "lategame": "后期",
+}
+
+COMPARISON_VALUES = {
+    "ally_big_advantage": "己方大优",
+    "ally_advantage": "己方优势",
+    "enemy_big_advantage": "敌方大优",
+    "enemy_advantage": "敌方优势",
+    "even": "均势",
+}
 
 
 class CoachPage(QWidget):
@@ -17,29 +47,54 @@ class CoachPage(QWidget):
         self.grades = QLabel("等待阵容分析...")
         self.grades.setWordWrap(True)
         self.grades.setObjectName("CoachGrades")
+        self.grades.setMaximumHeight(120)
         layout.addWidget(self.grades)
 
-        lane_title = QLabel("路线强弱分析")
-        lane_title.setObjectName("SectionTitle")
-        layout.addWidget(lane_title)
+        splitter = QSplitter(Qt.Vertical)
+        splitter.setChildrenCollapsible(False)
+        layout.addWidget(splitter, 1)
 
+        lane_group = self._build_group("路线强弱分析")
         self.lane_state = self._build_scroll_text("暂无路线强弱分析")
-        self.lane_state.setMinimumHeight(300)
-        layout.addWidget(self.lane_state, 3)
+        lane_group.layout().addWidget(self.lane_state)
+        splitter.addWidget(lane_group)
 
-        advice_title = QLabel("战术建议")
-        advice_title.setObjectName("SectionTitle")
-        layout.addWidget(advice_title)
-
+        advice_group = self._build_group("战术建议")
         self.advice = self._build_scroll_text("暂无战术建议")
-        self.advice.setMinimumHeight(140)
-        layout.addWidget(self.advice, 1)
+        advice_group.layout().addWidget(self.advice)
+        splitter.addWidget(advice_group)
+        splitter.setSizes([430, 210])
 
     def render(self, state: dict):
         coach = state.get("coach", {}) or {}
         self._render_grades(coach)
         self._render_lane_state(coach)
         self._render_advice(coach)
+
+    def _build_group(self, title: str) -> QGroupBox:
+        group = QGroupBox(title)
+        group.setStyleSheet(
+            """
+            QGroupBox {
+                color: #F2C94C;
+                font-weight: 700;
+                border: 1px solid #252A33;
+                border-radius: 8px;
+                margin-top: 12px;
+                padding-top: 10px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 12px;
+                padding: 0 6px;
+                background: #111318;
+            }
+            """
+        )
+        box = QVBoxLayout(group)
+        box.setContentsMargins(10, 12, 10, 10)
+        box.setSpacing(8)
+        return group
 
     def _build_scroll_text(self, placeholder: str) -> QTextEdit:
         widget = QTextEdit()
@@ -49,26 +104,22 @@ class CoachPage(QWidget):
         return widget
 
     def _render_grades(self, coach: dict):
-        dims = [
-            ("frontline", "前排"),
-            ("engage", "开团"),
-            ("protect", "保护"),
-            ("burst", "爆发"),
-            ("dps", "持续输出"),
-            ("late", "后期"),
-        ]
-
         lines: list[str] = []
         for side_key, side_name in (("ally", "己方"), ("enemy", "敌方")):
             side = coach.get(side_key, {}) or {}
-            parts = [f"{label} {side.get(key)}" for key, label in dims if side.get(key)]
+            parts = [f"{label} {side.get(key)}" for key, label in DIMENSIONS if side.get(key)]
             if parts:
                 lines.append(f"<b>{side_name}</b>　" + "　".join(parts))
 
         comparison = coach.get("comparison", {}) or {}
         if comparison:
-            diff = "　".join(f"{key}: {value}" for key, value in comparison.items())
-            lines.append(f"<b>双方对比</b>　{diff}")
+            parts = []
+            for key, value in comparison.items():
+                label = COMPARISON_LABELS.get(str(key), str(key))
+                text = COMPARISON_VALUES.get(str(value), str(value))
+                parts.append(f"{label}：{text}")
+            if parts:
+                lines.append("<b>双方对比</b>　" + "　".join(parts))
 
         self.grades.setText("<br>".join(lines) if lines else "等待阵容分析...")
 
