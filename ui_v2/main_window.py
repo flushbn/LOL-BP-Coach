@@ -255,6 +255,10 @@ class MainWindow(QMainWindow):
         self.stop_bp_button.setEnabled(False)
         layout.addWidget(self.stop_bp_button)
 
+        self.demo_button = QPushButton("????")
+        self.demo_button.clicked.connect(self.load_demo_state)
+        layout.addWidget(self.demo_button)
+
         self.bp_status = QLabel("BP状态: 等待数据")
         self.bp_status.setObjectName("StatusText")
         self.role_status = QLabel("当前角色: 未选择")
@@ -391,6 +395,16 @@ class MainWindow(QMainWindow):
             message="识别已停止",
             recommendation_status="stopped",
         )
+
+
+    def load_demo_state(self):
+        try:
+            from analysis.demo_state import write_demo_state
+            state = write_demo_state()
+            self.render(state)
+            self.recognition_status.setText("???????")
+        except Exception as exc:
+            self.recognition_status.setText(f"????????: {exc}")
 
     def update_recognition_status(self):
         if self.recognition_process and self.recognition_process.poll() is None:
