@@ -1,0 +1,130 @@
+from __future__ import annotations
+
+ITEM_ZH = {
+    "Doran's Ring": "多兰之戒",
+    "Doran's Blade": "多兰之刃",
+    "Doran's Shield": "多兰之盾",
+    "Health Potion": "生命药水",
+    "Scorchclaw Pup": "焰爪猫幼崽",
+    "Gustwalker Hatchling": "踏苔蜥幼苗",
+    "Mosstomper Seedling": "踏苔蜥幼苗",
+    "Plated Steelcaps": "铁板靴",
+    "Mercury's Treads": "水银之靴",
+    "Ionian Boots of Lucidity": "明朗之靴",
+    "Berserker's Greaves": "狂战士胫甲",
+    "Sorcerer's Shoes": "法师之靴",
+    "Sunfire Aegis": "日炎圣盾",
+    "Frozen Heart": "冰霜之心",
+    "Thornmail": "荆棘之甲",
+    "Randuin's Omen": "兰顿之兆",
+    "Kaenic Rookern": "败魔",
+    "Force of Nature": "自然之力",
+    "Spirit Visage": "振奋盔甲",
+    "Jak'Sho, The Protean": "千变者贾修",
+    "Unending Despair": "无终恨意",
+    "Iceborn Gauntlet": "冰脉护手",
+    "Eclipse": "星蚀",
+    "Sundered Sky": "焚天",
+    "Death's Dance": "死亡之舞",
+    "Sterak's Gage": "斯特拉克的挑战护手",
+    "Guardian Angel": "守护天使",
+    "Black Cleaver": "黑色切割者",
+    "Maw of Malmortius": "玛莫提乌斯之噬",
+    "Wit's End": "智慧末刃",
+    "Trinity Force": "三相之力",
+    "Youmuu's Ghostblade": "幽梦之灵",
+    "The Collector": "收集者",
+    "Serylda's Grudge": "赛瑞尔达的怨恨",
+    "Infinity Edge": "无尽之刃",
+    "Rapid Firecannon": "疾射火炮",
+    "Lord Dominik's Regards": "多米尼克领主的致意",
+    "Kraken Slayer": "海妖杀手",
+    "Mercurial Scimitar": "水银弯刀",
+    "Luden's Companion": "卢登的伙伴",
+    "Shadowflame": "影焰",
+    "Rabadon's Deathcap": "灭世者的死亡之帽",
+    "Zhonya's Hourglass": "中娅沙漏",
+    "Void Staff": "虚空之杖",
+    "Banshee's Veil": "女妖面纱",
+    "Moonstone Renewer": "月石再生器",
+    "Redemption": "救赎",
+    "Mikael's Blessing": "米凯尔的祝福",
+}
+
+RUNE_ZH = {
+    "Resolve": "坚决",
+    "Precision": "精密",
+    "Domination": "主宰",
+    "Sorcery": "巫术",
+    "Inspiration": "启迪",
+    "Grasp of the Undying": "不灭之握",
+    "Aftershock": "余震",
+    "Guardian": "守护者",
+    "Demolish": "爆破",
+    "Font of Life": "生命源泉",
+    "Shield Bash": "护盾猛击",
+    "Conditioning": "调节",
+    "Second Wind": "复苏之风",
+    "Bone Plating": "骸骨镀层",
+    "Overgrowth": "过度生长",
+    "Revitalize": "复苏",
+    "Unflinching": "坚定",
+    "Press the Attack": "强攻",
+    "Lethal Tempo": "致命节奏",
+    "Fleet Footwork": "迅捷步法",
+    "Conqueror": "征服者",
+    "Triumph": "凯旋",
+    "Presence of Mind": "气定神闲",
+    "Legend: Alacrity": "传说：欢欣",
+    "Legend: Haste": "传说：急速",
+    "Legend: Bloodline": "传说：血统",
+    "Coup de Grace": "致命一击",
+    "Cut Down": "砍倒",
+    "Last Stand": "坚毅不倒",
+    "Electrocute": "电刑",
+    "Dark Harvest": "黑暗收割",
+    "Hail of Blades": "丛刃",
+    "Cheap Shot": "恶意中伤",
+    "Taste of Blood": "血之滋味",
+    "Sudden Impact": "猛然冲击",
+    "Treasure Hunter": "寻宝猎人",
+    "Relentless Hunter": "无情猎手",
+    "Ultimate Hunter": "终极猎人",
+    "Summon Aery": "召唤：艾黎",
+    "Arcane Comet": "奥术彗星",
+    "Phase Rush": "相位猛冲",
+    "Axiom Arcanist": "公理秘术师",
+    "Manaflow Band": "法力流系带",
+    "Nimbus Cloak": "灵光披风",
+    "Transcendence": "超然",
+    "Celerity": "迅捷",
+    "Absolute Focus": "绝对专注",
+    "Scorch": "焦灼",
+    "Waterwalking": "水上行走",
+    "Gathering Storm": "风暴聚集",
+    "Glacial Augment": "冰川增幅",
+    "Unsealed Spellbook": "启封的秘籍",
+    "First Strike": "先攻",
+    "Magical Footwear": "神奇之鞋",
+    "Biscuit Delivery": "饼干配送",
+    "Cosmic Insight": "星界洞悉",
+    "Approach Velocity": "行近速率",
+}
+
+
+def item_zh(name: str | None) -> str:
+    text = str(name or "")
+    return ITEM_ZH.get(text, text)
+
+
+def rune_zh(name: str | None) -> str:
+    text = str(name or "")
+    return RUNE_ZH.get(text, text)
+
+
+def items_zh(items: list[str] | tuple[str, ...] | None) -> list[str]:
+    return [item_zh(item) for item in (items or [])]
+
+
+def runes_zh(runes: list[str] | tuple[str, ...] | None) -> list[str]:
+    return [rune_zh(rune) for rune in (runes or [])]

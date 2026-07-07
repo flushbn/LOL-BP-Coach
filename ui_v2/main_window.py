@@ -28,6 +28,7 @@ from ui_v2.pages.macro_page import MacroPage
 from ui_v2.pages.player_page import PlayerPage
 from ui_v2.pages.patch_notes_page import PatchNotesPage
 from ui_v2.pages.recommend_page import RecommendPage
+from ui_v2.pages.selected_champions_page import SelectedChampionsPage
 from ui_v2.pages.update_page import UpdatePage
 from ui_v2.state_reader import LIVE_STATE_PATH, read_state
 from analysis.data_patch_manager import DataPatchManager
@@ -251,6 +252,7 @@ class MainWindow(QMainWindow):
         self.update_page.status_changed.connect(self.check_patch_notice)
         self.pages = [
             ("英雄推荐", RecommendPage()),
+            ("已选英雄", SelectedChampionsPage()),
             ("对线", LanePage()),
             ("战术·阵容建议", CoachPage()),
             ("战术·路线节奏", MacroPage()),

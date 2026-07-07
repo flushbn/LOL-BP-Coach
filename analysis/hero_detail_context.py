@@ -71,6 +71,7 @@ class HeroDetailContextBuilder:
         champion: str,
         current_state: dict | None = None,
         recommendation: dict | None = None,
+        include_loadout: bool = False,
     ) -> dict[str, Any]:
         key = champion_key(champion)
         state = current_state or {}
@@ -79,8 +80,11 @@ class HeroDetailContextBuilder:
         selected_role = self._selected_role(state, roles)
         best_role_payload = self._best_meta_payload(key)
         enemy_team = [champion_key(item) for item in state.get("enemy", []) or [] if champion_key(item)]
-        rune_recommendation = self.rune_engine.recommend(key, selected_role, enemy_team)
-        build_recommendation = self.build_engine.recommend(key, selected_role, enemy_team)
+        rune_recommendation = None
+        build_recommendation = {}
+        if include_loadout:
+            rune_recommendation = self.rune_engine.recommend(key, selected_role, enemy_team)
+            build_recommendation = self.build_engine.recommend(key, selected_role, enemy_team)
 
         context = {
             "champion": key,
@@ -89,8 +93,8 @@ class HeroDetailContextBuilder:
             "roles": [ROLE_LABELS.get(role, role) for role in roles],
             "meta": best_role_payload,
             "recommendation": rec,
-            "runes": [rune_recommendation],
-            "builds": build_recommendation.get("core_build", []) or self._builds(key, roles),
+            "runes": [rune_recommendation] if rune_recommendation else [],
+            "builds": build_recommendation.get("core_build", []) if build_recommendation else [],
             "build_recommendation": build_recommendation,
             "lane_plan": self.lane_strategy.build_plan(key, state, self.champion_data),
             "power_spikes": self._power_spikes(key, best_role_payload),

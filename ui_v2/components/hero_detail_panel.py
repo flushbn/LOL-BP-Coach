@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from utils.champion_assets import champion_icon_path
+from utils.game_terms_zh import items_zh, rune_zh, runes_zh
 
 
 class HeroDetailPanel(QFrame):
@@ -151,16 +152,16 @@ class HeroDetailPanel(QFrame):
     @staticmethod
     def _format_runes(runes: list[dict]) -> str:
         if not runes:
-            return "暂无符文推荐"
+            return "符文与出装已移至左侧“已选英雄”页，避免拖慢推荐页。"
         lines = []
         for rune in runes:
             secondary = rune.get("secondary", "暂无")
             if isinstance(secondary, list):
-                secondary = " / ".join(str(item) for item in secondary if item) or "暂无"
+                secondary = " / ".join(runes_zh([str(item) for item in secondary if item])) or "暂无"
             rune_names = rune.get("runes", [])
             extra = ""
             if isinstance(rune_names, list) and rune_names:
-                extra = "\n  小符文：" + " / ".join(str(item) for item in rune_names[1:4] if item)
+                extra = "\n  小符文：" + " / ".join(runes_zh([str(item) for item in rune_names[1:4] if item]))
             stats = []
             if rune.get("winrate") is not None:
                 stats.append(f"胜率 {rune.get('winrate')}%")
@@ -168,7 +169,7 @@ class HeroDetailPanel(QFrame):
                 stats.append(f"样本 {rune.get('games')}")
             reason = rune.get("reason", "")
             lines.append(
-                f"• {rune.get('primary', '主系')}：{rune.get('keystone', '核心符文')}　副系：{secondary}"
+                f"• {rune_zh(rune.get('primary', '主系'))}：{rune_zh(rune.get('keystone', '核心符文'))}　副系：{secondary}"
                 + extra
                 + (f"\n  {' / '.join(stats)}" if stats else "")
                 + (f"\n  原因：{reason}" if reason else "")
@@ -178,13 +179,13 @@ class HeroDetailPanel(QFrame):
     @staticmethod
     def _format_builds(builds: list[dict], build_recommendation: dict | None = None) -> str:
         if not builds:
-            return "暂无出装推荐"
+            return "出装推荐已移至左侧“已选英雄”页，后台加载后可慢慢查看。"
         lines = []
         starting = (build_recommendation or {}).get("starting_items", [])
         if starting:
-            lines.append("出门装：" + " + ".join(starting))
+            lines.append("出门装：" + " + ".join(items_zh(starting)))
         for build in builds:
-            items = " → ".join(build.get("items", []))
+            items = " → ".join(items_zh(build.get("items", [])))
             note = build.get("reason") or build.get("note", "")
             stats = []
             if build.get("winrate") is not None:
@@ -210,7 +211,7 @@ class HeroDetailPanel(QFrame):
         for key, label in (("first_item", "第一件"), ("second_item", "第二件"), ("third_item", "第三件")):
             names = item_path.get(key, [])
             if names:
-                path_parts.append(f"{label}：" + " / ".join(names))
+                path_parts.append(f"{label}：" + " / ".join(items_zh(names)))
         if path_parts:
             lines.append("装备路线\n" + "\n".join(path_parts))
         situational = build_recommendation.get("situational", []) or []
@@ -218,7 +219,7 @@ class HeroDetailPanel(QFrame):
             lines.append(
                 "应对调整\n"
                 + "\n".join(
-                    f"• {' / '.join(item.get('items', []))}\n  {item.get('reason', '')}"
+                    f"• {' / '.join(items_zh(item.get('items', [])))}\n  {item.get('reason', '')}"
                     for item in situational
                 )
             )
