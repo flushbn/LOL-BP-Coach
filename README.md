@@ -1,101 +1,101 @@
-# LOL BP Coach
+# LoL BP Coach
 
-LOL BP Coach 是一个面向《英雄联盟》BP 阶段的桌面辅助工具。它把版本数据、对线克制、阵容分析、玩家历史表现和版本更新解释整合到一个 PySide6 单窗口 UI 中，帮助玩家在选人阶段更快做出决策。
+LoL BP Coach 是一个面向《英雄联盟》BP 阶段的桌面辅助工具。它会识别 LOL 客户端 BP 界面，并在一个 PySide6 单窗口客户端中展示英雄推荐、对线建议、阵容分析、路线强弱和前中期节奏计划。
 
-## 功能模块
+当前版本是朋友测试版，重点目标是：**下载安装后能直接使用，不需要安装 Python。**
 
-- **综合推荐**：基于版本强度、角色适配、阵容需求、对位加成和玩家熟练度生成推荐。
-- **对线推荐**：使用 Lolalytics 当前版本 matchup 数据展示对位优势英雄。
-- **战术分析**：分析己方与敌方阵容的前排、开团、保护、爆发、持续输出和后期能力。
-- **英雄详情**：搜索或点击英雄后查看版本数据、克制关系、协同关系、符文/出装思路和强势期。
-- **玩家数据**：读取本地对局历史，统计胜率、英雄池、位置表现和个人风格。
-- **数据更新中心**：在 UI 内更新当前 patch 的 Meta、Counter、Synergy 和 Lolalytics 缓存。
-- **版本公告**：展示 patch notes，并解释英雄、装备、符文和系统改动对推荐的影响。
+## 下载使用
 
-## 系统架构
+推荐普通用户直接下载 Release 安装包：
+
+- Release 页面：<https://github.com/flushbn/LOL-BP-Coach/releases/tag/v0.2.0>
+- 推荐下载：`LoL-BP-Coach-Setup-0.2.0.exe`
+- 备用下载：`LoL-BP-Coach-portable-0.2.0.zip`
+
+安装包会自动包含：
+
+- PySide6 客户端
+- BP 截图识别模块
+- 16.13 BP 数据
+- 英雄头像资源
+- 中文英雄数据
+- Lolalytics 缓存与种子缓存
+
+## 使用步骤
+
+1. 安装并打开 `LoL BP Coach`
+2. 选择自己的分路：上路 / 打野 / 中路 / 射手 / 辅助
+3. 点击 `启动识别`
+4. 进入 LOL BP 界面，等待推荐刷新
+5. 推荐稳定后可点击 `定格`，避免后续误识别覆盖结果
+6. 下一局点击 `新局`
+
+如果暂时没有进入 BP，可以点击 `演示阵容` 查看完整效果。
+
+## 核心功能
+
+- **综合推荐**：结合版本强度、分路适配、阵容需求、对位优势和玩家熟练度推荐英雄。
+- **对线推荐**：基于 Lolalytics matchup 数据，展示当前分路的优势对位选择。
+- **路线强弱分析**：判断上路、中路、下路、打野的线权、击杀潜力和防守价值。
+- **节奏计划**：给出前 5 分钟、5-14 分钟、小龙/先锋优先级和风险提醒。
+- **战术建议**：分析己方、敌方阵容，并给出团战和资源争夺思路。
+- **定格 / 继续 / 新局**：实战中锁定当前正确结果，防止 BP 界面变化导致误识别。
+- **我的数据**：记录对局历史、英雄胜率，并用于后续个性化推荐。
+- **版本更新中心**：在软件内检查数据版本，后续支持一键更新。
+
+## 当前进度
+
+当前已进入朋友测试版阶段：
+
+- 已完成主 UI
+- 已完成识别到推荐的完整链路
+- 已完成安装包和便携包构建
+- 已内置 16.13 数据与英雄头像
+- 正在等待更多真实 BP 测试反馈
+
+后续重点：
+
+- 优化真实 BP 识别准确率
+- 增强自动更新
+- 完善我的数据和局后记录
+- 增强符文、出装和英雄详情推荐
+
+## 开发者运行
+
+如果你想从源码运行：
+
+```powershell
+pip install -r requirements.txt
+python run_ui.py
+```
+
+如果要构建发布包：
+
+```powershell
+python build_release.py
+```
+
+构建产物会输出到：
 
 ```text
-LOL-BP-Coach
-├─ run_app.py                 # 统一启动入口
-├─ core/                      # 推荐引擎核心
-│  ├─ recommendation_engine_v3.py
-│  ├─ recommendation_engine.py
-│  ├─ counter_analyzer.py
-│  ├─ meta_analyzer.py
-│  └─ role_filter.py
-├─ analysis/                  # 数据层与分析模块
-│  ├─ lolalytics_client.py
-│  ├─ lane_recommendation.py
-│  ├─ role_inference_engine.py
-│  ├─ player_analytics.py
-│  └─ online_meta_sync.py
-├─ ui_v2/                     # PySide6 单窗口 UI
-│  ├─ main_window.py
-│  ├─ pages/
-│  ├─ widgets/
-│  └─ components/
-├─ data/
-│  ├─ 16.13/                  # 当前版本 BP 数据
-│  ├─ zh_CN/                  # Riot Data Dragon 中文英雄数据
-│  └─ patch_notes/
-├─ img/champion/              # 英雄头像
-└─ utils/                     # 资源路径、英雄名、头像等工具
+release/
 ```
 
-## 安装方法
+## 数据来源
 
-建议使用 Python 3.10+。
+- **Lolalytics**：用于版本数据、胜率、登场率、Ban 率、对位 matchup 与部分缓存数据。
+- **Riot Data Dragon**：用于英雄中文名、基础数据和头像资源。
+- **本地推断数据**：用于阵容协同、战术标签、路线节奏和部分 Coach 建议。
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-```
+部分协同和战术判断属于推断数据，软件会逐步增加可信度标记和真实数据来源。
 
-## 运行方式
+## 注意事项
 
-```bash
-python run_app.py
-```
+- LOL 客户端需要保持可见，不要最小化。
+- 本工具只做 BP 辅助建议，不保证胜负。
+- 首次测试如识别不准，请截图反馈 BP 界面。
+- 当前版本主要面向朋友测试，不是最终商业发布版。
 
-首次启动会自动创建：
+## 免责声明
 
-- `data/live_state.json`
-- `data/live_draft.json`
-- `data/match_sessions.json`
-- `data/player_profile.json`
-- `data/cache/`
-- `logs/`
-- `config/`
-
-## 数据来源说明
-
-- **Lolalytics**：用于当前 patch 的英雄胜率、登场率、禁用率、对位克制和对线推荐。
-- **Riot Data Dragon**：用于英雄中文名称、英雄基础信息和头像索引。
-- **本地推断数据**：协同数据当前基于英雄标签、阵容角色和 matchup pattern 推断，UI 会将其作为推断数据展示。
-
-## 当前内置版本
-
-- Patch：`16.13`
-- 数据目录：`data/16.13/`
-- 已内置：
-  - `meta_data.json`
-  - `counter_data.json`
-  - `synergy_data.json`
-
-## 安全与隐私
-
-仓库不包含：
-
-- API Key
-- 本地绝对路径
-- 个人日志
-- 缓存目录
-- 测试截图
-- 打包产物
-
-玩家对局历史只保存在本地 `data/match_sessions.json`，默认发布版本为空数组。
-
-## 开发说明
-
-本仓库是公开发布清理版，已移除旧 Overlay、临时脚本、debug 图片、缓存和打包产物。推荐系统核心位于 `core/`，UI 只读取 `data/live_state.json` 并渲染，不直接依赖截图识别流程。
+本项目为个人学习与测试项目，不隶属于 Riot Games。League of Legends 相关名称、图标和素材版权归 Riot Games 所有。
