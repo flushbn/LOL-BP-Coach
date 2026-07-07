@@ -29,13 +29,12 @@ class PlayerProfile:
         try:
             if not sp.exists():
                 return
-            sessions = json.loads(sp.read_text(encoding="utf-8"))
+            sessions = json.loads(sp.read_text(encoding="utf-8-sig"))
         except:
             return
         agg = {}
-        now = int(time.time())
         for s in sessions:
-            hero = s.get("hero", "")
+            hero = _normalize_hero_key(s.get("hero", ""))
             if not hero:
                 continue
             if hero not in agg:
@@ -46,13 +45,7 @@ class PlayerProfile:
             ts = s.get("timestamp", 0)
             if ts > agg[hero]["last_played"]:
                 agg[hero]["last_played"] = ts
-        for champ, data in agg.items():
-            if champ not in self._profile:
-                self._profile[champ] = {}
-            self._profile[champ]["games"] = self._profile[champ].get("games", 0) + data["games"]
-            self._profile[champ]["wins"] = self._profile[champ].get("wins", 0) + data["wins"]
-            if data["last_played"] > self._profile[champ].get("last_played", 0):
-                self._profile[champ]["last_played"] = data["last_played"]
+        self._profile = agg
         self.save()
 
     def get_comfort(self, champion, min_games=3):
@@ -108,3 +101,18 @@ class PlayerProfile:
     @property
     def profile(self):
         return self._profile
+
+
+def _normalize_hero_key(hero: str) -> str:
+    aliases = {
+        "leesin": "LeeSin",
+        "jarvaniv": "JarvanIV",
+        "twistedfate": "TwistedFate",
+        "missfortune": "MissFortune",
+        "masteryi": "MasterYi",
+        "xinzhao": "XinZhao",
+        "monkeyking": "MonkeyKing",
+        "wukong": "MonkeyKing",
+    }
+    compact = "".join(ch for ch in str(hero or "").lower() if ch.isalnum())
+    return aliases.get(compact, hero)

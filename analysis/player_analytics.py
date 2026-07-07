@@ -24,11 +24,40 @@ def _load_sessions() -> List[Dict]:
     try:
         if not MATCH_SESSIONS_PATH.exists():
             return []
-        raw = MATCH_SESSIONS_PATH.read_text(encoding="utf-8")
+        raw = MATCH_SESSIONS_PATH.read_text(encoding="utf-8-sig")
         data = json.loads(raw) if raw.strip() else []
-        return data if isinstance(data, list) else []
+        if not isinstance(data, list):
+            return []
+        return [_normalize_session(session) for session in data if isinstance(session, dict)]
     except Exception:
         return []
+
+
+def _normalize_session(session: Dict) -> Dict:
+    normalized = dict(session)
+    hero = normalized.get("hero", "")
+    normalized["hero"] = _normalize_hero_key(hero)
+    result = str(normalized.get("result", "")).upper()
+    if result in {"LOSS", "LOSE", "L"}:
+        normalized["result"] = "LOSE"
+    elif result in {"WIN", "W"}:
+        normalized["result"] = "WIN"
+    return normalized
+
+
+def _normalize_hero_key(hero: str) -> str:
+    aliases = {
+        "leesin": "LeeSin",
+        "jarvaniv": "JarvanIV",
+        "twistedfate": "TwistedFate",
+        "missfortune": "MissFortune",
+        "masteryi": "MasterYi",
+        "xinzhao": "XinZhao",
+        "monkeyking": "MonkeyKing",
+        "wukong": "MonkeyKing",
+    }
+    compact = "".join(ch for ch in str(hero or "").lower() if ch.isalnum())
+    return aliases.get(compact, hero)
 
 class PlayerAnalytics:
     def __init__(self):
@@ -222,4 +251,3 @@ def get_analytics() -> PlayerAnalytics:
 
 def get_player_insight() -> Dict:
     return get_analytics().get_player_insight()
-
