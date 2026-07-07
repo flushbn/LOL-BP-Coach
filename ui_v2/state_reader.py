@@ -23,6 +23,7 @@ EMPTY_STATE: dict[str, Any] = {
     "inferred_lane_opponent": "",
     "coach": {},
     "prepick": {},
+    "session_control": {},
 }
 
 

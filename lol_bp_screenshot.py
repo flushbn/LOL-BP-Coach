@@ -743,11 +743,10 @@ def main_loop_with_analysis(analyzer) -> None:
                             try:
                                 import json
                                 from pathlib import Path
+                                from analysis.draft_session_control import write_live_state
                                 ls={"ally":summary.get("ally_picks",[]),"enemy":summary.get("enemy_picks",[]),"bans":summary.get("ally_bans",[])+summary.get("enemy_bans",[]),"recommendations":[],"timestamp":int(time.time()),"target_role":""}
                                 recs=[]
-                                ls_path=Path(__file__).parent/"data"/"live_state.json"
-                                ls_path.parent.mkdir(parents=True,exist_ok=True)
-                                ls_path.write_text(json.dumps(ls,ensure_ascii=False),encoding="utf-8")
+                                write_live_state(ls)
                             except: pass
                             last_summary = summary
                         latest_preview = draw_results(client_image, results)
@@ -791,6 +790,9 @@ def recommend_loop(target_role):
 
     def write_recognition_snapshot(summary, effective_role, phase="recognizing", message="识别中"):
         try:
+            from analysis.draft_session_control import is_paused, write_live_state
+            if is_paused():
+                return
             state_path = Path(__file__).parent / "data" / "live_state.json"
             draft_path = Path(__file__).parent / "data" / "live_draft.json"
             existing = {}
@@ -819,10 +821,7 @@ def recommend_loop(target_role):
                     "recommendation_status": "calculating" if phase == "recognized" else phase,
                 },
             })
-            state_path.parent.mkdir(parents=True, exist_ok=True)
-            payload = json.dumps(existing, ensure_ascii=False)
-            state_path.write_text(payload, encoding="utf-8")
-            draft_path.write_text(payload, encoding="utf-8")
+            write_live_state(existing)
         except Exception as exc:
             print(f"SNAPSHOT_WRITE_ERR: {exc}")
 
@@ -944,6 +943,12 @@ def recommend_loop(target_role):
                             try:
                                 import json
                                 from pathlib import Path
+                                from analysis.draft_session_control import is_paused, write_live_state
+
+                                if is_paused():
+                                    last_summary = summary
+                                    next_capture_at = now + INTERVAL_SECONDS
+                                    continue
 
                                 # --- Role Inference + Lane Recommendations ---
                                 lane_recs_list = []
@@ -1071,9 +1076,7 @@ def recommend_loop(target_role):
                                             ls["lane_recommendations"] = old_lane
                                     except:
                                         pass
-                                ls_path.parent.mkdir(parents=True, exist_ok=True)
-                                ls_path.write_text(json.dumps(ls, ensure_ascii=False), encoding="utf-8")
-                                ld_path.write_text(json.dumps(ls, ensure_ascii=False), encoding="utf-8")
+                                write_live_state(ls)
                             except Exception as _v10e:
                                 print(f"STATE_WRITE_ERR: {_v10e}")
                             last_summary = summary
@@ -1236,11 +1239,10 @@ def main() -> None:
                             try:
                                 import json
                                 from pathlib import Path
+                                from analysis.draft_session_control import write_live_state
                                 ls={"ally":summary.get("ally_picks",[]),"enemy":summary.get("enemy_picks",[]),"bans":summary.get("ally_bans",[])+summary.get("enemy_bans",[]),"recommendations":[],"timestamp":int(time.time()),"target_role":""}
                                 recs=[]
-                                ls_path=Path(__file__).parent/"data"/"live_state.json"
-                                ls_path.parent.mkdir(parents=True,exist_ok=True)
-                                ls_path.write_text(json.dumps(ls,ensure_ascii=False),encoding="utf-8")
+                                write_live_state(ls)
                             except: pass
                             last_summary = summary
 

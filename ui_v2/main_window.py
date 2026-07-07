@@ -30,6 +30,7 @@ from ui_v2.pages.recommend_page import RecommendPage
 from ui_v2.pages.update_page import UpdatePage
 from ui_v2.state_reader import LIVE_STATE_PATH, read_state
 from analysis.data_patch_manager import DataPatchManager
+from analysis.draft_session_control import pause_state, resume_updates, start_new_game, write_live_state
 from utils.champion_names import champion_display_name
 from utils.window_capture_exclusion import exclude_window_from_capture
 
@@ -255,9 +256,24 @@ class MainWindow(QMainWindow):
         self.stop_bp_button.setEnabled(False)
         layout.addWidget(self.stop_bp_button)
 
-        self.demo_button = QPushButton("????")
+        self.demo_button = QPushButton("\u6f14\u793a\u9635\u5bb9")
         self.demo_button.clicked.connect(self.load_demo_state)
         layout.addWidget(self.demo_button)
+
+        self.freeze_button = QPushButton("\u5b9a\u683c")
+        self.freeze_button.setToolTip("\u5b9a\u683c\u5f53\u524d\u63a8\u8350\u548c\u6218\u672f\uff0c\u540e\u7eed\u8bc6\u522b\u4e0d\u4f1a\u8986\u76d6\u754c\u9762")
+        self.freeze_button.clicked.connect(self.freeze_current_result)
+        layout.addWidget(self.freeze_button)
+
+        self.resume_button = QPushButton("\u7ee7\u7eed")
+        self.resume_button.setToolTip("\u6062\u590d\u5b9e\u65f6\u8bc6\u522b\u5237\u65b0")
+        self.resume_button.clicked.connect(self.resume_live_updates)
+        layout.addWidget(self.resume_button)
+
+        self.new_game_button = QPushButton("\u65b0\u5c40")
+        self.new_game_button.setToolTip("\u6e05\u7a7a\u5f53\u524dBP\uff0c\u5f00\u59cb\u65b0\u7684\u4e00\u5c40")
+        self.new_game_button.clicked.connect(self.start_new_draft_session)
+        layout.addWidget(self.new_game_button)
 
         self.bp_status = QLabel("BP状态: 等待数据")
         self.bp_status.setObjectName("StatusText")
@@ -316,6 +332,7 @@ class MainWindow(QMainWindow):
         self.detected_status.setText(self._format_detected_status(state))
         for role_id, button in self.role_buttons.items():
             button.setChecked(role_id == role)
+        self._update_session_buttons(state)
 
         for _, page in self.pages:
             page.render(state)
@@ -325,17 +342,7 @@ class MainWindow(QMainWindow):
         state["role"] = role
         state["target_role"] = role
         state["timestamp"] = int(time.time())
-        LIVE_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        LIVE_STATE_PATH.write_text(json.dumps(state, ensure_ascii=False), encoding="utf-8")
-
-        draft = {}
-        if LIVE_DRAFT_PATH.exists():
-            try:
-                draft = json.loads(LIVE_DRAFT_PATH.read_text(encoding="utf-8"))
-            except Exception:
-                draft = {}
-        draft.update({"role": role, "target_role": role, "timestamp": state["timestamp"]})
-        LIVE_DRAFT_PATH.write_text(json.dumps(draft, ensure_ascii=False), encoding="utf-8")
+        write_live_state(state, force=True)
         self.render(state)
 
     def start_recognition(self):
@@ -399,12 +406,39 @@ class MainWindow(QMainWindow):
 
     def load_demo_state(self):
         try:
+            resume_updates()
             from analysis.demo_state import write_demo_state
             state = write_demo_state()
             self.render(state)
-            self.recognition_status.setText("???????")
+            self.recognition_status.setText("\u6f14\u793a\u9635\u5bb9\u5df2\u8f7d\u5165")
         except Exception as exc:
-            self.recognition_status.setText(f"????????: {exc}")
+            self.recognition_status.setText(f"\u6f14\u793a\u9635\u5bb9\u8f7d\u5165\u5931\u8d25: {exc}")
+
+    def freeze_current_result(self):
+        state = pause_state(read_state())
+        self.render(state)
+        self.recognition_status.setText("\u63a8\u8350\u7ed3\u679c\u5df2\u5b9a\u683c")
+
+    def resume_live_updates(self):
+        state = resume_updates()
+        self.render(state)
+        self.recognition_status.setText("\u5df2\u7ee7\u7eed\u5237\u65b0")
+
+    def start_new_draft_session(self):
+        current = read_state()
+        role = current.get("role") or current.get("target_role") or ""
+        state = start_new_game(role)
+        self.render(state)
+        self.recognition_status.setText("\u65b0\u7684\u4e00\u5c40\u5df2\u5f00\u59cb")
+
+    def _update_session_buttons(self, state: dict):
+        paused = bool((state.get("session_control") or {}).get("paused"))
+        if hasattr(self, "freeze_button"):
+            self.freeze_button.setEnabled(not paused)
+        if hasattr(self, "resume_button"):
+            self.resume_button.setEnabled(paused)
+        if paused:
+            self.bp_status.setText(self.bp_status.text() + " / \u5df2\u5b9a\u683c")
 
     def update_recognition_status(self):
         if self.recognition_process and self.recognition_process.poll() is None:
@@ -431,10 +465,7 @@ class MainWindow(QMainWindow):
             "ban_count": len(state.get("bans", []) or []),
             "last_scan_at": int(time.time()),
         }
-        LIVE_STATE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        payload = json.dumps(state, ensure_ascii=False)
-        LIVE_STATE_PATH.write_text(payload, encoding="utf-8")
-        LIVE_DRAFT_PATH.write_text(payload, encoding="utf-8")
+        write_live_state(state, force=True)
 
     def _format_detected_status(self, state: dict) -> str:
         recognition = state.get("recognition", {}) or {}
