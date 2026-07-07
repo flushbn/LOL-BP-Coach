@@ -52,6 +52,10 @@ def _load_champion_keys() -> dict[str, str]:
         "xinzhao": "XinZhao",
         "aurelionsol": "AurelionSol",
         "drmundo": "DrMundo",
+        "sona": "Sona",
+        "琴女": "Sona",
+        "娑娜": "Sona",
+        "琴瑟仙女": "Sona",
     }
     for alias, key in aliases.items():
         keys[_normalize(alias)] = key

@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QGroupBox, QLabel, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QGroupBox, QLabel, QScrollArea, QTextEdit, QVBoxLayout, QWidget
 
 
 DIMENSIONS = [
-    ("frontline", "前排"),
-    ("engage", "开团"),
-    ("protect", "保护"),
-    ("burst", "爆发"),
-    ("dps", "持续输出"),
-    ("late", "后期"),
+    (("frontline",), "前排"),
+    (("engage",), "开团"),
+    (("peel", "protect"), "保护"),
+    (("burst",), "爆发"),
+    (("dps",), "持续输出"),
+    (("late", "lategame"), "后期"),
 ]
 
 COMPARISON_LABELS = {
@@ -44,20 +44,48 @@ class CoachPage(QWidget):
         title.setObjectName("PageTitle")
         layout.addWidget(title)
 
-        self.grades = QLabel("等待阵容分析...")
-        self.grades.setWordWrap(True)
-        self.grades.setObjectName("CoachGrades")
-        self.grades.setMinimumHeight(150)
-        layout.addWidget(self.grades)
+        subtitle = QLabel("先看双方阵容能力，再看差异和建议。路线强弱与前中期节奏已拆到“路线节奏”页。")
+        subtitle.setObjectName("MutedText")
+        subtitle.setWordWrap(True)
+        layout.addWidget(subtitle)
+
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setStyleSheet("QScrollArea{border:none;background:transparent}")
+        layout.addWidget(scroll, 1)
+
+        content = QWidget()
+        content_layout = QVBoxLayout(content)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.setSpacing(10)
+        scroll.setWidget(content)
+
+        ally_group = self._build_group("己方阵容")
+        self.ally_grades = self._build_label("等待己方阵容分析...")
+        ally_group.layout().addWidget(self.ally_grades)
+        content_layout.addWidget(ally_group)
+
+        enemy_group = self._build_group("敌方阵容")
+        self.enemy_grades = self._build_label("等待敌方阵容分析...")
+        enemy_group.layout().addWidget(self.enemy_grades)
+        content_layout.addWidget(enemy_group)
+
+        comparison_group = self._build_group("双方对比")
+        self.comparison = self._build_label("等待双方对比...")
+        comparison_group.layout().addWidget(self.comparison)
+        content_layout.addWidget(comparison_group)
 
         advice_group = self._build_group("战术建议")
         self.advice = self._build_scroll_text("暂无战术建议")
         advice_group.layout().addWidget(self.advice)
-        layout.addWidget(advice_group, 1)
+        content_layout.addWidget(advice_group, 1)
 
     def render(self, state: dict):
         coach = state.get("coach", {}) or {}
-        self._render_grades(coach)
+        self._render_side(self.ally_grades, coach.get("ally", {}) or {}, "等待己方阵容分析...")
+        self._render_side(self.enemy_grades, coach.get("enemy", {}) or {}, "等待敌方阵容分析...")
+        self._render_comparison(coach.get("comparison", {}) or {})
         self._render_advice(coach)
 
     def _build_group(self, title: str) -> QGroupBox:
@@ -86,32 +114,40 @@ class CoachPage(QWidget):
         box.setSpacing(8)
         return group
 
+    def _build_label(self, placeholder: str) -> QLabel:
+        label = QLabel(placeholder)
+        label.setObjectName("CoachGrades")
+        label.setWordWrap(True)
+        label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        return label
+
     def _build_scroll_text(self, placeholder: str) -> QTextEdit:
         widget = QTextEdit()
         widget.setReadOnly(True)
         widget.setPlaceholderText(placeholder)
         widget.setLineWrapMode(QTextEdit.WidgetWidth)
+        widget.setMinimumHeight(150)
         return widget
 
-    def _render_grades(self, coach: dict):
-        lines: list[str] = []
-        for side_key, side_name in (("ally", "己方"), ("enemy", "敌方")):
-            side = coach.get(side_key, {}) or {}
-            parts = [f"{label} {side.get(key)}" for key, label in DIMENSIONS if side.get(key)]
-            if parts:
-                lines.append(f"<b>{side_name}</b>　" + "　".join(parts))
+    def _render_side(self, label: QLabel, side: dict, fallback: str):
+        parts = []
+        for keys, name in DIMENSIONS:
+            value = _first_value(side, keys)
+            if value:
+                parts.append(f"{name}：{value}")
+        label.setText("　".join(parts) if parts else fallback)
 
-        comparison = coach.get("comparison", {}) or {}
-        if comparison:
-            parts = []
-            for key, value in comparison.items():
-                label = COMPARISON_LABELS.get(str(key), str(key))
-                text = COMPARISON_VALUES.get(str(value), str(value))
-                parts.append(f"{label}：{text}")
-            if parts:
-                lines.append("<b>双方对比</b>　" + "　".join(parts))
+    def _render_comparison(self, comparison: dict):
+        if not comparison:
+            self.comparison.setText("等待双方对比...")
+            return
 
-        self.grades.setText("<br>".join(lines) if lines else "等待阵容分析...")
+        lines = []
+        for key, value in comparison.items():
+            label = COMPARISON_LABELS.get(str(key), str(key))
+            text = COMPARISON_VALUES.get(str(value), str(value))
+            lines.append(f"{label}：{text}")
+        self.comparison.setText("　".join(lines) if lines else "等待双方对比...")
 
     def _render_advice(self, coach: dict):
         advice = coach.get("advice", "")
@@ -126,7 +162,8 @@ class CoachPage(QWidget):
         advice_lines.extend(str(item) for item in lane_summary if item)
         advice_lines.extend(str(item) for item in plan_summary if item)
 
-        self._set_text_preserving_scroll(self.advice, "\n".join(dict.fromkeys(advice_lines)))
+        text = "\n".join(f"✓ {item}" for item in dict.fromkeys(advice_lines))
+        self._set_text_preserving_scroll(self.advice, text or "暂无战术建议")
 
     @staticmethod
     def _set_text_preserving_scroll(widget: QTextEdit, text: str):
@@ -140,3 +177,11 @@ class CoachPage(QWidget):
             widget.verticalScrollBar().setValue(widget.verticalScrollBar().maximum())
         else:
             widget.verticalScrollBar().setValue(min(old_value, widget.verticalScrollBar().maximum()))
+
+
+def _first_value(payload: dict, keys: tuple[str, ...]) -> str:
+    for key in keys:
+        value = payload.get(key)
+        if value:
+            return str(value)
+    return ""

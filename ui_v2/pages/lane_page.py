@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QFrame, QGridLayout, QHBoxLayout, QLabel, QScrollArea, QStackedWidget, QVBoxLayout, QWidget
 
+from analysis.hero_detail_context import HeroDetailContextBuilder
+from ui_v2.components.hero_detail_panel import HeroDetailPanel
 from utils.champion_assets import champion_icon_path
 from utils.champion_names import champion_display_name
 
@@ -21,8 +23,12 @@ ROLE_LABELS = {
 
 
 class LanePickCard(QFrame):
+    clicked = Signal(str)
+
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
+        self._champion_key = ""
+        self.setCursor(Qt.PointingHandCursor)
         self.setObjectName("HeroCard")
         self.setFrameShape(QFrame.StyledPanel)
         self.setMinimumHeight(92)
@@ -59,6 +65,7 @@ class LanePickCard(QFrame):
 
     def render(self, data: dict):
         champion_key = str(data.get("champion", "") or "")
+        self._champion_key = champion_key
         champion_name = champion_display_name(champion_key)
         opponent = champion_display_name(data.get("opponent", "") or "")
         lane_score = data.get("lane_score", "")
@@ -78,6 +85,11 @@ class LanePickCard(QFrame):
         self.stats.setText(
             f"样本 {games} / 分路可信 {role_score}% / 强度 {viability}{probability_text}"
         )
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton and self._champion_key:
+            self.clicked.emit(self._champion_key)
+        super().mousePressEvent(event)
 
     def _set_avatar(self, raw_champion: str, display_name: str):
         icon_path = champion_icon_path(raw_champion) or champion_icon_path(display_name)
@@ -100,6 +112,9 @@ class LanePickCard(QFrame):
 class LanePage(QWidget):
     def __init__(self):
         super().__init__()
+        self._state: dict = {}
+        self._recs: list[dict] = []
+        self._detail_builder = HeroDetailContextBuilder()
         layout = QVBoxLayout(self)
         layout.setContentsMargins(14, 14, 14, 14)
         layout.setSpacing(8)
@@ -108,14 +123,23 @@ class LanePage(QWidget):
         title.setObjectName("PageTitle")
         layout.addWidget(title)
 
+        self.stack = QStackedWidget()
+        self.stack.setStyleSheet("QStackedWidget{background:transparent;border:none;}")
+        layout.addWidget(self.stack, 1)
+
+        self.list_page = QWidget()
+        list_layout = QVBoxLayout(self.list_page)
+        list_layout.setContentsMargins(0, 0, 0, 0)
+        list_layout.setSpacing(8)
+
         self.enemy = QLabel("可能对位英雄：暂无")
         self.enemy.setObjectName("MutedText")
-        layout.addWidget(self.enemy)
+        list_layout.addWidget(self.enemy)
 
         self.inference = QLabel("敌方位置推断：暂无数据")
         self.inference.setObjectName("CoachGrades")
         self.inference.setWordWrap(True)
-        layout.addWidget(self.inference)
+        list_layout.addWidget(self.inference)
 
         self.card_area = QScrollArea()
         self.card_area.setWidgetResizable(True)
@@ -132,21 +156,30 @@ class LanePage(QWidget):
 
         self.cards = [LanePickCard() for _ in range(10)]
         for index, card in enumerate(self.cards):
+            card.clicked.connect(self.on_hero_click)
             self.card_grid.addWidget(card, index // 2, index % 2)
 
         self.card_area.setWidget(self.card_container)
-        layout.addWidget(self.card_area, 1)
+        list_layout.addWidget(self.card_area, 1)
 
         self.empty = QLabel("暂无对线优势推荐：等待识别敌方对位英雄，或当前没有明显优势选择")
         self.empty.setObjectName("MutedText")
         self.empty.setWordWrap(True)
-        layout.addWidget(self.empty)
+        list_layout.addWidget(self.empty)
+
+        self.detail = HeroDetailPanel()
+        self.detail.closed.connect(self._show_list)
+        self.stack.addWidget(self.list_page)
+        self.stack.addWidget(self.detail)
+        self.stack.setCurrentWidget(self.list_page)
 
     def render(self, state: dict):
+        self._state = state or {}
         recs = [
             rec for rec in state.get("lane_recommendations", [])
             if _is_positive_delta(rec.get("delta", 0))
         ][:10]
+        self._recs = recs
         inferred_opponent = state.get("inferred_lane_opponent", "")
         enemy = inferred_opponent
         for rec in recs:
@@ -162,6 +195,35 @@ class LanePage(QWidget):
                 card.show()
             else:
                 card.hide()
+
+    def on_hero_click(self, hero_name: str):
+        recommendation = self._find_recommendation(hero_name)
+        context = self._detail_builder.build(
+            hero_name,
+            current_state=self._state,
+            recommendation=recommendation,
+        )
+        self.detail.render_detail(context)
+        self.stack.setCurrentWidget(self.detail)
+
+    def _show_list(self):
+        self.stack.setCurrentWidget(self.list_page)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape and self.stack.currentWidget() is self.detail:
+            self.detail.hide_panel()
+            return
+        super().keyPressEvent(event)
+
+    def _find_recommendation(self, hero_name: str) -> dict:
+        target = str(hero_name or "").lower()
+        for rec in self._recs:
+            if str(rec.get("champion", "")).lower() == target:
+                return rec
+        for rec in self._state.get("recommendations", []) or []:
+            if str(rec.get("champion", "")).lower() == target:
+                return rec
+        return {}
 
     def _format_inference(self, inference: dict) -> str:
         if not inference:

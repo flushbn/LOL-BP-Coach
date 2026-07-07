@@ -55,6 +55,10 @@ BASE_CLIENT_HEIGHT = 857
 # 识别阈值。选人/禁用头像是圆形裁剪，分数通常不会特别高。
 MATCH_THRESHOLD = 0.55
 BAN_MATCH_THRESHOLD = 0.40
+SPECIAL_MATCH_THRESHOLDS = {
+    "Sona": 0.48,
+}
+SPECIAL_MATCH_MIN_GAP = 0.025
 
 # 过滤空槽位、纯色块、文字块。
 MIN_SLOT_STDDEV = 16.0
@@ -544,6 +548,7 @@ def best_match_slot(slot_bgr: np.ndarray, templates: List[HeroTemplate]) -> Tupl
 
     best_name: Optional[str] = None
     best_score = -1.0
+    second_score = -1.0
 
     for template in templates:
         if template.image_bgr.shape[1] < slot_bgr.shape[1] or template.image_bgr.shape[0] < slot_bgr.shape[0]:
@@ -553,10 +558,15 @@ def best_match_slot(slot_bgr: np.ndarray, templates: List[HeroTemplate]) -> Tupl
         _, score, _, _ = cv2.minMaxLoc(result)
 
         if score > best_score:
+            second_score = best_score
             best_score = float(score)
             best_name = template.name
+        elif score > second_score:
+            second_score = float(score)
 
-    if best_score < MATCH_THRESHOLD:
+    threshold = SPECIAL_MATCH_THRESHOLDS.get(best_name or "", MATCH_THRESHOLD)
+    gap_ok = best_name not in SPECIAL_MATCH_THRESHOLDS or (best_score - second_score) >= SPECIAL_MATCH_MIN_GAP
+    if best_score < threshold or not gap_ok:
         return None, best_score
 
     return best_name, best_score

@@ -78,6 +78,10 @@ def _load_name_maps() -> tuple[dict[str, str], dict[str, str]]:
         "aurelion sol": "AurelionSol",
         "drmundo": "DrMundo",
         "dr mundo": "DrMundo",
+        "sona": "Sona",
+        "琴女": "Sona",
+        "娑娜": "Sona",
+        "琴瑟仙女": "Sona",
     }
     for alias, canonical in aliases.items():
         display = direct.get(canonical) or normalized.get(_normalize(canonical))
