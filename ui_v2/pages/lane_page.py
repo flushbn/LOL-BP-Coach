@@ -101,8 +101,8 @@ class LanePage(QWidget):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(18, 18, 18, 18)
-        layout.setSpacing(10)
+        layout.setContentsMargins(14, 14, 14, 14)
+        layout.setSpacing(8)
 
         title = QLabel("对线推荐")
         title.setObjectName("PageTitle")

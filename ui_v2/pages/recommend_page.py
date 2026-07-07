@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QGridLayout, QLabel, QScrollArea, QSplitter, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QGridLayout, QLabel, QScrollArea, QVBoxLayout, QWidget
 
 from analysis.hero_detail_context import HeroDetailContextBuilder
 from ui_v2.components.hero_detail_panel import HeroDetailPanel
@@ -20,8 +20,8 @@ class RecommendPage(QWidget):
         self._detail_builder = HeroDetailContextBuilder()
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(18, 18, 18, 18)
-        root.setSpacing(10)
+        root.setContentsMargins(14, 14, 14, 14)
+        root.setSpacing(8)
 
         title = QLabel("英雄推荐")
         title.setObjectName("PageTitle")
@@ -30,14 +30,6 @@ class RecommendPage(QWidget):
         self.search = HeroSearchBar()
         self.search.hero_selected.connect(self.on_hero_click)
         root.addWidget(self.search)
-
-        splitter = QSplitter(Qt.Horizontal)
-        root.addWidget(splitter, 1)
-
-        left = QWidget()
-        left_layout = QVBoxLayout(left)
-        left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(10)
 
         self.card_area = QScrollArea()
         self.card_area.setWidgetResizable(True)
@@ -56,18 +48,16 @@ class RecommendPage(QWidget):
             card.clicked.connect(self.on_hero_click)
             self.card_grid.addWidget(card, index // 2, index % 2)
         self.card_area.setWidget(self.card_container)
-        left_layout.addWidget(self.card_area, 1)
+        root.addWidget(self.card_area, 1)
 
         self.empty = QLabel("请选择英雄或搜索英雄")
         self.empty.setObjectName("MutedText")
         self.empty.setWordWrap(True)
-        left_layout.addWidget(self.empty)
-        splitter.addWidget(left)
+        root.addWidget(self.empty)
 
-        self.detail = HeroDetailPanel()
+        self.detail = HeroDetailPanel(self)
         self.detail.hide()
-        splitter.addWidget(self.detail)
-        splitter.setSizes([720, 420])
+        self.detail.closed.connect(self._restore_focus)
 
     def render(self, state: dict):
         self._state = state or {}
@@ -102,7 +92,21 @@ class RecommendPage(QWidget):
         )
         self._selected_index = self._index_of(hero_name)
         self.detail.render_detail(context)
+        self._position_detail_panel()
+        self.detail.raise_()
         self.empty.setVisible(False)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._position_detail_panel()
+
+    def _position_detail_panel(self):
+        if not hasattr(self, "detail"):
+            return
+        self.detail.setGeometry(self.rect().adjusted(14, 14, -14, -14))
+
+    def _restore_focus(self):
+        self.setFocus()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape and self.detail.isVisible():

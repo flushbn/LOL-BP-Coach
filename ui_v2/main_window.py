@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 
 from ui_v2.pages.coach_page import CoachPage
 from ui_v2.pages.lane_page import LanePage
+from ui_v2.pages.macro_page import MacroPage
 from ui_v2.pages.player_page import PlayerPage
 from ui_v2.pages.patch_notes_page import PatchNotesPage
 from ui_v2.pages.recommend_page import RecommendPage
@@ -242,7 +243,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("LoL BP Coach")
-        self.setMinimumSize(1120, 720)
+        self.setMinimumSize(980, 620)
         self.setStyleSheet(APP_STYLE)
         self.recognition_process: subprocess.Popen | None = None
 
@@ -252,6 +253,7 @@ class MainWindow(QMainWindow):
             ("英雄推荐", RecommendPage()),
             ("对线", LanePage()),
             ("战术", CoachPage()),
+            ("路线节奏", MacroPage()),
             ("我的数据", PlayerPage()),
             ("版本更新", PatchNotesPage()),
             ("数据更新", self.update_page),
@@ -311,10 +313,10 @@ class MainWindow(QMainWindow):
     def _build_top_bar(self) -> QFrame:
         bar = QFrame()
         bar.setObjectName("TopBar")
-        bar.setMinimumHeight(92)
+        bar.setMinimumHeight(112)
         layout = QHBoxLayout(bar)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(12)
+        layout.setSpacing(18)
 
         title_box = QVBoxLayout()
         title_box.setSpacing(4)
@@ -324,11 +326,17 @@ class MainWindow(QMainWindow):
         subtitle.setObjectName("AppSubtitle")
         title_box.addWidget(title)
         title_box.addWidget(subtitle)
-        layout.addLayout(title_box, 1)
+        layout.addLayout(title_box)
 
+        control_box = QVBoxLayout()
+        control_box.setSpacing(8)
+        layout.addLayout(control_box, 1)
+
+        role_row = QHBoxLayout()
+        role_row.setSpacing(8)
         role_label = QLabel("位置")
         role_label.setObjectName("StatusText")
-        layout.addWidget(role_label)
+        role_row.addWidget(role_label)
         self.role_buttons: dict[str, QPushButton] = {}
         for role, label in ROLES:
             button = QPushButton(label)
@@ -336,37 +344,43 @@ class MainWindow(QMainWindow):
             button.setCheckable(True)
             button.clicked.connect(lambda checked=False, selected=role: self.change_role(selected))
             self.role_buttons[role] = button
-            layout.addWidget(button)
+            role_row.addWidget(button)
+        role_row.addStretch()
+        control_box.addLayout(role_row)
 
+        action_row = QHBoxLayout()
+        action_row.setSpacing(8)
         self.start_bp_button = QPushButton("启动识别")
         self.start_bp_button.setObjectName("PrimaryButton")
         self.start_bp_button.clicked.connect(self.start_recognition)
-        layout.addWidget(self.start_bp_button)
+        action_row.addWidget(self.start_bp_button)
 
         self.stop_bp_button = QPushButton("停止识别")
         self.stop_bp_button.clicked.connect(self.stop_recognition)
         self.stop_bp_button.setEnabled(False)
-        layout.addWidget(self.stop_bp_button)
+        action_row.addWidget(self.stop_bp_button)
 
         self.demo_button = QPushButton("\u6f14\u793a\u9635\u5bb9")
         self.demo_button.clicked.connect(self.load_demo_state)
-        layout.addWidget(self.demo_button)
+        action_row.addWidget(self.demo_button)
 
         self.freeze_button = QPushButton("\u5b9a\u683c")
         self.freeze_button.setObjectName("PrimaryButton")
         self.freeze_button.setToolTip("\u5b9a\u683c\u5f53\u524d\u63a8\u8350\u548c\u6218\u672f\uff0c\u540e\u7eed\u8bc6\u522b\u4e0d\u4f1a\u8986\u76d6\u754c\u9762")
         self.freeze_button.clicked.connect(self.freeze_current_result)
-        layout.addWidget(self.freeze_button)
+        action_row.addWidget(self.freeze_button)
 
         self.resume_button = QPushButton("\u7ee7\u7eed")
         self.resume_button.setToolTip("\u6062\u590d\u5b9e\u65f6\u8bc6\u522b\u5237\u65b0")
         self.resume_button.clicked.connect(self.resume_live_updates)
-        layout.addWidget(self.resume_button)
+        action_row.addWidget(self.resume_button)
 
         self.new_game_button = QPushButton("\u65b0\u5c40")
         self.new_game_button.setToolTip("\u6e05\u7a7a\u5f53\u524dBP\uff0c\u5f00\u59cb\u65b0\u7684\u4e00\u5c40")
         self.new_game_button.clicked.connect(self.start_new_draft_session)
-        layout.addWidget(self.new_game_button)
+        action_row.addWidget(self.new_game_button)
+        action_row.addStretch()
+        control_box.addLayout(action_row)
 
         self.bp_status = QLabel("BP状态: 等待数据")
         self.bp_status.setObjectName("StatusText")
@@ -394,7 +408,7 @@ class MainWindow(QMainWindow):
         layout.addWidget(nav_title)
 
         nav = QListWidget()
-        nav.setFixedWidth(188)
+        nav.setFixedWidth(158)
         for title, _ in self.pages:
             QListWidgetItem(title, nav)
         layout.addWidget(nav, 1)
