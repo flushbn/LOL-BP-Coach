@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap
@@ -62,6 +62,7 @@ class HeroDetailPanel(QFrame):
         self.meta = self._section("版本数据")
         self.runes = self._section("符文推荐")
         self.builds = self._section("出装推荐")
+        self.situational = self._section("阵容适配装备")
         self.lane = self._section("对线思路")
         self.power = self._section("强势期分析")
         self.matchups = self._section("克制 / 协同")
@@ -94,8 +95,10 @@ class HeroDetailPanel(QFrame):
         else:
             self.meta.setText("暂无版本数据")
 
+        build_recommendation = context.get("build_recommendation", {}) or {}
         self.runes.setText(self._format_runes(context.get("runes", [])))
-        self.builds.setText(self._format_builds(context.get("builds", [])))
+        self.builds.setText(self._format_builds(context.get("builds", []), build_recommendation))
+        self.situational.setText(self._format_situational(build_recommendation))
         self.lane.setText(self._format_lines(context.get("lane_plan", []), "暂无对线思路"))
         self.power.setText(self._format_lines(context.get("power_spikes", []), "暂无强势期分析"))
 
@@ -151,21 +154,75 @@ class HeroDetailPanel(QFrame):
             return "暂无符文推荐"
         lines = []
         for rune in runes:
+            secondary = rune.get("secondary", "暂无")
+            if isinstance(secondary, list):
+                secondary = " / ".join(str(item) for item in secondary if item) or "暂无"
+            rune_names = rune.get("runes", [])
+            extra = ""
+            if isinstance(rune_names, list) and rune_names:
+                extra = "\n  小符文：" + " / ".join(str(item) for item in rune_names[1:4] if item)
+            stats = []
+            if rune.get("winrate") is not None:
+                stats.append(f"胜率 {rune.get('winrate')}%")
+            if rune.get("games"):
+                stats.append(f"样本 {rune.get('games')}")
+            reason = rune.get("reason", "")
             lines.append(
-                f"• {rune.get('primary', '主系')}：{rune.get('keystone', '核心符文')}　副系：{rune.get('secondary', '暂无')}"
+                f"• {rune.get('primary', '主系')}：{rune.get('keystone', '核心符文')}　副系：{secondary}"
+                + extra
+                + (f"\n  {' / '.join(stats)}" if stats else "")
+                + (f"\n  原因：{reason}" if reason else "")
             )
         return "\n".join(lines)
 
     @staticmethod
-    def _format_builds(builds: list[dict]) -> str:
+    def _format_builds(builds: list[dict], build_recommendation: dict | None = None) -> str:
         if not builds:
             return "暂无出装推荐"
         lines = []
+        starting = (build_recommendation or {}).get("starting_items", [])
+        if starting:
+            lines.append("出门装：" + " + ".join(starting))
         for build in builds:
             items = " → ".join(build.get("items", []))
-            note = build.get("note", "")
-            lines.append(f"• {items}" + (f"\n  {note}" if note else ""))
+            note = build.get("reason") or build.get("note", "")
+            stats = []
+            if build.get("winrate") is not None:
+                stats.append(f"胜率 {build.get('winrate')}%")
+            if build.get("games"):
+                stats.append(f"样本 {build.get('games')}")
+            if build.get("build_score"):
+                stats.append(f"评分 {build.get('build_score')}")
+            lines.append(
+                f"• {items}"
+                + (f"\n  {' / '.join(stats)}" if stats else "")
+                + (f"\n  {note}" if note else "")
+            )
         return "\n".join(lines)
+
+    @staticmethod
+    def _format_situational(build_recommendation: dict) -> str:
+        if not build_recommendation:
+            return "暂无阵容适配装备"
+        lines = []
+        item_path = build_recommendation.get("item_path", {}) or {}
+        path_parts = []
+        for key, label in (("first_item", "第一件"), ("second_item", "第二件"), ("third_item", "第三件")):
+            names = item_path.get(key, [])
+            if names:
+                path_parts.append(f"{label}：" + " / ".join(names))
+        if path_parts:
+            lines.append("装备路线\n" + "\n".join(path_parts))
+        situational = build_recommendation.get("situational", []) or []
+        if situational:
+            lines.append(
+                "应对调整\n"
+                + "\n".join(
+                    f"• {' / '.join(item.get('items', []))}\n  {item.get('reason', '')}"
+                    for item in situational
+                )
+            )
+        return "\n\n".join(lines) if lines else "暂无阵容适配装备"
 
     @staticmethod
     def _format_lines(lines: list[str], fallback: str) -> str:
@@ -181,4 +238,3 @@ class HeroDetailPanel(QFrame):
             "lolalytics_live_on_demand": "当前版本实时数据（按需抓取）",
             "current_patch": "当前版本数据",
         }.get(str(source), str(source))
-

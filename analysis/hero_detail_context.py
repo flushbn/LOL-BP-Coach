@@ -1,12 +1,14 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 from pathlib import Path
 from typing import Any
 
+from analysis.build_recommendation import BuildRecommendationEngine
 from analysis.data_patch_manager import DataPatchManager
 from analysis.lane_strategy_engine import LaneStrategyEngine
 from analysis.lolalytics_client import LolalyticsClient
+from analysis.rune_recommendation import RuneRecommendationEngine
 from utils.champion_assets import champion_key
 from utils.champion_names import champion_display_name
 
@@ -60,6 +62,9 @@ class HeroDetailContextBuilder:
         self.champion_data = self._load_json(ROOT / "champion_data.json")
         self.role_data = self._load_json(DATA_DIR / "role_data.json")
         self.lane_strategy = LaneStrategyEngine()
+        self.lolalytics = LolalyticsClient(patch=self.patch)
+        self.build_engine = BuildRecommendationEngine(self.lolalytics)
+        self.rune_engine = RuneRecommendationEngine(self.lolalytics)
 
     def build(
         self,
@@ -71,7 +76,11 @@ class HeroDetailContextBuilder:
         state = current_state or {}
         rec = recommendation or {}
         roles = self._roles(key)
+        selected_role = self._selected_role(state, roles)
         best_role_payload = self._best_meta_payload(key)
+        enemy_team = [champion_key(item) for item in state.get("enemy", []) or [] if champion_key(item)]
+        rune_recommendation = self.rune_engine.recommend(key, selected_role, enemy_team)
+        build_recommendation = self.build_engine.recommend(key, selected_role, enemy_team)
 
         context = {
             "champion": key,
@@ -80,14 +89,22 @@ class HeroDetailContextBuilder:
             "roles": [ROLE_LABELS.get(role, role) for role in roles],
             "meta": best_role_payload,
             "recommendation": rec,
-            "runes": self._runes(key, roles),
-            "builds": self._builds(key, roles),
+            "runes": [rune_recommendation],
+            "builds": build_recommendation.get("core_build", []) or self._builds(key, roles),
+            "build_recommendation": build_recommendation,
             "lane_plan": self.lane_strategy.build_plan(key, state, self.champion_data),
             "power_spikes": self._power_spikes(key, best_role_payload),
             "counters": self._counter_summary(key, roles),
             "synergies": self._synergy_summary(key, state),
         }
         return context
+
+    def _selected_role(self, state: dict, roles: list[str]) -> str:
+        role = state.get("role") or state.get("target_role") or ""
+        role = str(role).upper()
+        if role:
+            return role
+        return roles[0] if roles else ""
 
     def _roles(self, champion: str) -> list[str]:
         roles = self.champion_data.get(champion, {}).get("roles", [])
@@ -508,4 +525,3 @@ class HeroDetailContextBuilder:
             return float(value)
         except Exception:
             return 0.0
-

@@ -1,4 +1,4 @@
-﻿import requests, json, os, time, re
+import requests, json, os, time, re
 from lxml import html
 from pathlib import Path
 
@@ -100,6 +100,32 @@ class LolalyticsClient:
     def _cache_set(self, key, data, patch=None):
         p = patch or self._current_patch or 'unknown'
         path = self._cache_dir(p) / f'{key}.json'
+        wrapped = {
+            'patch': p,
+            'timestamp': int(time.time()),
+            'data': data,
+        }
+        path.write_text(json.dumps(wrapped, ensure_ascii=False, indent=2), encoding='utf-8')
+
+    def _cache_get_category(self, category, key, patch=None):
+        path = self._cache_dir(patch) / category / f'{key}.json'
+        if path.exists():
+            try:
+                age = time.time() - path.stat().st_mtime
+                if age < self.CACHE_TTL:
+                    raw = json.loads(path.read_text(encoding='utf-8'))
+                    if isinstance(raw, dict) and 'data' in raw and 'patch' in raw:
+                        return raw['data']
+                    return raw
+            except Exception:
+                pass
+        return None
+
+    def _cache_set_category(self, category, key, data, patch=None):
+        p = patch or self._current_patch or 'unknown'
+        directory = self._cache_dir(p) / category
+        directory.mkdir(parents=True, exist_ok=True)
+        path = directory / f'{key}.json'
         wrapped = {
             'patch': p,
             'timestamp': int(time.time()),
@@ -269,20 +295,79 @@ class LolalyticsClient:
         return results
 
     def get_runes(self, champion, lane='', tier='emerald'):
+        key = self._cache_key('runes_v2', champion=champion, lane=lane, tier=tier)
+        cached = self._cache_get_category('builds', key)
+        if cached: return cached
         champ = self._normalize(champion)
         url = self._build_url(f'/lol/{champ}/build/', lane, tier)
         tree = self._fetch(url)
         if tree is None: return []
-        seen = set()
+        primary_section = self._find_section(tree, 'Primary Runes', 'rune68/')
+        secondary_section = self._find_section(tree, 'Secondary', 'rune68/')
+        primary = self._extract_image_alts(primary_section, 'rune68/')
+        secondary = self._extract_image_alts(secondary_section, 'rune68/')
+        stats_text = ''
+        if secondary_section is not None:
+            stats_text += ' ' + (secondary_section.text_content() or '')
+        if primary_section is not None:
+            stats_text += ' ' + (primary_section.text_content() or '')
+        winrate, games = self._extract_rate_games(stats_text)
         results = []
-        for el in tree.xpath('.//img[contains(@src, ' + chr(39) + 'rune68/' + chr(39) + ')]'):
-            alt = el.get('alt', '')
-            if alt and alt not in seen and len(alt) < 40:
-                seen.add(alt)
-                results.append({'name': alt, 'winrate': None, 'pickrate': None})
+        if primary:
+            results.append({
+                'primary': self._infer_rune_tree(primary[0]),
+                'keystone': primary[0],
+                'runes': primary[:4],
+                'secondary_tree': self._infer_rune_tree(secondary[0]) if secondary else '',
+                'secondary': secondary[:2],
+                'winrate': winrate,
+                'pickrate': None,
+                'games': games,
+                'source': 'lolalytics_html',
+            })
+        if not results:
+            seen = set()
+            for el in tree.xpath('.//img[contains(@src, ' + chr(39) + 'rune68/' + chr(39) + ')]'):
+                alt = el.get('alt', '')
+                if alt and alt not in seen and len(alt) < 40:
+                    seen.add(alt)
+                    results.append({'name': alt, 'winrate': None, 'pickrate': None, 'games': 0})
+        self._cache_set_category('builds', key, results)
         return results
 
     def get_builds(self, champion, lane='', tier='emerald'):
+        key = self._cache_key('builds_v2', champion=champion, lane=lane, tier=tier)
+        cached = self._cache_get_category('builds', key)
+        if cached: return cached
+        paths = self.get_item_paths(champion, lane, tier)
+        if paths:
+            core = paths.get('core_build', [])
+            item4 = paths.get('item_4_options', [])
+            item5 = paths.get('item_5_options', [])
+            item6 = paths.get('item_6_options', [])
+            results = []
+            if core:
+                results.append({
+                    'items': [item.get('name', '') for item in core if item.get('name')],
+                    'winrate': core[0].get('winrate'),
+                    'pickrate': core[0].get('pickrate'),
+                    'games': core[0].get('games', 0),
+                    'type': 'core_build',
+                    'source': 'lolalytics_html',
+                })
+            for label, options in (('item_4', item4), ('item_5', item5), ('item_6', item6)):
+                for item in options[:3]:
+                    results.append({
+                        'items': [item.get('name', '')],
+                        'winrate': item.get('winrate'),
+                        'pickrate': item.get('pickrate'),
+                        'games': item.get('games', 0),
+                        'type': label,
+                        'source': 'lolalytics_html',
+                    })
+            self._cache_set_category('builds', key, results)
+            return results
+
         champ = self._normalize(champion)
         url = self._build_url(f'/lol/{champ}/build/', lane, tier)
         tree = self._fetch(url)
@@ -294,7 +379,108 @@ class LolalyticsClient:
             if alt and alt not in seen and len(alt) < 40:
                 seen.add(alt)
                 items.append(alt)
-        return [{'items': items[:6], 'winrate': None}]
+        result = [{'items': items[:6], 'winrate': None, 'games': 0, 'source': 'lolalytics_html_fallback'}]
+        self._cache_set_category('builds', key, result)
+        return result
+
+    def get_item_paths(self, champion, lane='', tier='emerald'):
+        key = self._cache_key('item_paths_v2', champion=champion, lane=lane, tier=tier)
+        cached = self._cache_get_category('builds', key)
+        if cached: return cached
+        champ = self._normalize(champion)
+        url = self._build_url(f'/lol/{champ}/build/', lane, tier)
+        tree = self._fetch(url)
+        if tree is None: return None
+
+        result = {
+            'starting_items': self._extract_item_section(tree, 'Starting Items'),
+            'core_build': self._extract_item_section(tree, 'Core Build'),
+            'item_4_options': self._extract_item_section(tree, 'Item 4'),
+            'item_5_options': self._extract_item_section(tree, 'Item 5'),
+            'item_6_options': self._extract_item_section(tree, 'Item 6'),
+            'source': 'lolalytics_html',
+        }
+        self._cache_set_category('builds', key, result)
+        return result
+
+    def _extract_item_section(self, tree, title):
+        section = self._find_section(tree, title, 'item64/')
+        if section is None:
+            return []
+        alts = self._extract_image_alts(section, 'item64/')
+        text = section.text_content() or ''
+        winrates = [float(item) for item in re.findall(r'(\d+\.\d+)%', text)]
+        games = [int(item.replace(',', '')) for item in re.findall(r'(\d{1,3}(?:,\d{3})+)', text)]
+        rows = []
+        for idx, name in enumerate(alts):
+            rows.append({
+                'name': name,
+                'winrate': winrates[idx] if idx < len(winrates) else (winrates[0] if winrates else None),
+                'pickrate': None,
+                'games': games[idx] if idx < len(games) else (games[0] if games else 0),
+            })
+        return rows
+
+    def _find_section(self, tree, title, image_marker):
+        candidates = tree.xpath('.//*[contains(text(), ' + chr(39) + title + chr(39) + ')]')
+        best = None
+        best_len = 10**9
+        for el in candidates:
+            node = el
+            for _ in range(6):
+                if node is None:
+                    break
+                imgs = node.xpath('.//img[contains(@src, ' + chr(39) + image_marker + chr(39) + ')]')
+                if imgs:
+                    length = len((node.text_content() or ''))
+                    if length < best_len:
+                        best = node
+                        best_len = length
+                    break
+                node = node.getparent()
+        return best
+
+    def _extract_image_alts(self, node, image_marker):
+        if node is None:
+            return []
+        seen = set()
+        result = []
+        for el in node.xpath('.//img[contains(@src, ' + chr(39) + image_marker + chr(39) + ')]'):
+            if image_marker == 'rune68/' and 'grayscale' in (el.get('class', '') or ''):
+                continue
+            alt = (el.get('alt', '') or '').replace('&#39;', chr(39)).replace('&amp;', '&').strip()
+            if alt and alt not in seen and len(alt) < 60:
+                seen.add(alt)
+                result.append(alt)
+        return result
+
+    def _extract_rate_games(self, text):
+        winrate = None
+        games = 0
+        m = re.search(r'(\d+\.\d+)%\s*Win Rate', text)
+        if not m:
+            m = re.search(r'(\d+\.\d+)', text)
+        if m:
+            try: winrate = float(m.group(1))
+            except Exception: winrate = None
+        g = re.search(r'(\d{1,3}(?:,\d{3})+|\d{3,})\s*Games', text)
+        if g:
+            try: games = int(g.group(1).replace(',', ''))
+            except Exception: games = 0
+        return winrate, games
+
+    def _infer_rune_tree(self, rune_name):
+        resolve = {'Grasp of the Undying', 'Aftershock', 'Guardian', 'Demolish', 'Font of Life', 'Shield Bash', 'Conditioning', 'Second Wind', 'Bone Plating', 'Overgrowth', 'Revitalize', 'Unflinching'}
+        precision = {'Press the Attack', 'Lethal Tempo', 'Fleet Footwork', 'Conqueror', 'Triumph', 'Presence of Mind', 'Legend: Alacrity', 'Legend: Haste', 'Legend: Bloodline', 'Coup de Grace', 'Cut Down', 'Last Stand'}
+        domination = {'Electrocute', 'Dark Harvest', 'Hail of Blades', 'Cheap Shot', 'Taste of Blood', 'Sudden Impact', 'Zombie Ward', 'Ghost Poro', 'Eyeball Collection', 'Treasure Hunter', 'Relentless Hunter', 'Ultimate Hunter'}
+        sorcery = {'Summon Aery', 'Arcane Comet', 'Phase Rush', 'Axiom Arcanist', 'Manaflow Band', 'Nimbus Cloak', 'Transcendence', 'Celerity', 'Absolute Focus', 'Scorch', 'Waterwalking', 'Gathering Storm'}
+        inspiration = {'Glacial Augment', 'Unsealed Spellbook', 'First Strike', 'Hextech Flashtraption', 'Magical Footwear', 'Cash Back', 'Triple Tonic', 'Time Warp Tonic', 'Biscuit Delivery', 'Cosmic Insight', 'Approach Velocity', 'Jack Of All Trades'}
+        if rune_name in resolve: return 'Resolve'
+        if rune_name in precision: return 'Precision'
+        if rune_name in domination: return 'Domination'
+        if rune_name in sorcery: return 'Sorcery'
+        if rune_name in inspiration: return 'Inspiration'
+        return ''
 
     def get_tierlist(self, lane='', tier='emerald', limit=50):
         url = self._build_url('/lol/tierlist/', lane, tier)
@@ -317,4 +503,3 @@ class LolalyticsClient:
                 champs.append({'name': t, 'tier': current_tier})
                 if limit and len(champs) >= limit: break
         return champs
-
