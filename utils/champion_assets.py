@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 from functools import lru_cache
@@ -80,5 +80,10 @@ def champion_icon_path(name: str | None) -> Path | None:
     for path in candidates:
         if path.exists():
             return path
+    icon_dir = get_resource_path("img", "champion")
+    if icon_dir.exists():
+        normalized_key = _normalize(key)
+        for path in icon_dir.glob("*.png"):
+            if _normalize(path.stem) == normalized_key:
+                return path
     return None
-

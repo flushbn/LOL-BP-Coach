@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import shutil
@@ -21,6 +21,7 @@ DATA_FILES = [
     ROOT / "champion_data.json",
     DATA_DIR / "zh_CN" / "champion.json",
 ]
+CHAMPION_ICON_DIR = ROOT / "img" / "champion"
 
 
 class DataUpdateService:
@@ -44,7 +45,15 @@ class DataUpdateService:
                 source = "online"
 
             progress(30, "更新英雄基础数据")
-            self._update_champion_data(latest_patch, online=online)
+            champion_payload, full_version = self._update_champion_data(latest_patch, online=online)
+
+            progress(40, "同步英雄头像资源")
+            icon_result = self.update_champion_icons(
+                patch=latest_patch,
+                champion_payload=champion_payload,
+                full_version=full_version,
+                online=online,
+            )
 
             progress(50, "更新 Meta / Counter / Synergy")
             fallback_files = self._update_strategy_data(latest_patch, online=online, progress=progress)
@@ -64,6 +73,7 @@ class DataUpdateService:
                 "source": source,
                 "fallback_files": fallback_files,
                 "removed_cache": removed_cache,
+                "icons": icon_result,
                 "patch_info": info,
             }
             self._log("SUCCESS", result)
@@ -120,11 +130,62 @@ class DataUpdateService:
         client = LolalyticsClient(patch=patch)
         return client.clean_old_cache(max_days=30)
 
-    def _update_champion_data(self, patch: str, online: bool):
+    def update_champion_icons(
+        self,
+        patch: str | None = None,
+        champion_payload: dict | None = None,
+        full_version: str | None = None,
+        online: bool = True,
+    ) -> dict:
+        patch = normalize_patch(patch or self.manager.get_current_patch())
+        if champion_payload is None:
+            champion_json = DATA_DIR / "zh_CN" / "champion.json"
+            if champion_json.exists():
+                champion_payload = json.loads(champion_json.read_text(encoding="utf-8-sig"))
+            else:
+                champion_payload = {}
+        champions = champion_payload.get("data", {}) if isinstance(champion_payload, dict) else {}
+        if not champions:
+            return {"patch": patch, "downloaded": 0, "missing": [], "total": 0}
+
+        if full_version is None:
+            full_version = str(champion_payload.get("version") or self._resolve_full_version(patch))
+
+        CHAMPION_ICON_DIR.mkdir(parents=True, exist_ok=True)
+        downloaded = 0
+        missing: list[str] = []
+        for champion_id, info in champions.items():
+            image_name = (info.get("image") or {}).get("full") or f"{champion_id}.png"
+            target = CHAMPION_ICON_DIR / f"{champion_id}.png"
+            if target.exists() and target.stat().st_size > 0:
+                continue
+            if not online:
+                missing.append(champion_id)
+                continue
+            url = f"https://ddragon.leagueoflegends.com/cdn/{full_version}/img/champion/{image_name}"
+            try:
+                response = requests.get(url, timeout=20)
+                response.raise_for_status()
+                target.write_bytes(response.content)
+                downloaded += 1
+            except Exception:
+                missing.append(champion_id)
+
+        return {
+            "patch": patch,
+            "version": full_version,
+            "downloaded": downloaded,
+            "missing": missing,
+            "total": len(champions),
+        }
+
+    def _update_champion_data(self, patch: str, online: bool) -> tuple[dict, str | None]:
         patch = normalize_patch(patch)
         if not online:
             self._ensure_required_file(ROOT / "champion_data.json")
-            return
+            champion_json = DATA_DIR / "zh_CN" / "champion.json"
+            payload = json.loads(champion_json.read_text(encoding="utf-8-sig")) if champion_json.exists() else {}
+            return payload, payload.get("version") if isinstance(payload, dict) else None
         version = self._resolve_full_version(patch)
         url = f"https://ddragon.leagueoflegends.com/cdn/{version}/data/zh_CN/champion.json"
         response = requests.get(url, timeout=20)
@@ -132,6 +193,7 @@ class DataUpdateService:
         champion_payload = response.json()
         self._atomic_write(DATA_DIR / "zh_CN" / "champion.json", champion_payload)
         self._atomic_write(ROOT / "champion_data.json", self._merge_champion_index(champion_payload))
+        return champion_payload, version
 
     def _resolve_full_version(self, patch: str) -> str:
         versions = requests.get("https://ddragon.leagueoflegends.com/api/versions.json", timeout=8).json()
@@ -254,4 +316,3 @@ class DataUpdateService:
         line = json.dumps({"time": int(time.time()), "status": status, **payload}, ensure_ascii=False)
         with LOG_PATH.open("a", encoding="utf-8") as handle:
             handle.write(line + "\n")
-
