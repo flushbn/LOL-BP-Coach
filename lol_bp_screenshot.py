@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import ctypes
 import os
 import time
@@ -698,7 +698,7 @@ def print_summary(summary: Dict[str, List[str]]) -> None:
 
 def main_loop_with_analysis(analyzer) -> None:
     """Run the normal recognition loop with team analysis."""
-    from core.recommendation_engine import print_analysis
+    from recommendation_engine import print_analysis
 
     name_map = load_chinese_name_map()
     templates = load_hero_templates(TEMPLATE_DIR, name_map)
@@ -764,7 +764,7 @@ def main_loop_with_analysis(analyzer) -> None:
 
 
 def recommend_loop(target_role):
-    from core.recommendation_engine_v3 import RecommendationEngine
+    from recommendation_engine_v3 import RecommendationEngine
 
     hide_capture_window = os.environ.get("LOL_HIDE_CAPTURE", "").lower() in ("1", "true", "yes")
     name_map = load_chinese_name_map()
@@ -774,6 +774,7 @@ def recommend_loop(target_role):
     lane_recommender = None
     bilateral_analyzer = None
     coach_advisor = None
+    lane_state_analyzer = None
 
     def read_selected_role():
         try:
@@ -878,7 +879,7 @@ def recommend_loop(target_role):
                             reverse_map = {v:k for k,v in name_map.items()}
                             all_bans = [reverse_map.get(x, x) for x in set(ally_bans_list + enemy_bans_list)]
                             if ally or enemy or effective_role:
-                                from core.recommendation_engine import TeamAnalyzer
+                                from recommendation_engine import TeamAnalyzer
                                 _team_ana = TeamAnalyzer()
                                 game_state = _team_ana.describe_game_state(ally_picks=ally, enemy_picks=enemy)
                                 eng = game_state['enemy_summary']
@@ -978,19 +979,27 @@ def recommend_loop(target_role):
                                     except Exception as _e:
                                         print(f"LANE_REC_ERR: {_e}")
 
-                                                                # --- ???? (Coach / Team Grade) V1 ???? ---
+                                # --- Coach / Team Grade / Lane State ---
                                 coach_data = {}
                                 try:
                                     from analysis.team_analyzer import BilateralTeamAnalyzer
                                     from analysis.coach_advisor import CoachAdvisor
+                                    from analysis.lane_state_analyzer import LaneStateAnalyzer
                                     if bilateral_analyzer is None:
                                         bilateral_analyzer = BilateralTeamAnalyzer()
                                     if coach_advisor is None:
                                         coach_advisor = CoachAdvisor()
+                                    if lane_state_analyzer is None:
+                                        lane_state_analyzer = LaneStateAnalyzer()
                                     _ba = bilateral_analyzer
                                     _bilateral = _ba.analyze(
                                         ally_picks=summary.get("ally_picks", []),
                                         enemy_picks=summary.get("enemy_picks", [])
+                                    )
+                                    _lane_state = lane_state_analyzer.analyze(
+                                        ally_picks=summary.get("ally_picks", []),
+                                        enemy_picks=summary.get("enemy_picks", []),
+                                        role_inference=role_inference_data,
                                     )
                                     _ca = coach_advisor
                                     _ally_grades_obj = {}
@@ -1009,7 +1018,8 @@ def recommend_loop(target_role):
                                         "ally": ally_out,
                                         "enemy": enemy_out,
                                         "comparison": comparison_out,
-                                        "advice": "\n".join(_combined.get("advice", [])[:5])
+                                        "advice": "\n".join(_combined.get("advice", [])[:5]),
+                                        "lane_state": _lane_state,
                                     }
                                 except Exception as _e:
                                     print(f"COACH_ERR: {_e}")
@@ -1162,7 +1172,7 @@ def main() -> None:
         calibrate_ban_slots()
         return
     if len(sys.argv) > 1 and sys.argv[1] == "--analyze":
-        from core.recommendation_engine import TeamAnalyzer
+        from recommendation_engine import TeamAnalyzer
         _analyzer = TeamAnalyzer()
         main_loop_with_analysis(_analyzer)
         return
@@ -1250,4 +1260,3 @@ if __name__ == "__main__":
 
 ALLY_BAN_SLOTS: list[tuple[str, int, int, int, int]] = [["ally_ban_1", 64, 45, 55, 55], ["ally_ban_2", 64, 142, 55, 55], ["ally_ban_3", 64, 239, 55, 55], ["ally_ban_4", 64, 336, 55, 55], ["ally_ban_5", 64, 433, 55, 55]]
 ENEMY_BAN_SLOTS: list[tuple[str, int, int, int, int]] = [["enemy_ban_1", 1430, 45, 55, 55], ["enemy_ban_2", 1430, 142, 55, 55], ["enemy_ban_3", 1430, 239, 55, 55], ["enemy_ban_4", 1430, 336, 55, 55], ["enemy_ban_5", 1430, 433, 55, 55]]
-
