@@ -1,5 +1,5 @@
-﻿import sys, json
-from core.recommendation_engine import TeamAnalyzer
+import json
+from recommendation_engine import TeamAnalyzer
 from typing import Dict, List
 
 class TeamGradeAnalyzer:
@@ -57,4 +57,3 @@ class TeamGradeAnalyzer:
 
     def __call__(self, analysis: dict) -> dict:
         return self.grade(analysis)
-

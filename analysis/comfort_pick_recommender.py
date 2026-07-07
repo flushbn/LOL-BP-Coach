@@ -1,5 +1,5 @@
-from pathlib import Path
 import json
+from pathlib import Path
 
 class ComfortPickRecommender:
     """Filters recommendations through user's favorite champion pool."""
@@ -27,5 +27,3 @@ class ComfortPickRecommender:
             if r["champion"] in fav_set and r["final_score"]>=self._min_score:
                 result.append(r)
         return result[:3]
-
-

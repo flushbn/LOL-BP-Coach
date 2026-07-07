@@ -8,13 +8,13 @@ class TacticalAnalyzer:
         # Load champion tags from champion_data.json
         self._cd = {}
         try:
-            with open(ROOT / "champion_data.json","r",encoding="utf-8") as f:
+            with open(ROOT / "champion_data.json", "r", encoding="utf-8") as f:
                 self._cd = json.load(f)
         except: pass
         # Load tactical rules
         self._tr = {}
         try:
-            with open(ROOT / "data" / "tactical_rules.json","r",encoding="utf-8") as f:
+            with open(ROOT / "data" / "tactical_rules.json", "r", encoding="utf-8") as f:
                 self._tr = json.load(f)
         except: self._tr = {}
         # Tag groups for classification
@@ -36,7 +36,7 @@ class TacticalAnalyzer:
         return bool(self._tags(champ) & group)
 
     def _team_score(self, ally_picks, dim):
-        from core.recommendation_engine import TeamAnalyzer
+        from recommendation_engine import TeamAnalyzer
         try:
             ta = TeamAnalyzer()
             a = ta.analyze(ally_picks=ally_picks, enemy_picks=[])
@@ -110,4 +110,3 @@ class TacticalAnalyzer:
             "strengths": strengths[:3],
             "warnings": warnings[:2]
         }
-

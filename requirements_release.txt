@@ -1,0 +1,9 @@
+PySide6
+requests
+lxml
+numpy
+opencv-python
+mss
+pywin32
+Pillow
+pygetwindow

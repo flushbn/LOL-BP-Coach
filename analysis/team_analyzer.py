@@ -5,7 +5,7 @@
 
 使用 recommendation_engine.TeamAnalyzer 底层引擎。
 """
-from core.recommendation_engine import TeamAnalyzer
+from recommendation_engine import TeamAnalyzer
 from typing import Dict, List, Optional
 
 
@@ -95,5 +95,3 @@ class BilateralTeamAnalyzer:
                 "ally": {}, "enemy": {}, "comparison": {},
                 "ally_scores": {}, "enemy_scores": {},
             }
-
-

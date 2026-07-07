@@ -372,8 +372,13 @@ class MainWindow(QMainWindow):
         log_path = ROOT / "logs" / "recognition.log"
         log_path.parent.mkdir(parents=True, exist_ok=True)
         log_file = log_path.open("a", encoding="utf-8")
+        if getattr(sys, "frozen", False):
+            command = [sys.executable, "--recognize", role]
+        else:
+            command = [sys.executable, str(ROOT / "lol_bp_screenshot.py"), "--recommend", role]
+
         self.recognition_process = subprocess.Popen(
-            [sys.executable, str(ROOT / "lol_bp_screenshot.py"), "--recommend", role],
+            command,
             cwd=str(ROOT),
             env=env,
             stdout=log_file,
