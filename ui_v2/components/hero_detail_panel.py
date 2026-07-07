@@ -78,6 +78,8 @@ class HeroDetailPanel(QFrame):
         roles = " / ".join(context.get("roles", [])) or "未知位置"
         patch = context.get("patch", "")
         self.subtitle.setText(f"位置：{roles}　版本：{patch}")
+        if context.get("quick_mode"):
+            self.subtitle.setText(f"位置：{roles}　版本：{patch}　快速详情：不联网读取，保证 BP 点击不卡顿")
         self._set_icon(champion, champion_cn)
 
         meta = context.get("meta", {}) or {}
@@ -94,7 +96,20 @@ class HeroDetailPanel(QFrame):
                 )
             )
         else:
-            self.meta.setText("暂无版本数据")
+            recommendation = context.get("recommendation", {}) or {}
+            if recommendation:
+                self.meta.setText(
+                    "\n".join(
+                        [
+                            f"综合分：{recommendation.get('score', recommendation.get('final_score', '暂无'))}",
+                            f"对线加成：{recommendation.get('lane_bonus', 0)}",
+                            f"熟练度加成：{recommendation.get('comfort_bonus', 0)}",
+                            "来源：推荐列表快照",
+                        ]
+                    )
+                )
+            else:
+                self.meta.setText("暂无版本数据")
 
         build_recommendation = context.get("build_recommendation", {}) or {}
         self.runes.setText(self._format_runes(context.get("runes", [])))
@@ -152,7 +167,7 @@ class HeroDetailPanel(QFrame):
     @staticmethod
     def _format_runes(runes: list[dict]) -> str:
         if not runes:
-            return "符文与出装已移至左侧“已选英雄”页，避免拖慢推荐页。"
+            return "推荐页点击不联网读取符文，避免 BP 阶段卡顿；完整符文请到左侧“已选英雄”页查看。"
         lines = []
         for rune in runes:
             secondary = rune.get("secondary", "暂无")
@@ -179,7 +194,7 @@ class HeroDetailPanel(QFrame):
     @staticmethod
     def _format_builds(builds: list[dict], build_recommendation: dict | None = None) -> str:
         if not builds:
-            return "出装推荐已移至左侧“已选英雄”页，后台加载后可慢慢查看。"
+            return "推荐页点击不联网读取出装；完整出装在左侧“已选英雄”页后台加载。"
         lines = []
         starting = (build_recommendation or {}).get("starting_items", [])
         if starting:

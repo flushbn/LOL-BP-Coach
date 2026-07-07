@@ -4,11 +4,22 @@ import threading
 
 from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QPushButton, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QScrollArea,
+    QStackedWidget,
+    QVBoxLayout,
+    QWidget,
+)
 
 from analysis.build_recommendation import BuildRecommendationEngine
+from analysis.hero_detail_context import HeroDetailContextBuilder
 from analysis.lolalytics_client import LolalyticsClient
 from analysis.rune_recommendation import RuneRecommendationEngine
+from ui_v2.components.hero_detail_panel import HeroDetailPanel
 from ui_v2.components.hero_search_bar import HeroSearchBar
 from utils.champion_assets import champion_icon_path, champion_key
 from utils.champion_names import champion_display_name
@@ -32,10 +43,14 @@ class _LoadoutSignals(QObject):
 
 
 class SelectedChampionCard(QFrame):
+    clicked = Signal(str)
+
     def __init__(self):
         super().__init__()
+        self._champion = ""
         self.setObjectName("HeroCard")
         self.setMinimumHeight(148)
+        self.setCursor(Qt.PointingHandCursor)
 
         root = QHBoxLayout(self)
         root.setContentsMargins(12, 10, 12, 10)
@@ -68,6 +83,7 @@ class SelectedChampionCard(QFrame):
 
     def render_base(self, champion: str, index: int, role: str):
         key = champion_key(champion)
+        self._champion = key
         name = champion_display_name(key)
         self.title.setText(f"{index}. {name or key}　{ROLE_TO_LABEL.get(role, role or '未知位置')}")
         self._set_avatar(key, name)
@@ -119,6 +135,12 @@ class SelectedChampionCard(QFrame):
         self.avatar.clear()
         self.avatar.setText((display_name or key or "?")[:2])
 
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton and self._champion:
+            self.clicked.emit(self._champion)
+            return
+        super().mousePressEvent(event)
+
 
 class SelectedChampionsPage(QWidget):
     def __init__(self):
@@ -128,11 +150,22 @@ class SelectedChampionsPage(QWidget):
         self._last_state: dict = {}
         self._manual_champions: list[str] = []
         self._cards: dict[str, SelectedChampionCard] = {}
+        self._loadouts: dict[str, dict] = {}
+        self._detail_builder = HeroDetailContextBuilder()
         self._signals = _LoadoutSignals()
         self._signals.loaded.connect(self._on_loaded)
 
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(14, 14, 14, 14)
+        root = QVBoxLayout(self)
+        root.setContentsMargins(14, 14, 14, 14)
+        root.setSpacing(8)
+
+        self.stack = QStackedWidget()
+        self.stack.setStyleSheet("QStackedWidget{background:transparent;border:none;}")
+        root.addWidget(self.stack, 1)
+
+        self.list_page = QWidget()
+        layout = QVBoxLayout(self.list_page)
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(8)
 
         title = QLabel("已选英雄")
@@ -169,6 +202,12 @@ class SelectedChampionsPage(QWidget):
         self.card_layout.setSpacing(10)
         self.scroll.setWidget(self.container)
         layout.addWidget(self.scroll, 1)
+
+        self.detail = HeroDetailPanel()
+        self.detail.closed.connect(self._restore_list)
+        self.stack.addWidget(self.list_page)
+        self.stack.addWidget(self.detail)
+        self.stack.setCurrentWidget(self.list_page)
 
     def render(self, state: dict):
         self._last_state = state or {}
@@ -213,9 +252,11 @@ class SelectedChampionsPage(QWidget):
         for index, champion in enumerate(ally, start=1):
             card = SelectedChampionCard()
             card.render_base(champion, index, role)
+            card.clicked.connect(self.open_detail)
             self._cards[champion] = card
             self.card_layout.addWidget(card)
         self.card_layout.addStretch()
+        self._loadouts = {champion: payload for champion, payload in self._loadouts.items() if champion in ally}
 
     def _start_loading(self, signature: str, ally: list[str], enemy: list[str], role: str):
         if signature == self._loading_signature:
@@ -240,6 +281,7 @@ class SelectedChampionsPage(QWidget):
         threading.Thread(target=worker, daemon=True).start()
 
     def _on_loaded(self, champion: str, payload: dict):
+        self._loadouts[champion] = payload
         card = self._cards.get(champion)
         if not card:
             return
@@ -248,6 +290,29 @@ class SelectedChampionsPage(QWidget):
         else:
             card.render_loadout(payload)
         self.status.setText("符文和出装加载完成，可在本页慢慢查看。")
+
+    def open_detail(self, champion: str):
+        key = champion_key(champion)
+        if not key:
+            return
+        context = self._detail_builder.build(
+            key,
+            current_state=self._last_state,
+            include_online=False,
+            loadout_payload=self._loadouts.get(key),
+        )
+        self.detail.render_detail(context)
+        self.stack.setCurrentWidget(self.detail)
+
+    def _restore_list(self):
+        self.stack.setCurrentWidget(self.list_page)
+        self.setFocus()
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape and self.stack.currentWidget() == self.detail:
+            self.detail.hide_panel()
+            return
+        super().keyPressEvent(event)
 
     def _clear_layout(self):
         while self.card_layout.count():

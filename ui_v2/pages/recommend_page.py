@@ -100,6 +100,7 @@ class RecommendPage(QWidget):
             hero_name,
             current_state=self._state,
             recommendation=recommendation,
+            include_online=False,
         )
         self._selected_index = self._index_of(hero_name)
         self.detail.render_detail(context)

@@ -50,6 +50,19 @@ class PlayerPage(QWidget):
         title.setObjectName("PageTitle")
         layout.addWidget(title)
 
+        action_bar = QHBoxLayout()
+        self.record_toggle_button = QPushButton("记录本局")
+        self.record_toggle_button.clicked.connect(lambda: self._toggle_panel(self.record_box))
+        self.baseline_toggle_button = QPushButton("导入历史胜率")
+        self.baseline_toggle_button.clicked.connect(lambda: self._toggle_panel(self.baseline_box))
+        self.refresh_button = QPushButton("刷新数据")
+        self.refresh_button.clicked.connect(self.refresh_player_data)
+        action_bar.addWidget(self.record_toggle_button)
+        action_bar.addWidget(self.baseline_toggle_button)
+        action_bar.addWidget(self.refresh_button)
+        action_bar.addStretch()
+        layout.addLayout(action_bar)
+
         self.record_box = QGroupBox("记录本局")
         record_layout = QVBoxLayout(self.record_box)
         record_layout.setSpacing(8)
@@ -76,11 +89,8 @@ class PlayerPage(QWidget):
         self.win_button.clicked.connect(lambda: self.record_match("WIN"))
         self.loss_button = QPushButton("记录失败")
         self.loss_button.clicked.connect(lambda: self.record_match("LOSE"))
-        self.refresh_button = QPushButton("刷新数据")
-        self.refresh_button.clicked.connect(self.refresh_player_data)
         actions.addWidget(self.win_button)
         actions.addWidget(self.loss_button)
-        actions.addWidget(self.refresh_button)
         actions.addStretch()
         record_layout.addLayout(actions)
 
@@ -89,6 +99,7 @@ class PlayerPage(QWidget):
         self.record_status.setWordWrap(True)
         record_layout.addWidget(self.record_status)
         layout.addWidget(self.record_box)
+        self.record_box.hide()
 
         self.baseline_box = QGroupBox("导入软件使用前的英雄胜率")
         baseline_layout = QVBoxLayout(self.baseline_box)
@@ -130,6 +141,7 @@ class PlayerPage(QWidget):
         self.baseline_status.setWordWrap(True)
         baseline_layout.addWidget(self.baseline_status)
         layout.addWidget(self.baseline_box)
+        self.baseline_box.hide()
 
         self.summary = QLabel("暂无玩家数据")
         self.summary.setObjectName("CoachGrades")
@@ -153,6 +165,13 @@ class PlayerPage(QWidget):
             if index >= 0:
                 self.role_combo.setCurrentIndex(index)
         self.refresh_player_data()
+
+    def _toggle_panel(self, panel: QGroupBox):
+        should_show = not panel.isVisible()
+        self.record_box.hide()
+        self.baseline_box.hide()
+        if should_show:
+            panel.show()
 
     def fill_current_hero(self):
         ally = self._state.get("ally", []) or []
@@ -250,7 +269,7 @@ class PlayerPage(QWidget):
                 ])
             )
         else:
-            self.summary.setText("暂无玩家数据。请先在上方记录一局胜负。")
+            self.summary.setText("暂无玩家数据。点击“记录本局”或“导入历史胜率”后，系统会开始学习你的英雄池。")
 
         heroes = self._analytics.get_hero_pool(20)
         self.table.setRowCount(len(heroes))

@@ -72,17 +72,22 @@ class HeroDetailContextBuilder:
         current_state: dict | None = None,
         recommendation: dict | None = None,
         include_loadout: bool = False,
+        include_online: bool = True,
+        loadout_payload: dict | None = None,
     ) -> dict[str, Any]:
         key = champion_key(champion)
         state = current_state or {}
         rec = recommendation or {}
-        roles = self._roles(key)
+        roles = self._roles(key, include_online=include_online)
         selected_role = self._selected_role(state, roles)
-        best_role_payload = self._best_meta_payload(key)
+        best_role_payload = self._best_meta_payload(key, include_online=include_online)
         enemy_team = [champion_key(item) for item in state.get("enemy", []) or [] if champion_key(item)]
         rune_recommendation = None
         build_recommendation = {}
-        if include_loadout:
+        if loadout_payload and not loadout_payload.get("error"):
+            rune_recommendation = loadout_payload.get("rune")
+            build_recommendation = loadout_payload.get("build", {}) or {}
+        elif include_loadout:
             rune_recommendation = self.rune_engine.recommend(key, selected_role, enemy_team)
             build_recommendation = self.build_engine.recommend(key, selected_role, enemy_team)
 
@@ -98,8 +103,9 @@ class HeroDetailContextBuilder:
             "build_recommendation": build_recommendation,
             "lane_plan": self.lane_strategy.build_plan(key, state, self.champion_data),
             "power_spikes": self._power_spikes(key, best_role_payload),
-            "counters": self._counter_summary(key, roles),
+            "counters": self._counter_summary(key, roles, include_online=include_online),
             "synergies": self._synergy_summary(key, state),
+            "quick_mode": not include_online and not include_loadout and not loadout_payload,
         }
         return context
 
@@ -110,7 +116,7 @@ class HeroDetailContextBuilder:
             return role
         return roles[0] if roles else ""
 
-    def _roles(self, champion: str) -> list[str]:
+    def _roles(self, champion: str, include_online: bool = True) -> list[str]:
         roles = self.champion_data.get(champion, {}).get("roles", [])
         result = []
         for role in roles:
@@ -126,11 +132,11 @@ class HeroDetailContextBuilder:
         if result:
             return result
 
-        role_payloads = self._meta_roles(champion)
+        role_payloads = self._meta_roles(champion, include_online=include_online)
         return list(role_payloads.keys())[:3]
 
-    def _best_meta_payload(self, champion: str) -> dict:
-        roles = self._meta_roles(champion)
+    def _best_meta_payload(self, champion: str, include_online: bool = True) -> dict:
+        roles = self._meta_roles(champion, include_online=include_online)
         if not roles:
             return {}
         return max(
@@ -138,19 +144,19 @@ class HeroDetailContextBuilder:
             key=lambda item: (self._safe_float(item.get("games", 0)), self._safe_float(item.get("pickrate", 0))),
         )
 
-    def _meta_roles(self, champion: str) -> dict[str, dict]:
+    def _meta_roles(self, champion: str, include_online: bool = True) -> dict[str, dict]:
         if "champions" in self.meta:
             roles = self.meta.get("champions", {}).get(champion, {}).get("roles", {})
             if roles:
                 return roles
-            return self._fetch_live_meta_roles(champion)
+            return self._fetch_live_meta_roles(champion) if include_online else {}
         result = {}
         for role, role_data in self.meta.get("roles", {}).items():
             if champion in role_data:
                 result[role] = role_data[champion]
         if result:
             return result
-        return self._fetch_live_meta_roles(champion)
+        return self._fetch_live_meta_roles(champion) if include_online else {}
 
     def _runes(self, champion: str, roles: list[str]) -> list[dict]:
         tags = set(self._champion_payload(champion).get("tags", []))
@@ -195,12 +201,17 @@ class HeroDetailContextBuilder:
             spikes.append("中后期：团战容错和输出空间更重要。")
         return spikes or ["一件套后进入稳定作战期。", "中期资源团决定节奏。"]
 
-    def _counter_summary(self, champion: str, roles: list[str] | None = None) -> list[str]:
+    def _counter_summary(
+        self,
+        champion: str,
+        roles: list[str] | None = None,
+        include_online: bool = True,
+    ) -> list[str]:
         pairs = self.counter.get("champions", {}).get(champion, {})
-        if not pairs:
+        if not pairs and include_online:
             pairs = self._fetch_live_counters(champion, roles or self._candidate_roles(champion))
         if not pairs:
-            return ["暂无当前版本克制数据"]
+            return ["暂无本地克制数据，完整对位数据可在已选英雄页后台加载后查看。"]
         rows = sorted(
             pairs.items(),
             key=lambda item: self._safe_float(item[1].get("winrate_delta", item[1].get("delta", 0))),
