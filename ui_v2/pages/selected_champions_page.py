@@ -71,7 +71,7 @@ class SelectedChampionCard(QFrame):
         super().__init__()
         self._champion = ""
         self.setObjectName("HeroCard")
-        self.setMinimumHeight(148)
+        self.setMinimumHeight(188)
         self.setCursor(Qt.PointingHandCursor)
 
         root = QHBoxLayout(self)
@@ -119,8 +119,19 @@ class SelectedChampionCard(QFrame):
 
         primary = rune_zh(rune.get("primary", ""))
         keystone = rune_zh(rune.get("keystone", ""))
+        primary_runes = [item for item in (rune.get("runes", []) or []) if item]
+        primary_minors = " / ".join(runes_zh(primary_runes[1:4])) or "暂无"
+        secondary_tree = rune_zh(rune.get("secondary_tree", ""))
         secondary = " / ".join(runes_zh(rune.get("secondary", []))) or "暂无"
-        self.runes.setText(f"符文：{primary} / {keystone}　副系：{secondary}")
+        stat_shards = " / ".join(runes_zh(rune.get("stat_shards", []))) or "暂无"
+        tree_text = primary or "主系"
+        secondary_text = f"{secondary_tree}：" if secondary_tree else "副系："
+        self.runes.setText(
+            f"符文：{tree_text} / {keystone}\n"
+            f"主系：{primary_minors}\n"
+            f"{secondary_text}{secondary}\n"
+            f"小属性：{stat_shards}"
+        )
 
         core = (build.get("core_build", []) or [{}])[0]
         core_items = " → ".join(items_zh(core.get("items", []))) or "暂无"

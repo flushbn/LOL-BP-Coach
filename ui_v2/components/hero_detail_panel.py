@@ -173,10 +173,15 @@ class HeroDetailPanel(QFrame):
             secondary = rune.get("secondary", "暂无")
             if isinstance(secondary, list):
                 secondary = " / ".join(runes_zh([str(item) for item in secondary if item])) or "暂无"
+            secondary_tree = rune_zh(rune.get("secondary_tree", ""))
             rune_names = rune.get("runes", [])
-            extra = ""
+            primary_minors = ""
             if isinstance(rune_names, list) and rune_names:
-                extra = "\n  小符文：" + " / ".join(runes_zh([str(item) for item in rune_names[1:4] if item]))
+                primary_minors = "\n  主系3个：" + " / ".join(runes_zh([str(item) for item in rune_names[1:4] if item]))
+            stat_shards = rune.get("stat_shards", [])
+            shard_line = ""
+            if isinstance(stat_shards, list) and stat_shards:
+                shard_line = "\n  小属性：" + " / ".join(runes_zh([str(item) for item in stat_shards if item]))
             stats = []
             if rune.get("winrate") is not None:
                 stats.append(f"胜率 {rune.get('winrate')}%")
@@ -184,8 +189,10 @@ class HeroDetailPanel(QFrame):
                 stats.append(f"样本 {rune.get('games')}")
             reason = rune.get("reason", "")
             lines.append(
-                f"• {rune_zh(rune.get('primary', '主系'))}：{rune_zh(rune.get('keystone', '核心符文'))}　副系：{secondary}"
-                + extra
+                f"• {rune_zh(rune.get('primary', '主系'))}：{rune_zh(rune.get('keystone', '核心符文'))}"
+                + primary_minors
+                + f"\n  {secondary_tree + '：' if secondary_tree else '副系：'}{secondary}"
+                + shard_line
                 + (f"\n  {' / '.join(stats)}" if stats else "")
                 + (f"\n  原因：{reason}" if reason else "")
             )

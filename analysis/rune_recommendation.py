@@ -38,6 +38,7 @@ class RuneRecommendationEngine:
                 "runes": row.get("runes", []),
                 "secondary_tree": row.get("secondary_tree", ""),
                 "secondary": row.get("secondary", []),
+                "stat_shards": row.get("stat_shards") or self._stat_shards(key, role),
                 "winrate": row.get("winrate"),
                 "pickrate": row.get("pickrate"),
                 "games": row.get("games", 0),
@@ -49,16 +50,16 @@ class RuneRecommendationEngine:
     def _fallback(self, champion: str) -> dict[str, Any]:
         tags = set(self.champion_data.get(champion, {}).get("tags", []))
         if "tank" in tags or "frontline" in tags:
-            return {"primary": "Resolve", "keystone": "Grasp of the Undying", "secondary": ["Demolish", "Bone Plating"], "reason": "适合近战换血和边线抗压", "source": "local_fallback"}
+            return {"primary": "Resolve", "keystone": "Grasp of the Undying", "runes": ["Grasp of the Undying", "Demolish", "Bone Plating", "Overgrowth"], "secondary_tree": "Inspiration", "secondary": ["Magical Footwear", "Cosmic Insight"], "stat_shards": self._stat_shards(champion, ""), "reason": "适合近战换血和边线抗压", "source": "local_fallback"}
         if "assassin" in tags:
-            return {"primary": "Domination", "keystone": "Electrocute", "secondary": ["Sudden Impact", "Treasure Hunter"], "reason": "强化爆发和游走滚雪球", "source": "local_fallback"}
+            return {"primary": "Domination", "keystone": "Electrocute", "runes": ["Electrocute", "Sudden Impact", "Grisly Mementos", "Treasure Hunter"], "secondary_tree": "Precision", "secondary": ["Triumph", "Coup de Grace"], "stat_shards": self._stat_shards(champion, ""), "reason": "强化爆发和游走滚雪球", "source": "local_fallback"}
         if "marksman" in tags or "dps" in tags:
-            return {"primary": "Precision", "keystone": "Lethal Tempo", "secondary": ["Presence of Mind", "Legend: Alacrity"], "reason": "提升持续输出能力", "source": "local_fallback"}
+            return {"primary": "Precision", "keystone": "Lethal Tempo", "runes": ["Lethal Tempo", "Presence of Mind", "Legend: Alacrity", "Cut Down"], "secondary_tree": "Inspiration", "secondary": ["Magical Footwear", "Biscuit Delivery"], "stat_shards": self._stat_shards(champion, ""), "reason": "提升持续输出能力", "source": "local_fallback"}
         if "mage" in tags or "ap" in tags:
-            return {"primary": "Sorcery", "keystone": "Arcane Comet", "secondary": ["Manaflow Band", "Scorch"], "reason": "增强消耗和线上压制", "source": "local_fallback"}
+            return {"primary": "Sorcery", "keystone": "Arcane Comet", "runes": ["Arcane Comet", "Manaflow Band", "Transcendence", "Scorch"], "secondary_tree": "Domination", "secondary": ["Taste of Blood", "Ultimate Hunter"], "stat_shards": self._stat_shards(champion, ""), "reason": "增强消耗和线上压制", "source": "local_fallback"}
         if "support" in tags or "enchanter" in tags:
-            return {"primary": "Sorcery", "keystone": "Summon Aery", "secondary": ["Manaflow Band", "Scorch"], "reason": "适合保护和消耗型辅助", "source": "local_fallback"}
-        return {"primary": "Precision", "keystone": "Conqueror", "secondary": ["Triumph", "Last Stand"], "reason": "通用持续作战方案", "source": "local_fallback"}
+            return {"primary": "Sorcery", "keystone": "Summon Aery", "runes": ["Summon Aery", "Manaflow Band", "Transcendence", "Scorch"], "secondary_tree": "Resolve", "secondary": ["Bone Plating", "Revitalize"], "stat_shards": self._stat_shards(champion, ""), "reason": "适合保护和消耗型辅助", "source": "local_fallback"}
+        return {"primary": "Precision", "keystone": "Conqueror", "runes": ["Conqueror", "Triumph", "Legend: Alacrity", "Last Stand"], "secondary_tree": "Resolve", "secondary": ["Bone Plating", "Overgrowth"], "stat_shards": self._stat_shards(champion, ""), "reason": "通用持续作战方案", "source": "local_fallback"}
 
     def _reason(self, champion: str, keystone: str) -> str:
         tags = set(self.champion_data.get(champion, {}).get("tags", []))
@@ -82,9 +83,22 @@ class RuneRecommendationEngine:
             return "Precision"
         if rune_name in {"Electrocute", "Dark Harvest", "Hail of Blades"}:
             return "Domination"
-        if rune_name in {"Summon Aery", "Arcane Comet", "Phase Rush"}:
+        if rune_name in {"Summon Aery", "Arcane Comet", "Phase Rush", "Deathfire Touch"}:
             return "Sorcery"
         return ""
+
+    def _stat_shards(self, champion: str, role: str = "") -> list[str]:
+        tags = set(self.champion_data.get(champion, {}).get("tags", []))
+        normalized_role = str(role or "").upper()
+        if "marksman" in tags or "dps" in tags:
+            return ["Attack Speed", "Adaptive Force", "Health Scaling"]
+        if "jungle" in tags or normalized_role == "JUNGLE":
+            return ["Attack Speed", "Adaptive Force", "Health Scaling"]
+        if "tank" in tags or "frontline" in tags or "support" in tags:
+            return ["Ability Haste", "Move Speed", "Health Scaling"]
+        if "mage" in tags or "ap" in tags:
+            return ["Ability Haste", "Adaptive Force", "Health Scaling"]
+        return ["Adaptive Force", "Adaptive Force", "Health Scaling"]
 
     @staticmethod
     def _load_json(path: Path) -> dict:
