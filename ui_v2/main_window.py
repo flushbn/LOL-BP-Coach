@@ -252,8 +252,8 @@ class MainWindow(QMainWindow):
         self.update_page.status_changed.connect(self.check_patch_notice)
         self.pages = [
             ("英雄推荐", RecommendPage()),
+            ("对线推荐", LanePage()),
             ("已选英雄", SelectedChampionsPage()),
-            ("对线", LanePage()),
             ("战术·阵容建议", CoachPage()),
             ("战术·路线节奏", MacroPage()),
             ("我的数据", PlayerPage()),

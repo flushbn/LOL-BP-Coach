@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtWidgets import (
+    QApplication,
     QComboBox,
     QDoubleSpinBox,
     QGroupBox,
@@ -82,6 +83,9 @@ class PlayerPage(QWidget):
         self.fill_current_button = QPushButton("填入识别英雄")
         self.fill_current_button.clicked.connect(self.fill_current_hero)
         form.addWidget(self.fill_current_button)
+        self.fill_viewed_button = QPushButton("填入已选英雄")
+        self.fill_viewed_button.clicked.connect(self.fill_viewed_hero)
+        form.addWidget(self.fill_viewed_button)
         record_layout.addLayout(form)
 
         actions = QHBoxLayout()
@@ -89,8 +93,11 @@ class PlayerPage(QWidget):
         self.win_button.clicked.connect(lambda: self.record_match("WIN"))
         self.loss_button = QPushButton("记录失败")
         self.loss_button.clicked.connect(lambda: self.record_match("LOSE"))
+        self.record_cancel_button = QPushButton("取消")
+        self.record_cancel_button.clicked.connect(self.record_box.hide)
         actions.addWidget(self.win_button)
         actions.addWidget(self.loss_button)
+        actions.addWidget(self.record_cancel_button)
         actions.addStretch()
         record_layout.addLayout(actions)
 
@@ -131,8 +138,11 @@ class PlayerPage(QWidget):
         self.import_baseline_button.clicked.connect(self.import_baseline_stats)
         self.fill_baseline_current_button = QPushButton("填入识别英雄")
         self.fill_baseline_current_button.clicked.connect(self.fill_baseline_current_hero)
+        self.baseline_cancel_button = QPushButton("取消")
+        self.baseline_cancel_button.clicked.connect(self.baseline_box.hide)
         baseline_actions.addWidget(self.import_baseline_button)
         baseline_actions.addWidget(self.fill_baseline_current_button)
+        baseline_actions.addWidget(self.baseline_cancel_button)
         baseline_actions.addStretch()
         baseline_layout.addLayout(baseline_actions)
 
@@ -180,6 +190,21 @@ class PlayerPage(QWidget):
             self.record_status.setText(f"已填入己方最近识别英雄：{champion_display_name(ally[-1])}")
         else:
             self.record_status.setText("当前没有识别到己方英雄，请手动输入。")
+
+    def fill_viewed_hero(self):
+        app = QApplication.instance()
+        viewed = app.property("last_viewed_champion") if app is not None else ""
+        hero = self._normalize_hero(str(viewed or ""))
+        if hero:
+            self.hero_input.setText(champion_display_name(hero))
+            self.record_status.setText(f"已填入当前查看的已选/攻略英雄：{champion_display_name(hero)}")
+            return
+        ally = self._state.get("ally", []) or []
+        if ally:
+            self.hero_input.setText(champion_display_name(ally[-1]))
+            self.record_status.setText(f"暂无点击记录，已改为填入最近识别英雄：{champion_display_name(ally[-1])}")
+        else:
+            self.record_status.setText("还没有点击过英雄卡片，也没有识别到己方英雄。")
 
     def fill_baseline_current_hero(self):
         ally = self._state.get("ally", []) or []

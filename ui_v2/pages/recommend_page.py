@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QGridLayout, QLabel, QScrollArea, QStackedWidget, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QApplication, QGridLayout, QLabel, QScrollArea, QStackedWidget, QVBoxLayout, QWidget
 
 from analysis.hero_detail_context import HeroDetailContextBuilder
 from ui_v2.components.hero_detail_panel import HeroDetailPanel
@@ -96,6 +96,9 @@ class RecommendPage(QWidget):
 
     def on_hero_click(self, hero_name: str):
         recommendation = self._find_recommendation(hero_name)
+        app = QApplication.instance()
+        if app is not None:
+            app.setProperty("last_viewed_champion", hero_name)
         context = self._detail_builder.build(
             hero_name,
             current_state=self._state,

@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
     QLabel,
+    QApplication,
     QPushButton,
     QScrollArea,
     QStackedWidget,
@@ -295,6 +296,9 @@ class SelectedChampionsPage(QWidget):
         key = champion_key(champion)
         if not key:
             return
+        app = QApplication.instance()
+        if app is not None:
+            app.setProperty("last_viewed_champion", key)
         context = self._detail_builder.build(
             key,
             current_state=self._last_state,
