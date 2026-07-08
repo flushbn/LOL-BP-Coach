@@ -21,12 +21,11 @@ from PySide6.QtWidgets import (
 from analysis.build_recommendation import BuildRecommendationEngine
 from analysis.hero_detail_context import HeroDetailContextBuilder
 from analysis.lolalytics_client import LolalyticsClient
-from analysis.rune_recommendation import RuneRecommendationEngine
 from ui_v2.components.hero_detail_panel import HeroDetailPanel
 from ui_v2.components.hero_search_bar import HeroSearchBar
 from utils.champion_assets import champion_icon_path, champion_key
 from utils.champion_names import champion_display_name
-from utils.game_terms_zh import item_zh, items_zh, rune_zh, runes_zh
+from utils.game_terms_zh import items_zh
 
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -71,7 +70,7 @@ class SelectedChampionCard(QFrame):
         super().__init__()
         self._champion = ""
         self.setObjectName("HeroCard")
-        self.setMinimumHeight(188)
+        self.setMinimumHeight(148)
         self.setCursor(Qt.PointingHandCursor)
 
         root = QHBoxLayout(self)
@@ -88,9 +87,10 @@ class SelectedChampionCard(QFrame):
         box.setSpacing(6)
         self.title = QLabel("")
         self.title.setObjectName("HeroName")
-        self.runes = QLabel("符文：等待加载")
+        self.runes = QLabel("")
         self.runes.setObjectName("HeroTags")
         self.runes.setWordWrap(True)
+        self.runes.hide()
         self.core = QLabel("核心装：等待加载")
         self.core.setObjectName("HeroTags")
         self.core.setWordWrap(True)
@@ -109,29 +109,11 @@ class SelectedChampionCard(QFrame):
         name = champion_display_name(key)
         self.title.setText(f"{index}. {name or key}　{ROLE_TO_LABEL.get(role, role or '未知位置')}")
         self._set_avatar(key, name)
-        self.runes.setText("符文：加载中，不影响推荐页")
         self.core.setText("核心装：加载中")
         self.situational.setText("调整：根据敌方阵容计算中")
 
     def render_loadout(self, payload: dict):
-        rune = payload.get("rune", {}) or {}
         build = payload.get("build", {}) or {}
-
-        primary = rune_zh(rune.get("primary", ""))
-        keystone = rune_zh(rune.get("keystone", ""))
-        primary_runes = [item for item in (rune.get("runes", []) or []) if item]
-        primary_minors = " / ".join(runes_zh(primary_runes[1:4])) or "暂无"
-        secondary_tree = rune_zh(rune.get("secondary_tree", ""))
-        secondary = " / ".join(runes_zh(rune.get("secondary", []))) or "暂无"
-        stat_shards = " / ".join(runes_zh(rune.get("stat_shards", []))) or "暂无"
-        tree_text = primary or "主系"
-        secondary_text = f"{secondary_tree}：" if secondary_tree else "副系："
-        self.runes.setText(
-            f"符文：{tree_text} / {keystone}\n"
-            f"主系：{primary_minors}\n"
-            f"{secondary_text}{secondary}\n"
-            f"小属性：{stat_shards}"
-        )
 
         core = (build.get("core_build", []) or [{}])[0]
         core_items = " → ".join(items_zh(core.get("items", []))) or "暂无"
@@ -151,7 +133,6 @@ class SelectedChampionCard(QFrame):
             self.situational.setText("调整：暂无阵容适配建议")
 
     def render_error(self):
-        self.runes.setText("符文：暂无在线数据")
         self.core.setText("核心装：暂无在线数据")
         self.situational.setText("调整：网络失败时仍可先按推荐页完成 BP")
 
@@ -209,7 +190,7 @@ class SelectedChampionsPage(QWidget):
         title.setObjectName("PageTitle")
         layout.addWidget(title)
 
-        hint = QLabel("符文和出装放在这里后台加载，避免拖慢英雄推荐页；已选英雄即使从推荐列表过滤掉，也能在这里查看。")
+        hint = QLabel("装备推荐放在这里后台加载，避免拖慢英雄推荐页；已选英雄即使从推荐列表过滤掉，也能在这里查看。")
         hint.setObjectName("MutedText")
         hint.setWordWrap(True)
         layout.addWidget(hint)
@@ -263,7 +244,7 @@ class SelectedChampionsPage(QWidget):
         if not ally:
             self.status.setText("等待识别己方已选英雄")
             return
-        self.status.setText(f"已识别己方 {len(ally)} 个英雄，正在后台加载符文和出装...")
+        self.status.setText(f"已识别己方 {len(ally)} 个英雄，正在后台加载装备推荐...")
         self._start_loading(signature, ally, enemy, roles_by_champion)
 
     def add_manual_champion(self, champion: str):
@@ -308,11 +289,9 @@ class SelectedChampionsPage(QWidget):
             try:
                 client = LolalyticsClient(patch="16.13")
                 build_engine = BuildRecommendationEngine(client)
-                rune_engine = RuneRecommendationEngine(client)
                 for champion in ally:
                     champion_role = roles_by_champion.get(champion, "")
                     payload = {
-                        "rune": rune_engine.recommend(champion, champion_role, enemy),
                         "build": build_engine.recommend(champion, champion_role, enemy),
                     }
                     self._signals.loaded.emit(champion, payload)
@@ -331,7 +310,7 @@ class SelectedChampionsPage(QWidget):
             card.render_error()
         else:
             card.render_loadout(payload)
-        self.status.setText("符文和出装加载完成，可在本页慢慢查看。")
+        self.status.setText("装备推荐加载完成，可在本页慢慢查看。")
 
     def open_detail(self, champion: str):
         key = champion_key(champion)

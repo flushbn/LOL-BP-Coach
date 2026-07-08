@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -86,7 +86,7 @@ class UpdatePage(QWidget):
         buttons = QHBoxLayout()
         self.update_button = QPushButton("一键更新")
         self.update_button.clicked.connect(lambda: self.run_action("all"))
-        self.lolalytics_button = QPushButton("更新全英雄在线数据")
+        self.lolalytics_button = QPushButton("更新全英雄在线数据（含装备）")
         self.lolalytics_button.clicked.connect(lambda: self.run_action("lolalytics"))
         self.cache_button = QPushButton("重建缓存")
         self.cache_button.clicked.connect(lambda: self.run_action("cache"))
@@ -186,4 +186,3 @@ class UpdatePage(QWidget):
     def set_buttons_enabled(self, enabled: bool):
         for button in (self.update_button, self.lolalytics_button, self.cache_button, self.switch_button):
             button.setEnabled(enabled)
-

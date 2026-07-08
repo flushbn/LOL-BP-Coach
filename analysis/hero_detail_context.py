@@ -8,7 +8,6 @@ from analysis.build_recommendation import BuildRecommendationEngine
 from analysis.data_patch_manager import DataPatchManager
 from analysis.lane_strategy_engine import LaneStrategyEngine
 from analysis.lolalytics_client import LolalyticsClient
-from analysis.rune_recommendation import RuneRecommendationEngine
 from utils.champion_assets import champion_key
 from utils.champion_names import champion_display_name
 
@@ -30,8 +29,11 @@ ROLE_TO_LANE = {
     "TOP": "top",
     "JUNGLE": "jungle",
     "MID": "middle",
+    "MIDDLE": "middle",
     "ADC": "bottom",
+    "BOTTOM": "bottom",
     "SUPPORT": "support",
+    "UTILITY": "support",
 }
 CHAMPION_ROLE_MAP = {
     "top": "TOP",
@@ -64,7 +66,6 @@ class HeroDetailContextBuilder:
         self.lane_strategy = LaneStrategyEngine()
         self.lolalytics = LolalyticsClient(patch=self.patch)
         self.build_engine = BuildRecommendationEngine(self.lolalytics)
-        self.rune_engine = RuneRecommendationEngine(self.lolalytics)
 
     def build(
         self,
@@ -82,14 +83,13 @@ class HeroDetailContextBuilder:
         selected_role = self._selected_role(state, roles)
         best_role_payload = self._best_meta_payload(key, include_online=include_online)
         enemy_team = [champion_key(item) for item in state.get("enemy", []) or [] if champion_key(item)]
-        rune_recommendation = None
         build_recommendation = {}
         if loadout_payload and not loadout_payload.get("error"):
-            rune_recommendation = loadout_payload.get("rune")
             build_recommendation = loadout_payload.get("build", {}) or {}
         elif include_loadout:
-            rune_recommendation = self.rune_engine.recommend(key, selected_role, enemy_team)
             build_recommendation = self.build_engine.recommend(key, selected_role, enemy_team)
+        else:
+            build_recommendation = self._cached_build_recommendation(key, selected_role)
 
         context = {
             "champion": key,
@@ -98,7 +98,7 @@ class HeroDetailContextBuilder:
             "roles": [ROLE_LABELS.get(role, role) for role in roles],
             "meta": best_role_payload,
             "recommendation": rec,
-            "runes": [rune_recommendation] if rune_recommendation else [],
+            "runes": [],
             "builds": build_recommendation.get("core_build", []) if build_recommendation else [],
             "build_recommendation": build_recommendation,
             "lane_plan": self.lane_strategy.build_plan(key, state, self.champion_data),
@@ -187,6 +187,114 @@ class HeroDetailContextBuilder:
         else:
             items = ["三相之力", "斯特拉克的挑战护手", "死亡之舞"]
         return [{"items": items, "note": "基于英雄定位的本地推荐"}]
+
+    def _cached_build_recommendation(self, champion: str, role: str = "") -> dict:
+        lane = ROLE_TO_LANE.get(str(role or "").upper()) or self._primary_lane(champion)
+        cache_dir = DATA_DIR / "cache" / "lolalytics" / self.patch / "builds"
+        item_paths = self._read_cached_item_paths(cache_dir, champion, lane)
+        if not item_paths and lane:
+            item_paths = self._read_cached_item_paths(cache_dir, champion, "")
+        if item_paths:
+            core_items = item_paths.get("core_build", []) or []
+            names = [item.get("name", "") for item in core_items if isinstance(item, dict) and item.get("name")]
+            games = max([int(item.get("games", 0) or 0) for item in core_items] or [0])
+            winrates = [self._safe_float(item.get("winrate")) for item in core_items if item.get("winrate") is not None]
+            winrate = max(winrates) if winrates else None
+            return {
+                "champion": champion,
+                "role": role,
+                "starting_items": self._cached_names(item_paths.get("starting_items", [])),
+                "core_build": [{
+                    "items": names[:3],
+                    "winrate": round(winrate, 2) if winrate else None,
+                    "games": games,
+                    "build_score": None,
+                    "reason": "数据更新中心缓存的当前版本核心装备",
+                }] if names else self._builds(champion, [role]),
+                "item_path": {
+                    "first_item": self._cached_names(core_items[:1]),
+                    "second_item": self._cached_names(core_items[1:2]),
+                    "third_item": self._cached_names(core_items[2:3]),
+                    "item_4_options": self._cached_names((item_paths.get("item_4_options", []) or [])[:3]),
+                    "item_5_options": self._cached_names((item_paths.get("item_5_options", []) or [])[:3]),
+                    "item_6_options": self._cached_names((item_paths.get("item_6_options", []) or [])[:3]),
+                },
+                "situational": self._cached_situational_items(item_paths),
+                "source": "local_lolalytics_cache",
+            }
+
+        return {
+            "champion": champion,
+            "role": role,
+            "starting_items": [],
+            "core_build": self._builds(champion, [role]),
+            "item_path": {},
+            "situational": [],
+            "source": "local_fallback",
+        }
+
+    def _read_cached_item_paths(self, cache_dir: Path, champion: str, lane: str = "") -> dict:
+        if not cache_dir.exists():
+            return {}
+        lower = str(champion or "").lower()
+        candidates = []
+        if lane:
+            candidates.extend([
+                cache_dir / f"item_paths_v2_champion={lower}_lane={lane}_tier=emerald.json",
+                cache_dir / f"item_paths_champion={lower}_lane={lane}_tier=emerald.json",
+            ])
+        candidates.extend(sorted(cache_dir.glob(f"item_paths_v2_champion={lower}_lane=*_tier=emerald.json")))
+        candidates.extend(sorted(cache_dir.glob(f"item_paths_champion={lower}_lane=*_tier=emerald.json")))
+        for path in candidates:
+            payload = self._load_json(path)
+            data = payload.get("data", payload) if isinstance(payload, dict) else {}
+            if isinstance(data, dict) and data.get("core_build"):
+                return data
+        return {}
+
+    def _primary_lane(self, champion: str) -> str:
+        roles = self.role_data.get(champion, {})
+        role_alias = {
+            "TOP": "TOP",
+            "JUNGLE": "JUNGLE",
+            "MIDDLE": "MID",
+            "BOTTOM": "ADC",
+            "UTILITY": "SUPPORT",
+        }
+        best_role = ""
+        best_value = -1.0
+        for role, value in roles.items():
+            normalized = role_alias.get(str(role).upper(), "")
+            score = self._safe_float(value)
+            if normalized and score > best_value:
+                best_role = normalized
+                best_value = score
+        if best_role:
+            return ROLE_TO_LANE.get(best_role, "")
+        candidate_roles = self._roles(champion, include_online=False)
+        if candidate_roles:
+            return ROLE_TO_LANE.get(candidate_roles[0], "")
+        return ""
+
+    @staticmethod
+    def _cached_names(items: list[dict]) -> list[str]:
+        return [item.get("name", "") for item in items if isinstance(item, dict) and item.get("name")]
+
+    def _cached_situational_items(self, item_paths: dict) -> list[dict]:
+        rows = []
+        for key, label in (
+            ("item_4_options", "第四件选择"),
+            ("item_5_options", "第五件选择"),
+            ("item_6_options", "第六件选择"),
+        ):
+            names = self._cached_names((item_paths.get(key, []) or [])[:3])
+            if names:
+                rows.append({
+                    "condition": key,
+                    "items": names,
+                    "reason": f"当前版本{label}，来自更新缓存",
+                })
+        return rows[:3]
 
     def _power_spikes(self, champion: str, meta_payload: dict) -> list[str]:
         tags = set(self._champion_payload(champion).get("tags", []))

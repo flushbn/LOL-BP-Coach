@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from utils.champion_assets import champion_icon_path
-from utils.game_terms_zh import items_zh, rune_zh, runes_zh
+from utils.game_terms_zh import items_zh
 
 
 class HeroDetailPanel(QFrame):
@@ -61,7 +61,6 @@ class HeroDetailPanel(QFrame):
         self.content_layout.setSpacing(10)
 
         self.meta = self._section("版本数据")
-        self.runes = self._section("符文推荐")
         self.builds = self._section("出装推荐")
         self.situational = self._section("阵容适配装备")
         self.lane = self._section("对线思路")
@@ -112,7 +111,6 @@ class HeroDetailPanel(QFrame):
                 self.meta.setText("暂无版本数据")
 
         build_recommendation = context.get("build_recommendation", {}) or {}
-        self.runes.setText(self._format_runes(context.get("runes", [])))
         self.builds.setText(self._format_builds(context.get("builds", []), build_recommendation))
         self.situational.setText(self._format_situational(build_recommendation))
         self.lane.setText(self._format_lines(context.get("lane_plan", []), "暂无对线思路"))
@@ -163,40 +161,6 @@ class HeroDetailPanel(QFrame):
                 return
         self.icon.clear()
         self.icon.setText(champion_cn[:2])
-
-    @staticmethod
-    def _format_runes(runes: list[dict]) -> str:
-        if not runes:
-            return "推荐页点击不联网读取符文，避免 BP 阶段卡顿；完整符文请到左侧“已选英雄”页查看。"
-        lines = []
-        for rune in runes:
-            secondary = rune.get("secondary", "暂无")
-            if isinstance(secondary, list):
-                secondary = " / ".join(runes_zh([str(item) for item in secondary if item])) or "暂无"
-            secondary_tree = rune_zh(rune.get("secondary_tree", ""))
-            rune_names = rune.get("runes", [])
-            primary_minors = ""
-            if isinstance(rune_names, list) and rune_names:
-                primary_minors = "\n  主系3个：" + " / ".join(runes_zh([str(item) for item in rune_names[1:4] if item]))
-            stat_shards = rune.get("stat_shards", [])
-            shard_line = ""
-            if isinstance(stat_shards, list) and stat_shards:
-                shard_line = "\n  小属性：" + " / ".join(runes_zh([str(item) for item in stat_shards if item]))
-            stats = []
-            if rune.get("winrate") is not None:
-                stats.append(f"胜率 {rune.get('winrate')}%")
-            if rune.get("games"):
-                stats.append(f"样本 {rune.get('games')}")
-            reason = rune.get("reason", "")
-            lines.append(
-                f"• {rune_zh(rune.get('primary', '主系'))}：{rune_zh(rune.get('keystone', '核心符文'))}"
-                + primary_minors
-                + f"\n  {secondary_tree + '：' if secondary_tree else '副系：'}{secondary}"
-                + shard_line
-                + (f"\n  {' / '.join(stats)}" if stats else "")
-                + (f"\n  原因：{reason}" if reason else "")
-            )
-        return "\n".join(lines)
 
     @staticmethod
     def _format_builds(builds: list[dict], build_recommendation: dict | None = None) -> str:
