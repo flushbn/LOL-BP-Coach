@@ -7,7 +7,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QVBoxLayout, QWidget
-from utils.champion_assets import champion_icon_path
+from utils.champion_assets import champion_icon_path, champion_key
 from utils.champion_names import champion_display_name
 from utils.game_terms_zh import items_zh
 
@@ -79,7 +79,7 @@ class HeroCard(QFrame):
             tags.append(f"Comfort {comfort_bonus:+}")
         if patch_reason:
             tags.append(f"版本: {patch_reason}")
-        quick_build = _quick_build(raw_champion)
+        quick_build = _quick_build(raw_champion, data.get("target_role", data.get("role", "")))
         if quick_build:
             tags.append("装备: " + " → ".join(items_zh(quick_build[:3])))
 
@@ -137,18 +137,150 @@ def _champion_data() -> dict:
         return {}
 
 
-def _quick_build(champion: str) -> list[str]:
-    tags = set(_champion_data().get(str(champion), {}).get("tags", []))
-    if "tank" in tags or "frontline" in tags:
-        return ["Sunfire Aegis", "Thornmail", "Kaenic Rookern"]
+@lru_cache(maxsize=1)
+def _role_data() -> dict:
+    path = ROOT / "data" / "role_data.json"
+    try:
+        return json.loads(path.read_text(encoding="utf-8-sig")) if path.exists() else {}
+    except Exception:
+        return {}
+
+
+ROLE_TO_LANE = {
+    "TOP": "top",
+    "JUNGLE": "jungle",
+    "MID": "middle",
+    "MIDDLE": "middle",
+    "ADC": "bottom",
+    "BOTTOM": "bottom",
+    "SUPPORT": "support",
+    "UTILITY": "support",
+}
+ROLE_ALIASES = {
+    "TOP": "TOP",
+    "JUNGLE": "JUNGLE",
+    "MID": "MID",
+    "MIDDLE": "MID",
+    "ADC": "ADC",
+    "BOTTOM": "ADC",
+    "SUPPORT": "SUPPORT",
+    "UTILITY": "SUPPORT",
+}
+RIOT_ROLE_TO_INTERNAL = {
+    "TOP": "TOP",
+    "JUNGLE": "JUNGLE",
+    "MIDDLE": "MID",
+    "BOTTOM": "ADC",
+    "UTILITY": "SUPPORT",
+}
+
+CHAMPION_QUICK_BUILDS = {
+    "Malphite": ["Plated Steelcaps", "Sunfire Aegis", "Frozen Heart"],
+    "LeeSin": ["Eclipse", "Sundered Sky", "Mercury's Treads"],
+    "Ahri": ["Malignance", "Sorcerer's Shoes", "Lich Bane"],
+    "Jhin": ["The Collector", "Infinity Edge", "Boots of Swiftness"],
+    "Leona": ["Bloodsong", "Plated Steelcaps", "Locket of the Iron Solari"],
+    "Garen": ["Stridebreaker", "Phantom Dancer", "Dead Man's Plate"],
+    "Kennen": ["Hextech Rocketbelt", "Shadowflame", "Zhonya's Hourglass"],
+    "Qiyana": ["Hubris", "Ionian Boots of Lucidity", "Serylda's Grudge"],
+    "Zed": ["Hubris", "Serylda's Grudge", "Edge of Night"],
+    "Talon": ["Youmuu's Ghostblade", "Opportunity", "Serylda's Grudge"],
+    "Akali": ["Stormsurge", "Lich Bane", "Zhonya's Hourglass"],
+    "Poppy": ["Iceborn Gauntlet", "Sunfire Aegis", "Thornmail"],
+    "Rammus": ["Thornmail", "Plated Steelcaps", "Jak'Sho, The Protean"],
+    "Darius": ["Stridebreaker", "Sterak's Gage", "Dead Man's Plate"],
+    "Aatrox": ["Eclipse", "Sundered Sky", "Death's Dance"],
+    "Camille": ["Trinity Force", "Sundered Sky", "Sterak's Gage"],
+    "Fiora": ["Ravenous Hydra", "Trinity Force", "Death's Dance"],
+    "Jax": ["Trinity Force", "Sundered Sky", "Wit's End"],
+    "Irelia": ["Blade of The Ruined King", "Wit's End", "Death's Dance"],
+    "Ashe": ["Kraken Slayer", "Terminus", "Runaan's Hurricane"],
+    "Caitlyn": ["The Collector", "Infinity Edge", "Rapid Firecannon"],
+    "KaiSa": ["Statikk Shiv", "Nashor's Tooth", "Guinsoo's Rageblade"],
+    "Vi": ["Sundered Sky", "Black Cleaver", "Sterak's Gage"],
+    "JarvanIV": ["Sundered Sky", "Black Cleaver", "Sterak's Gage"],
+    "Lissandra": ["Malignance", "Zhonya's Hourglass", "Shadowflame"],
+    "Malzahar": ["Blackfire Torch", "Rylai's Crystal Scepter", "Liandry's Torment"],
+    "Galio": ["Hollow Radiance", "Kaenic Rookern", "Zhonya's Hourglass"],
+    "Janna": ["Moonstone Renewer", "Redemption", "Mikael's Blessing"],
+    "Milio": ["Moonstone Renewer", "Redemption", "Ardent Censer"],
+    "Taric": ["Locket of the Iron Solari", "Knight's Vow", "Redemption"],
+}
+
+
+def _quick_build(champion: str, role: str = "") -> list[str]:
+    raw_key = str(champion or "")
+    key = raw_key if raw_key in _champion_data() else (champion_key(raw_key) or raw_key)
+    if key in CHAMPION_QUICK_BUILDS:
+        return CHAMPION_QUICK_BUILDS[key]
+    cached = _cached_quick_build(key, role)
+    if cached:
+        return cached
+    tags = set(_champion_data().get(key, {}).get("tags", []))
     if "marksman" in tags or "dps" in tags:
-        return ["Infinity Edge", "Rapid Firecannon", "Lord Dominik's Regards"]
-    if "mage" in tags or "ap" in tags:
-        return ["Luden's Companion", "Shadowflame", "Rabadon's Deathcap"]
+        return ["Kraken Slayer", "Infinity Edge", "Lord Dominik's Regards"]
+    if "assassin" in tags and "ap" in tags:
+        return ["Stormsurge", "Lich Bane", "Zhonya's Hourglass"]
     if "assassin" in tags:
-        return ["Youmuu's Ghostblade", "The Collector", "Serylda's Grudge"]
+        return ["Hubris", "Serylda's Grudge", "Edge of Night"]
+    if "mage" in tags or "ap" in tags:
+        return ["Malignance", "Shadowflame", "Rabadon's Deathcap"]
     if "support" in tags or "enchanter" in tags:
         return ["Moonstone Renewer", "Redemption", "Mikael's Blessing"]
     if "fighter" in tags:
-        return ["Trinity Force", "Sterak's Gage", "Death's Dance"]
+        return ["Sundered Sky", "Black Cleaver", "Sterak's Gage"]
+    if "tank" in tags or "frontline" in tags:
+        return ["Sunfire Aegis", "Thornmail", "Kaenic Rookern"]
     return []
+
+
+def _cached_quick_build(champion: str, role: str = "") -> list[str]:
+    lane = ROLE_TO_LANE.get(str(role or "").upper()) or _primary_lane(champion)
+    if not lane:
+        return []
+    cache_dir = ROOT / "data" / "cache" / "lolalytics" / "16.13" / "builds"
+    lower = champion.lower()
+    candidates = [
+        cache_dir / f"item_paths_v2_champion={lower}_lane={lane}_tier=emerald.json",
+        cache_dir / f"item_paths_champion={lower}_lane={lane}_tier=emerald.json",
+    ]
+    for path in candidates:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8-sig"))
+        except Exception:
+            continue
+        data = payload.get("data", payload)
+        names = [
+            item.get("name", "")
+            for item in (data.get("core_build", []) or [])
+            if isinstance(item, dict) and item.get("name")
+        ]
+        if names:
+            return names[:3]
+    return []
+
+
+def _primary_lane(champion: str) -> str:
+    role_payload = _role_data().get(champion, {})
+    best_role = ""
+    best_score = -1
+    for role, value in role_payload.items():
+        internal = RIOT_ROLE_TO_INTERNAL.get(str(role).upper(), "")
+        try:
+            score = float(value)
+        except Exception:
+            score = 0
+        if internal and score > best_score:
+            best_role, best_score = internal, score
+    if best_role:
+        return ROLE_TO_LANE.get(best_role, "")
+    roles = _champion_data().get(champion, {}).get("roles", [])
+    if roles:
+        return {
+            "top": "top",
+            "jungle": "jungle",
+            "mid": "middle",
+            "adc": "bottom",
+            "support": "support",
+        }.get(str(roles[0]).lower(), "")
+    return ""

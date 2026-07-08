@@ -89,7 +89,9 @@ class RecommendPage(QWidget):
 
         for index, card in enumerate(self.cards):
             if index < len(self._recs):
-                card.render(self._recs[index])
+                card_data = dict(self._recs[index])
+                card_data["target_role"] = self._state.get("role") or self._state.get("target_role") or ""
+                card.render(card_data)
                 card.show()
             else:
                 card.hide()
