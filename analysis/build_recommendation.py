@@ -126,19 +126,19 @@ class BuildRecommendationEngine:
         if profile["ad"] >= 3:
             rows.append({
                 "condition": "enemy_ad_high",
-                "items": ["Thornmail", "Frozen Heart", "Randuin's Omen"] if self._is_tank(tags) else ["Plated Steelcaps", "Death's Dance", "Guardian Angel"],
-                "reason": "敌方物理伤害偏多，护甲装备优先",
+                "items": self._anti_ad_items(tags),
+                "reason": "敌方物理伤害偏多，按英雄类型补生存装",
             })
         if profile["ap"] >= 3:
             rows.append({
                 "condition": "enemy_ap_high",
-                "items": ["Kaenic Rookern", "Force of Nature", "Spirit Visage"] if self._is_tank(tags) else ["Mercury's Treads", "Maw of Malmortius", "Wit's End"],
-                "reason": "敌方法术伤害偏多，魔抗装备优先",
+                "items": self._anti_ap_items(tags),
+                "reason": "敌方法术伤害偏多，按英雄类型补魔抗或容错",
             })
         if profile["burst"] >= 2:
             rows.append({
                 "condition": "enemy_burst_high",
-                "items": ["Zhonya's Hourglass", "Sterak's Gage", "Guardian Angel"],
+                "items": self._anti_burst_items(tags),
                 "reason": "敌方爆发较高，优先生存与容错",
             })
         if not rows:
@@ -230,7 +230,53 @@ class BuildRecommendationEngine:
             return ["Guardian Angel", "Lord Dominik's Regards", "Mercurial Scimitar"]
         if "mage" in tags or "ap" in tags:
             return ["Zhonya's Hourglass", "Void Staff", "Banshee's Veil"]
+        if "assassin" in tags:
+            return ["Edge of Night", "Serylda's Grudge", "Guardian Angel"]
+        if "support" in tags or "enchanter" in tags:
+            return ["Redemption", "Mikael's Blessing", "Locket of the Iron Solari"]
         return ["Guardian Angel", "Death's Dance", "Maw of Malmortius"]
+
+    @staticmethod
+    def _anti_ad_items(tags: set[str]) -> list[str]:
+        if tags.intersection(TANK_TAGS):
+            return ["Thornmail", "Frozen Heart", "Randuin's Omen"]
+        if "mage" in tags or ("ap" in tags and "marksman" not in tags):
+            return ["Zhonya's Hourglass", "Seeker's Armguard", "Banshee's Veil"]
+        if "marksman" in tags:
+            return ["Guardian Angel", "Lord Dominik's Regards", "Bloodthirster"]
+        if "assassin" in tags:
+            return ["Edge of Night", "Guardian Angel", "Serylda's Grudge"]
+        if "support" in tags or "enchanter" in tags:
+            return ["Locket of the Iron Solari", "Redemption", "Mikael's Blessing"]
+        return ["Death's Dance", "Guardian Angel", "Plated Steelcaps"]
+
+    @staticmethod
+    def _anti_ap_items(tags: set[str]) -> list[str]:
+        if tags.intersection(TANK_TAGS):
+            return ["Kaenic Rookern", "Force of Nature", "Spirit Visage"]
+        if "mage" in tags or ("ap" in tags and "marksman" not in tags):
+            return ["Banshee's Veil", "Zhonya's Hourglass", "Void Staff"]
+        if "marksman" in tags:
+            return ["Mercurial Scimitar", "Maw of Malmortius", "Wit's End"]
+        if "assassin" in tags:
+            return ["Edge of Night", "Maw of Malmortius", "Serylda's Grudge"]
+        if "support" in tags or "enchanter" in tags:
+            return ["Mikael's Blessing", "Redemption", "Locket of the Iron Solari"]
+        return ["Maw of Malmortius", "Mercury's Treads", "Wit's End"]
+
+    @staticmethod
+    def _anti_burst_items(tags: set[str]) -> list[str]:
+        if tags.intersection(TANK_TAGS):
+            return ["Jak'Sho, The Protean", "Randuin's Omen", "Kaenic Rookern"]
+        if "mage" in tags or ("ap" in tags and "marksman" not in tags):
+            return ["Zhonya's Hourglass", "Banshee's Veil", "Rabadon's Deathcap"]
+        if "marksman" in tags:
+            return ["Guardian Angel", "Bloodthirster", "Mercurial Scimitar"]
+        if "assassin" in tags:
+            return ["Edge of Night", "Guardian Angel", "Opportunity"]
+        if "support" in tags or "enchanter" in tags:
+            return ["Locket of the Iron Solari", "Redemption", "Mikael's Blessing"]
+        return ["Sterak's Gage", "Guardian Angel", "Death's Dance"]
 
     @staticmethod
     def _load_json(path: Path) -> dict:

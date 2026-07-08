@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import threading
+from pathlib import Path
 
 from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtGui import QPixmap
@@ -27,6 +29,7 @@ from utils.champion_names import champion_display_name
 from utils.game_terms_zh import item_zh, items_zh, rune_zh, runes_zh
 
 
+ROOT = Path(__file__).resolve().parent.parent.parent
 ROLE_TO_LABEL = {
     "TOP": "上路",
     "JUNGLE": "打野",
@@ -36,6 +39,24 @@ ROLE_TO_LABEL = {
     "BOTTOM": "射手",
     "SUPPORT": "辅助",
     "UTILITY": "辅助",
+}
+ROLE_ALIASES = {
+    "TOP": "TOP",
+    "JUNGLE": "JUNGLE",
+    "MID": "MID",
+    "MIDDLE": "MID",
+    "ADC": "ADC",
+    "BOTTOM": "ADC",
+    "SUPPORT": "SUPPORT",
+    "UTILITY": "SUPPORT",
+    "top": "TOP",
+    "jungle": "JUNGLE",
+    "mid": "MID",
+    "middle": "MID",
+    "adc": "ADC",
+    "bottom": "ADC",
+    "support": "SUPPORT",
+    "utility": "SUPPORT",
 }
 
 
@@ -152,6 +173,10 @@ class SelectedChampionsPage(QWidget):
         self._manual_champions: list[str] = []
         self._cards: dict[str, SelectedChampionCard] = {}
         self._loadouts: dict[str, dict] = {}
+        self._roles_by_champion: dict[str, str] = {}
+        self._champion_data = self._load_json(ROOT / "champion_data.json")
+        self._role_data = self._load_json(ROOT / "data" / "role_data.json")
+        self._meta_data = self._load_json(ROOT / "data" / "16.13" / "meta_data.json")
         self._detail_builder = HeroDetailContextBuilder()
         self._signals = _LoadoutSignals()
         self._signals.loaded.connect(self._on_loaded)
@@ -215,16 +240,20 @@ class SelectedChampionsPage(QWidget):
         ally = self._combined_champions(state)
         enemy = [champion_key(item) for item in (state.get("enemy", []) or []) if champion_key(item)]
         role = str(state.get("role") or state.get("target_role") or "")
-        signature = "|".join(ally) + "::" + "|".join(enemy) + "::" + role
+        roles_by_champion = self._resolve_team_roles(ally, role)
+        signature = "|".join(ally) + "::" + "|".join(enemy) + "::" + "|".join(
+            roles_by_champion.get(champion, "") for champion in ally
+        )
         if signature == self._signature:
             return
         self._signature = signature
-        self._render_cards(ally, role)
+        self._roles_by_champion = roles_by_champion
+        self._render_cards(ally, roles_by_champion)
         if not ally:
             self.status.setText("等待识别己方已选英雄")
             return
         self.status.setText(f"已识别己方 {len(ally)} 个英雄，正在后台加载符文和出装...")
-        self._start_loading(signature, ally, enemy, role)
+        self._start_loading(signature, ally, enemy, roles_by_champion)
 
     def add_manual_champion(self, champion: str):
         key = champion_key(champion)
@@ -247,19 +276,19 @@ class SelectedChampionsPage(QWidget):
         detected = [champion_key(item) for item in ((state or {}).get("ally", []) or []) if champion_key(item)]
         return list(dict.fromkeys(detected + self._manual_champions))
 
-    def _render_cards(self, ally: list[str], role: str):
+    def _render_cards(self, ally: list[str], roles_by_champion: dict[str, str]):
         self._clear_layout()
         self._cards = {}
         for index, champion in enumerate(ally, start=1):
             card = SelectedChampionCard()
-            card.render_base(champion, index, role)
+            card.render_base(champion, index, roles_by_champion.get(champion, ""))
             card.clicked.connect(self.open_detail)
             self._cards[champion] = card
             self.card_layout.addWidget(card)
         self.card_layout.addStretch()
         self._loadouts = {champion: payload for champion, payload in self._loadouts.items() if champion in ally}
 
-    def _start_loading(self, signature: str, ally: list[str], enemy: list[str], role: str):
+    def _start_loading(self, signature: str, ally: list[str], enemy: list[str], roles_by_champion: dict[str, str]):
         if signature == self._loading_signature:
             return
         self._loading_signature = signature
@@ -270,9 +299,10 @@ class SelectedChampionsPage(QWidget):
                 build_engine = BuildRecommendationEngine(client)
                 rune_engine = RuneRecommendationEngine(client)
                 for champion in ally:
+                    champion_role = roles_by_champion.get(champion, "")
                     payload = {
-                        "rune": rune_engine.recommend(champion, role, enemy),
-                        "build": build_engine.recommend(champion, role, enemy),
+                        "rune": rune_engine.recommend(champion, champion_role, enemy),
+                        "build": build_engine.recommend(champion, champion_role, enemy),
                     }
                     self._signals.loaded.emit(champion, payload)
             except Exception:
@@ -301,7 +331,7 @@ class SelectedChampionsPage(QWidget):
             app.setProperty("last_viewed_champion", key)
         context = self._detail_builder.build(
             key,
-            current_state=self._last_state,
+            current_state={**self._last_state, "role": self._roles_by_champion.get(key, "")},
             include_online=False,
             loadout_payload=self._loadouts.get(key),
         )
@@ -324,3 +354,51 @@ class SelectedChampionsPage(QWidget):
             widget = item.widget()
             if widget:
                 widget.deleteLater()
+
+    def _resolve_team_roles(self, champions: list[str], fallback_role: str = "") -> dict[str, str]:
+        return {
+            champion: self._primary_role(champion, fallback_role)
+            for champion in champions
+        }
+
+    def _primary_role(self, champion: str, fallback_role: str = "") -> str:
+        key = champion if champion in self._champion_data else champion_key(champion)
+        scores: dict[str, float] = {}
+
+        role_payload = self._role_data.get(key, {})
+        for role, value in role_payload.items():
+            normalized = ROLE_ALIASES.get(str(role), "")
+            if normalized:
+                scores[normalized] = max(scores.get(normalized, 0.0), float(value or 0))
+
+        meta_roles = self._meta_data.get("champions", {}).get(key, {}).get("roles", {})
+        for role, payload in meta_roles.items():
+            normalized = ROLE_ALIASES.get(str(role), "")
+            if not normalized:
+                continue
+            pickrate = self._safe_float(payload.get("pickrate", payload.get("pick_rate", 0)))
+            games = self._safe_float(payload.get("games", 0))
+            scores[normalized] = max(scores.get(normalized, 0.0), pickrate * 10 + min(games / 1000, 20))
+
+        for index, role in enumerate(self._champion_data.get(key, {}).get("roles", [])):
+            normalized = ROLE_ALIASES.get(str(role), "")
+            if normalized:
+                scores[normalized] = max(scores.get(normalized, 0.0), 80 - index * 12)
+
+        if scores:
+            return max(scores.items(), key=lambda item: item[1])[0]
+        return ROLE_ALIASES.get(str(fallback_role), str(fallback_role or "").upper())
+
+    @staticmethod
+    def _safe_float(value, default: float = 0.0) -> float:
+        try:
+            return float(value)
+        except Exception:
+            return default
+
+    @staticmethod
+    def _load_json(path: Path) -> dict:
+        try:
+            return json.loads(path.read_text(encoding="utf-8-sig")) if path.exists() else {}
+        except Exception:
+            return {}
