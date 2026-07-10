@@ -83,7 +83,8 @@ python run_ingame_overlay.py
   "y": 80,
   "width": 360,
   "height": 520,
-  "opacity": 92,
+  "opacity": 72,
+  "background_opacity": 72,
   "background_strength": 36,
   "collapsed": false,
   "prefer_frozen": true,
@@ -124,7 +125,7 @@ python run_ingame_overlay.py
 - 默认背景更透明，减少遮挡游戏画面。
 - 保留清晰文字、边框和重点建议卡片。
 - 新增 `背景` 滑条：
-  - `透明度`：控制整个窗口透明度。
+  - `底色透明`：只控制背景 / 卡片透明度，文字不透明。
   - `背景`：控制卡片和面板底色深浅。
 - 背景强度会保存到 `data/ingame_overlay_settings.json`。
 

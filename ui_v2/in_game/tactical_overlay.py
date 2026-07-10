@@ -44,6 +44,7 @@ DEFAULT_SETTINGS = {
     "width": 360,
     "height": 520,
     "opacity": 92,
+    "background_opacity": 72,
     "background_strength": 36,
     "collapsed": False,
     "prefer_frozen": True,
@@ -134,12 +135,14 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
 """
 
 
-def _build_style(background_strength: int) -> str:
+def _build_style(background_strength: int, background_opacity: int = 72) -> str:
     strength = max(20, min(100, int(background_strength)))
-    root_alpha = int(18 + strength * 0.95)
-    title_alpha = int(28 + strength * 1.05)
-    card_alpha = int(20 + strength * 1.0)
-    button_alpha = int(28 + strength * 0.95)
+    opacity = max(15, min(100, int(background_opacity)))
+    opacity_factor = opacity / 100
+    root_alpha = int((18 + strength * 0.95) * opacity_factor)
+    title_alpha = int((28 + strength * 1.05) * opacity_factor)
+    card_alpha = int((20 + strength * 1.0) * opacity_factor)
+    button_alpha = int((28 + strength * 0.95) * opacity_factor)
     border_alpha = int(95 + strength * 1.15)
     replacements = {
         "__ROOT_ALPHA__": str(min(220, root_alpha)),
@@ -221,10 +224,21 @@ class InGameTacticalOverlay(QWidget):
         self.setAttribute(Qt.WA_ShowWithoutActivating, True)
         self._background_strength = max(
             20,
-            min(100, int(self._settings.get("background_strength") or 48)),
+            min(100, int(self._settings.get("background_strength") or 36)),
         )
-        self.setStyleSheet(_build_style(self._background_strength))
-        self.setWindowOpacity(max(50, min(100, int(self._settings.get("opacity") or 92))) / 100)
+        self._background_opacity = max(
+            15,
+            min(
+                100,
+                int(
+                    self._settings.get("background_opacity")
+                    or self._settings.get("opacity")
+                    or 72
+                ),
+            ),
+        )
+        self.setStyleSheet(_build_style(self._background_strength, self._background_opacity))
+        self.setWindowOpacity(1.0)
 
         self._drag_pos = None
         self._paused = False
@@ -315,14 +329,14 @@ class InGameTacticalOverlay(QWidget):
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(8)
 
-        self.opacity_caption = QLabel("透明度")
+        self.opacity_caption = QLabel("底色透明")
         self.opacity_caption.setObjectName("Muted")
         row.addWidget(self.opacity_caption)
 
         self.opacity_slider = QSlider(Qt.Horizontal)
-        self.opacity_slider.setRange(60, 100)
-        self.opacity_slider.setValue(max(60, min(100, int(self._settings.get("opacity") or 92))))
-        self.opacity_slider.valueChanged.connect(self.set_overlay_opacity)
+        self.opacity_slider.setRange(15, 100)
+        self.opacity_slider.setValue(self._background_opacity)
+        self.opacity_slider.valueChanged.connect(self.set_background_opacity)
         row.addWidget(self.opacity_slider, 1)
 
         self.opacity_label = QLabel(f"{self.opacity_slider.value()}%")
@@ -430,18 +444,24 @@ class InGameTacticalOverlay(QWidget):
         for widget in getattr(self, "_full_widgets", []):
             widget.setVisible(not self._compact_mode)
 
-    def set_overlay_opacity(self, value: int):
-        value = max(60, min(100, int(value)))
+    def set_background_opacity(self, value: int):
+        value = max(15, min(100, int(value)))
+        self._background_opacity = value
         self.opacity_label.setText(f"{value}%")
-        self.setWindowOpacity(value / 100)
+        self.setWindowOpacity(1.0)
+        self.setStyleSheet(_build_style(self._background_strength, self._background_opacity))
+        self._settings["background_opacity"] = value
         self._settings["opacity"] = value
         _save_settings(self._settings)
+
+    def set_overlay_opacity(self, value: int):
+        self.set_background_opacity(value)
 
     def set_background_strength(self, value: int):
         value = max(20, min(100, int(value)))
         self._background_strength = value
         self.background_label.setText(f"{value}%")
-        self.setStyleSheet(_build_style(value))
+        self.setStyleSheet(_build_style(value, self._background_opacity))
         self._settings["background_strength"] = value
         _save_settings(self._settings)
 
