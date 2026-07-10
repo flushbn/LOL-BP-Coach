@@ -1,0 +1,89 @@
+# In-game Tactical Overlay V1
+
+## 目标
+
+实现第一版安全局内战术浮窗，用于在进入游戏后查看 BP 阶段已经生成的阵容分析、路线强弱、资源节奏和战术建议。
+
+## 新增文件
+
+- `ui_v2/in_game/__init__.py`
+- `ui_v2/in_game/tactical_overlay.py`
+- `run_ingame_overlay.py`
+- `运行局内战术浮窗.bat`
+
+## 修改文件
+
+- `ui_v2/main_window.py`
+
+## 启动方式
+
+1. 主客户端中点击：`局内浮窗`
+2. 或单独运行：
+
+```bash
+python run_ingame_overlay.py
+```
+
+## 数据来源
+
+唯一读取：
+
+- `data/live_state.json`
+
+显示内容来自：
+
+- `coach.lane_state`
+- `coach.macro_plan`
+- `coach.ally`
+- `coach.enemy`
+- `coach.comparison`
+- `coach.advice`
+- `ally`
+- `enemy`
+- `role`
+
+## 安全边界
+
+本版本只做静态/半静态战术展示：
+
+- 不读取游戏内存
+- 不注入游戏进程
+- 不自动操作鼠标键盘
+- 不追踪敌方隐藏信息
+- 不追踪敌方技能/大招冷却
+- 不调用推荐引擎
+- 不实时读取游戏内部状态
+
+## 功能
+
+- 永远置顶
+- 无边框
+- 可拖动
+- 可滚动
+- 可暂停刷新
+- 可手动刷新
+- 可折叠
+- 尝试启用 Windows 截图隔离，避免被识别系统截入画面
+
+## 是否影响现有功能
+
+不影响。
+
+该模块只新增 UI 展示入口，不修改：
+
+- BP 识别
+- 推荐排序
+- 对线推荐
+- 战术分析计算
+- Overlay
+- Desktop 主客户端核心逻辑
+
+## 后续方向
+
+下一阶段可以加入：
+
+1. 游戏内小型资源提醒卡片
+2. 装备路线速查
+3. 团战目标提示
+4. 透明度与位置保存
+5. 仅展示冻结 BP 结果的局内模式

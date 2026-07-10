@@ -31,6 +31,7 @@ from ui_v2.pages.recommend_page import RecommendPage
 from ui_v2.pages.selected_champions_page import SelectedChampionsPage
 from ui_v2.pages.update_page import UpdatePage
 from ui_v2.state_reader import LIVE_STATE_PATH, read_state
+from ui_v2.in_game.tactical_overlay import InGameTacticalOverlay
 from analysis.data_patch_manager import DataPatchManager
 from analysis.draft_session_control import pause_state, resume_updates, start_new_game, write_live_state
 from utils.champion_names import champion_display_name
@@ -247,6 +248,7 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(980, 620)
         self.setStyleSheet(APP_STYLE)
         self.recognition_process: subprocess.Popen | None = None
+        self.ingame_overlay: InGameTacticalOverlay | None = None
 
         self.update_page = UpdatePage()
         self.update_page.status_changed.connect(self.check_patch_notice)
@@ -381,6 +383,11 @@ class MainWindow(QMainWindow):
         self.new_game_button.setToolTip("\u6e05\u7a7a\u5f53\u524dBP\uff0c\u5f00\u59cb\u65b0\u7684\u4e00\u5c40")
         self.new_game_button.clicked.connect(self.start_new_draft_session)
         action_row.addWidget(self.new_game_button)
+
+        self.ingame_overlay_button = QPushButton("局内浮窗")
+        self.ingame_overlay_button.setToolTip("打开只读战术浮窗：显示已生成的局内战术，不读取游戏内存")
+        self.ingame_overlay_button.clicked.connect(self.open_ingame_overlay)
+        action_row.addWidget(self.ingame_overlay_button)
         action_row.addStretch()
         control_box.addLayout(action_row)
 
@@ -560,6 +567,14 @@ class MainWindow(QMainWindow):
         state = start_new_game(role)
         self.render(state)
         self.recognition_status.setText("\u65b0\u7684\u4e00\u5c40\u5df2\u5f00\u59cb")
+
+    def open_ingame_overlay(self):
+        if self.ingame_overlay is None or not self.ingame_overlay.isVisible():
+            self.ingame_overlay = InGameTacticalOverlay()
+        self.ingame_overlay.show()
+        self.ingame_overlay.raise_()
+        self.ingame_overlay.poll_state(force=True)
+        self.recognition_status.setText("局内战术浮窗已打开")
 
     def _update_session_buttons(self, state: dict):
         paused = bool((state.get("session_control") or {}).get("paused"))
