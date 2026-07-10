@@ -46,6 +46,7 @@ DEFAULT_SETTINGS = {
     "opacity": 92,
     "collapsed": False,
     "prefer_frozen": True,
+    "compact_mode": True,
 }
 
 
@@ -199,7 +200,9 @@ class InGameTacticalOverlay(QWidget):
         self._paused = False
         self._collapsed = bool(self._settings.get("collapsed"))
         self._prefer_frozen = bool(self._settings.get("prefer_frozen", True))
+        self._compact_mode = bool(self._settings.get("compact_mode", True))
         self._last_state: dict[str, Any] = {}
+        self._full_widgets: list[QWidget] = []
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
@@ -251,6 +254,11 @@ class InGameTacticalOverlay(QWidget):
         self.frozen_button.setObjectName("PrimaryButton" if self._prefer_frozen else "")
         self.frozen_button.clicked.connect(self.toggle_prefer_frozen)
         row.addWidget(self.frozen_button)
+
+        self.compact_button = QPushButton("精简" if self._compact_mode else "完整")
+        self.compact_button.setObjectName("PrimaryButton" if self._compact_mode else "")
+        self.compact_button.clicked.connect(self.toggle_compact_mode)
+        row.addWidget(self.compact_button)
 
         refresh_button = QPushButton("刷新")
         refresh_button.clicked.connect(lambda: self.poll_state(force=True))
@@ -304,20 +312,25 @@ class InGameTacticalOverlay(QWidget):
         self.team_label = self._card()
         self.advice_label = self._card(alert=True)
 
-        self.content_layout.addWidget(self._section("阵容快照"))
-        self.content_layout.addWidget(self.draft_label)
-        self.content_layout.addWidget(self._section("核心节奏"))
-        self.content_layout.addWidget(self.key_plan_label)
-        self.content_layout.addWidget(self._section("路线强弱"))
-        self.content_layout.addWidget(self.lane_label)
-        self.content_layout.addWidget(self._section("阵容对比"))
-        self.content_layout.addWidget(self.team_label)
-        self.content_layout.addWidget(self._section("战术建议"))
-        self.content_layout.addWidget(self.advice_label)
+        self.compact_label = self._card(alert=True)
+        self.content_layout.addWidget(self.compact_label)
+
+        self._add_full_section("阵容快照", self.draft_label)
+        self._add_full_section("核心节奏", self.key_plan_label)
+        self._add_full_section("路线强弱", self.lane_label)
+        self._add_full_section("阵容对比", self.team_label)
+        self._add_full_section("战术建议", self.advice_label)
         self.content_layout.addStretch()
 
         self.scroll.setWidget(self.content)
         self._layout.addWidget(self.scroll, 1)
+        self._apply_view_mode()
+
+    def _add_full_section(self, title: str, card: QLabel):
+        section = self._section(title)
+        self._full_widgets.extend([section, card])
+        self.content_layout.addWidget(section)
+        self.content_layout.addWidget(card)
 
     def _section(self, text: str) -> QLabel:
         label = QLabel(text)
@@ -343,6 +356,24 @@ class InGameTacticalOverlay(QWidget):
         self._settings["prefer_frozen"] = self._prefer_frozen
         _save_settings(self._settings)
         self.poll_state(force=True)
+
+    def toggle_compact_mode(self):
+        self._compact_mode = not self._compact_mode
+        self.compact_button.setText("精简" if self._compact_mode else "完整")
+        self.compact_button.setObjectName("PrimaryButton" if self._compact_mode else "")
+        self.compact_button.style().unpolish(self.compact_button)
+        self.compact_button.style().polish(self.compact_button)
+        self._settings["compact_mode"] = self._compact_mode
+        _save_settings(self._settings)
+        self._apply_view_mode()
+        self.poll_state(force=True)
+
+    def _apply_view_mode(self):
+        if not hasattr(self, "compact_label"):
+            return
+        self.compact_label.setVisible(self._compact_mode)
+        for widget in getattr(self, "_full_widgets", []):
+            widget.setVisible(not self._compact_mode)
 
     def set_overlay_opacity(self, value: int):
         value = max(60, min(100, int(value)))
@@ -417,6 +448,93 @@ class InGameTacticalOverlay(QWidget):
         self.lane_label.setText(self._format_lanes(state))
         self.team_label.setText(self._format_team_comparison(state))
         self.advice_label.setText(self._format_advice(state))
+        self.compact_label.setText(self._format_compact(state))
+
+    def _format_compact(self, state: dict[str, Any]) -> str:
+        coach = _safe_dict(state.get("coach"))
+        macro = _safe_dict(coach.get("macro_plan"))
+        lane_state = _safe_dict(coach.get("lane_state"))
+        lanes = _safe_list(lane_state.get("lanes"))
+
+        lines = []
+        primary_side = macro.get("primary_side") or "未判断"
+        primary_lane = macro.get("primary_lane") or "未判断"
+        lines.append(f"主节奏：{primary_side} / {primary_lane}")
+
+        attack_lanes = []
+        protect_lanes = []
+        for lane in lanes:
+            if not isinstance(lane, dict):
+                continue
+            label = lane.get("label") or lane.get("lane") or "路线"
+            priority = str(lane.get("priority") or "")
+            state_text = str(lane.get("state") or "")
+            if "主攻" in priority or "大优" in state_text:
+                attack_lanes.append(label)
+            if "防守" in priority or "劣" in state_text:
+                protect_lanes.append(label)
+        if attack_lanes:
+            lines.append(f"主攻路：{'、'.join(attack_lanes[:2])}")
+        if protect_lanes:
+            lines.append(f"防守路：{'、'.join(protect_lanes[:2])}")
+
+        key_lane = self._pick_key_lane(lanes)
+        if key_lane:
+            lines.append(key_lane)
+
+        advice_lines = self._collect_advice_lines(state, limit=3)
+        if advice_lines:
+            lines.append("关键建议：")
+            lines.extend([f"✓ {item}" for item in advice_lines])
+        else:
+            lines.extend([f"✓ {item}" for item in _safe_list(macro.get("summary"))[:3]])
+
+        return _join_lines(lines, "暂无精简战术，请先完成 BP 识别或载入演示阵容。")
+
+    def _pick_key_lane(self, lanes: list) -> str:
+        for lane in lanes:
+            if not isinstance(lane, dict):
+                continue
+            priority = str(lane.get("priority") or "")
+            if "主攻" in priority:
+                return self._format_lane_one_line(lane)
+        for lane in lanes:
+            if isinstance(lane, dict):
+                return self._format_lane_one_line(lane)
+        return ""
+
+    def _format_lane_one_line(self, lane: dict[str, Any]) -> str:
+        label = lane.get("label") or lane.get("lane") or "路线"
+        state_text = lane.get("state") or "未知"
+        ally = lane.get("ally_display") or champion_display_name(lane.get("ally", ""))
+        enemy = lane.get("enemy_display") or champion_display_name(lane.get("enemy", ""))
+        action = lane.get("jungle_action") or lane.get("advice") or ""
+        if action:
+            return f"{label}：{ally} vs {enemy}｜{state_text}\n→ {action}"
+        return f"{label}：{ally} vs {enemy}｜{state_text}"
+
+    def _collect_advice_lines(self, state: dict[str, Any], limit: int = 3) -> list[str]:
+        coach = _safe_dict(state.get("coach"))
+        macro = _safe_dict(coach.get("macro_plan"))
+        raw_advice = coach.get("advice")
+        lines = []
+        if isinstance(raw_advice, str):
+            lines.extend([line.strip(" ✓·") for line in raw_advice.splitlines() if line.strip()])
+        elif isinstance(raw_advice, list):
+            lines.extend([str(item).strip(" ✓·") for item in raw_advice if str(item).strip()])
+        lines.extend([str(item).strip(" ✓·") for item in _safe_list(macro.get("objectives"))])
+        lines.extend([str(item).strip(" ✓·") for item in _safe_list(macro.get("risk_alerts"))])
+
+        deduped = []
+        seen = set()
+        for line in lines:
+            if not line or line in seen:
+                continue
+            seen.add(line)
+            deduped.append(line)
+            if len(deduped) >= limit:
+                break
+        return deduped
 
     def _format_draft(self, state: dict[str, Any]) -> str:
         ally = [champion_display_name(item) for item in _safe_list(state.get("ally"))]
@@ -513,19 +631,10 @@ class InGameTacticalOverlay(QWidget):
         return mapping.get(value, "")
 
     def _format_advice(self, state: dict[str, Any]) -> str:
-        coach = _safe_dict(state.get("coach"))
-        advice = coach.get("advice")
-        macro = _safe_dict(coach.get("macro_plan"))
-        lines = []
-        if isinstance(advice, str):
-            lines.extend([line.strip() for line in advice.splitlines() if line.strip()])
-        elif isinstance(advice, list):
-            lines.extend([str(item).strip() for item in advice if str(item).strip()])
-        lines.extend(_safe_list(macro.get("objectives"))[:2])
-        lines.extend(_safe_list(macro.get("risk_alerts"))[:2])
+        lines = self._collect_advice_lines(state, limit=6)
         if not lines:
             return "暂无战术建议。"
-        return "\n".join([f"✓ {item}" for item in lines[:6]])
+        return "\n".join([f"✓ {item}" for item in lines])
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
