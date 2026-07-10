@@ -54,7 +54,7 @@ DEFAULT_SETTINGS = {
 OVERLAY_STYLE_TEMPLATE = """
 QWidget {
     background: transparent;
-    color: #F8FAFC;
+    color: #0F172A;
     font-family: Microsoft YaHei, Segoe UI, Arial;
     font-size: 14px;
     font-weight: 700;
@@ -70,16 +70,16 @@ QFrame#TitleBar {
     border-radius: 12px;
 }
 QLabel#Title {
-    color: #FACC15;
+    color: #111827;
     font-size: 16px;
     font-weight: 800;
 }
 QLabel#Muted {
-    color: #E0F2FE;
+    color: #1E3A8A;
     font-weight: 800;
 }
 QLabel#SectionTitle {
-    color: #67E8F9;
+    color: #075985;
     font-size: 14px;
     font-weight: 800;
 }
@@ -89,19 +89,19 @@ QLabel#Card {
     border-radius: 10px;
     padding: 8px;
     line-height: 150%;
-    color: #F8FAFC;
+    color: #0F172A;
 }
 QLabel#AlertCard {
-    background: rgba(255, 255, 255, __CARD_ALPHA__);
+    background: rgba(254, 243, 199, __CARD_ALPHA__);
     border: 1px solid rgba(250, 204, 21, __BORDER_ALPHA__);
     border-radius: 10px;
-    color: #FEF3C7;
+    color: #7C2D12;
     padding: 8px;
     font-weight: 800;
 }
 QPushButton {
     background: rgba(255, 255, 255, __BUTTON_ALPHA__);
-    color: #F8FAFC;
+    color: #0F172A;
     border: 1px solid rgba(255, 255, 255, __BORDER_ALPHA__);
     border-radius: 8px;
     padding: 5px 9px;
@@ -113,6 +113,7 @@ QPushButton:hover {
 QPushButton#PrimaryButton {
     background: rgba(14, 165, 233, 185);
     border-color: rgba(125, 211, 252, 230);
+    color: #FFFFFF;
 }
 QScrollArea {
     border: none;
