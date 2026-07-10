@@ -44,7 +44,7 @@ DEFAULT_SETTINGS = {
     "width": 360,
     "height": 520,
     "opacity": 92,
-    "background_strength": 48,
+    "background_strength": 36,
     "collapsed": False,
     "prefer_frozen": True,
     "compact_mode": True,
@@ -54,72 +54,76 @@ DEFAULT_SETTINGS = {
 OVERLAY_STYLE_TEMPLATE = """
 QWidget {
     background: transparent;
-    color: #E5E7EB;
+    color: #F8FAFC;
     font-family: Microsoft YaHei, Segoe UI, Arial;
-    font-size: 13px;
+    font-size: 14px;
+    font-weight: 700;
 }
 QFrame#Root {
-    background: rgba(8, 12, 24, __ROOT_ALPHA__);
-    border: 1px solid rgba(147, 197, 253, __BORDER_ALPHA__);
+    background: rgba(248, 250, 252, __ROOT_ALPHA__);
+    border: 1px solid rgba(255, 255, 255, __BORDER_ALPHA__);
     border-radius: 14px;
 }
 QFrame#TitleBar {
-    background: rgba(15, 23, 42, __TITLE_ALPHA__);
-    border: 1px solid rgba(148, 163, 184, __BORDER_ALPHA__);
+    background: rgba(241, 245, 249, __TITLE_ALPHA__);
+    border: 1px solid rgba(255, 255, 255, __BORDER_ALPHA__);
     border-radius: 12px;
 }
 QLabel#Title {
-    color: #FBBF24;
+    color: #FACC15;
     font-size: 16px;
     font-weight: 800;
 }
 QLabel#Muted {
-    color: #94A3B8;
+    color: #E0F2FE;
+    font-weight: 800;
 }
 QLabel#SectionTitle {
-    color: #93C5FD;
+    color: #67E8F9;
     font-size: 14px;
     font-weight: 800;
 }
 QLabel#Card {
-    background: rgba(15, 23, 42, __CARD_ALPHA__);
-    border: 1px solid rgba(148, 163, 184, __BORDER_ALPHA__);
+    background: rgba(255, 255, 255, __CARD_ALPHA__);
+    border: 1px solid rgba(255, 255, 255, __BORDER_ALPHA__);
     border-radius: 10px;
     padding: 8px;
     line-height: 150%;
+    color: #F8FAFC;
 }
 QLabel#AlertCard {
-    background: rgba(44, 32, 10, __CARD_ALPHA__);
-    border: 1px solid rgba(251, 191, 36, __BORDER_ALPHA__);
+    background: rgba(255, 255, 255, __CARD_ALPHA__);
+    border: 1px solid rgba(250, 204, 21, __BORDER_ALPHA__);
     border-radius: 10px;
-    color: #FDE68A;
+    color: #FEF3C7;
     padding: 8px;
+    font-weight: 800;
 }
 QPushButton {
-    background: rgba(31, 41, 55, __BUTTON_ALPHA__);
+    background: rgba(255, 255, 255, __BUTTON_ALPHA__);
     color: #F8FAFC;
-    border: 1px solid rgba(148, 163, 184, __BORDER_ALPHA__);
+    border: 1px solid rgba(255, 255, 255, __BORDER_ALPHA__);
     border-radius: 8px;
     padding: 5px 9px;
-    font-weight: 700;
+    font-weight: 800;
 }
 QPushButton:hover {
-    background: rgba(51, 65, 85, 210);
+    background: rgba(255, 255, 255, 155);
 }
 QPushButton#PrimaryButton {
-    background: rgba(37, 99, 235, 210);
-    border-color: rgba(96, 165, 250, 230);
+    background: rgba(14, 165, 233, 185);
+    border-color: rgba(125, 211, 252, 230);
 }
 QScrollArea {
     border: none;
     background: transparent;
 }
 QScrollBar:vertical {
-    background: rgba(11, 16, 32, 80);
+    background: rgba(255, 255, 255, 45);
     width: 8px;
 }
 QScrollBar::handle:vertical {
-    background: rgba(148, 163, 184, 150);
+    background: rgba(255, 255, 255, 145);
     border-radius: 4px;
     min-height: 32px;
 }
@@ -131,11 +135,11 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
 
 def _build_style(background_strength: int) -> str:
     strength = max(20, min(100, int(background_strength)))
-    root_alpha = int(65 + strength * 1.35)
-    title_alpha = int(70 + strength * 1.25)
-    card_alpha = int(55 + strength * 1.25)
-    button_alpha = int(75 + strength * 1.1)
-    border_alpha = int(70 + strength * 1.3)
+    root_alpha = int(18 + strength * 0.95)
+    title_alpha = int(28 + strength * 1.05)
+    card_alpha = int(20 + strength * 1.0)
+    button_alpha = int(28 + strength * 0.95)
+    border_alpha = int(95 + strength * 1.15)
     replacements = {
         "__ROOT_ALPHA__": str(min(220, root_alpha)),
         "__TITLE_ALPHA__": str(min(220, title_alpha)),
@@ -520,7 +524,7 @@ class InGameTacticalOverlay(QWidget):
         lines = []
         primary_side = macro.get("primary_side") or "未判断"
         primary_lane = macro.get("primary_lane") or "未判断"
-        lines.append(f"主节奏：{primary_side} / {primary_lane}")
+        lines.append(f"◆ 主节奏：{primary_side} / {primary_lane}")
 
         attack_lanes = []
         protect_lanes = []
@@ -535,9 +539,9 @@ class InGameTacticalOverlay(QWidget):
             if "防守" in priority or "劣" in state_text:
                 protect_lanes.append(label)
         if attack_lanes:
-            lines.append(f"主攻路：{'、'.join(attack_lanes[:2])}")
+            lines.append(f"▲ 主攻：{'、'.join(attack_lanes[:2])}")
         if protect_lanes:
-            lines.append(f"防守路：{'、'.join(protect_lanes[:2])}")
+            lines.append(f"▼ 防守：{'、'.join(protect_lanes[:2])}")
 
         key_lane = self._pick_key_lane(lanes)
         if key_lane:
@@ -545,7 +549,7 @@ class InGameTacticalOverlay(QWidget):
 
         advice_lines = self._collect_advice_lines(state, limit=3)
         if advice_lines:
-            lines.append("关键建议：")
+            lines.append("★ 关键建议")
             lines.extend([f"✓ {item}" for item in advice_lines])
         else:
             lines.extend([f"✓ {item}" for item in _safe_list(macro.get("summary"))[:3]])
@@ -571,8 +575,8 @@ class InGameTacticalOverlay(QWidget):
         enemy = lane.get("enemy_display") or champion_display_name(lane.get("enemy", ""))
         action = lane.get("jungle_action") or lane.get("advice") or ""
         if action:
-            return f"{label}：{ally} vs {enemy}｜{state_text}\n→ {action}"
-        return f"{label}：{ally} vs {enemy}｜{state_text}"
+            return f"● {label}：{ally} vs {enemy}｜{state_text}\n→ {action}"
+        return f"● {label}：{ally} vs {enemy}｜{state_text}"
 
     def _collect_advice_lines(self, state: dict[str, Any], limit: int = 3) -> list[str]:
         coach = _safe_dict(state.get("coach"))

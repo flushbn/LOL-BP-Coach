@@ -84,7 +84,7 @@ python run_ingame_overlay.py
   "width": 360,
   "height": 520,
   "opacity": 92,
-  "background_strength": 48,
+  "background_strength": 36,
   "collapsed": false,
   "prefer_frozen": true,
   "compact_mode": true
@@ -127,6 +127,16 @@ python run_ingame_overlay.py
   - `透明度`：控制整个窗口透明度。
   - `背景`：控制卡片和面板底色深浅。
 - 背景强度会保存到 `data/ingame_overlay_settings.json`。
+
+## 第五步增强
+
+切换为白玻璃 HUD 主题：
+
+- 背景从蓝黑色改为白色 / 灰白玻璃效果。
+- 默认背景强度从 `48` 调整为 `36`，更轻、更不遮挡。
+- 标题使用金色，分段标题使用青色。
+- 关键建议使用更亮的黄色。
+- 精简模式增加 `◆`、`▲`、`▼`、`★`、`●` 标识，局内扫一眼更容易读。
 
 ## 是否影响现有功能
 
