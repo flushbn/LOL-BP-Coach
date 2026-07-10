@@ -92,7 +92,7 @@ QLabel#Card {
     color: #0F172A;
 }
 QLabel#AlertCard {
-    background: rgba(254, 243, 199, __CARD_ALPHA__);
+    background: rgba(255, 255, 255, __CARD_ALPHA__);
     border: 1px solid rgba(250, 204, 21, __BORDER_ALPHA__);
     border-radius: 10px;
     color: #7C2D12;
