@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -17,10 +18,12 @@ from PySide6.QtWidgets import (
     QLabel,
     QPushButton,
     QScrollArea,
+    QSlider,
     QVBoxLayout,
     QWidget,
 )
 
+from analysis.draft_session_control import read_control
 from ui_v2.state_reader import read_state
 from utils.champion_names import champion_display_name
 from utils.window_capture_exclusion import exclude_window_from_capture
@@ -32,6 +35,17 @@ ROLE_LABELS = {
     "MID": "中路",
     "ADC": "射手",
     "SUPPORT": "辅助",
+}
+
+SETTINGS_PATH = ROOT / "data" / "ingame_overlay_settings.json"
+DEFAULT_SETTINGS = {
+    "x": 80,
+    "y": 80,
+    "width": 360,
+    "height": 520,
+    "opacity": 92,
+    "collapsed": False,
+    "prefer_frozen": True,
 }
 
 
@@ -126,6 +140,30 @@ def _join_lines(items: list[str], empty: str = "暂无") -> str:
     return "\n".join(valid) if valid else empty
 
 
+def _load_settings() -> dict[str, Any]:
+    try:
+        if SETTINGS_PATH.exists():
+            data = json.loads(SETTINGS_PATH.read_text(encoding="utf-8-sig"))
+            if isinstance(data, dict):
+                settings = dict(DEFAULT_SETTINGS)
+                settings.update(data)
+                return settings
+    except Exception:
+        pass
+    return dict(DEFAULT_SETTINGS)
+
+
+def _save_settings(settings: dict[str, Any]):
+    try:
+        SETTINGS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        SETTINGS_PATH.write_text(
+            json.dumps(settings, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except Exception:
+        pass
+
+
 class InGameTacticalOverlay(QWidget):
     """Safe in-game tactical card.
 
@@ -141,7 +179,11 @@ class InGameTacticalOverlay(QWidget):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("LoL BP Coach 局内战术")
-        self.resize(self.DEFAULT_W, self.DEFAULT_H)
+        self._settings = _load_settings()
+        self.resize(
+            int(self._settings.get("width") or self.DEFAULT_W),
+            int(self._settings.get("height") or self.DEFAULT_H),
+        )
         self.setMinimumSize(260, 180)
         self.setWindowFlags(
             Qt.WindowStaysOnTopHint
@@ -151,11 +193,12 @@ class InGameTacticalOverlay(QWidget):
         )
         self.setAttribute(Qt.WA_ShowWithoutActivating, True)
         self.setStyleSheet(OVERLAY_STYLE)
-        self.setWindowOpacity(0.92)
+        self.setWindowOpacity(max(50, min(100, int(self._settings.get("opacity") or 92))) / 100)
 
         self._drag_pos = None
         self._paused = False
-        self._collapsed = False
+        self._collapsed = bool(self._settings.get("collapsed"))
+        self._prefer_frozen = bool(self._settings.get("prefer_frozen", True))
         self._last_state: dict[str, Any] = {}
 
         outer = QVBoxLayout(self)
@@ -171,11 +214,15 @@ class InGameTacticalOverlay(QWidget):
 
         self._build_title_bar()
         self._build_scroll_content()
+        self._build_settings_bar()
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.poll_state)
         self._timer.start(500)
 
+        self._restore_geometry()
+        if self._collapsed:
+            self._apply_collapsed_state()
         self.poll_state()
         QTimer.singleShot(300, self.enable_capture_exclusion)
 
@@ -200,6 +247,11 @@ class InGameTacticalOverlay(QWidget):
         self.pause_button.clicked.connect(self.toggle_pause)
         row.addWidget(self.pause_button)
 
+        self.frozen_button = QPushButton("定格优先")
+        self.frozen_button.setObjectName("PrimaryButton" if self._prefer_frozen else "")
+        self.frozen_button.clicked.connect(self.toggle_prefer_frozen)
+        row.addWidget(self.frozen_button)
+
         refresh_button = QPushButton("刷新")
         refresh_button.clicked.connect(lambda: self.poll_state(force=True))
         row.addWidget(refresh_button)
@@ -215,6 +267,28 @@ class InGameTacticalOverlay(QWidget):
         row.addWidget(close_button)
 
         self._layout.addWidget(title_bar)
+
+    def _build_settings_bar(self):
+        row = QHBoxLayout()
+        row.setContentsMargins(2, 0, 2, 0)
+        row.setSpacing(8)
+
+        self.opacity_caption = QLabel("透明度")
+        self.opacity_caption.setObjectName("Muted")
+        row.addWidget(self.opacity_caption)
+
+        self.opacity_slider = QSlider(Qt.Horizontal)
+        self.opacity_slider.setRange(60, 100)
+        self.opacity_slider.setValue(max(60, min(100, int(self._settings.get("opacity") or 92))))
+        self.opacity_slider.valueChanged.connect(self.set_overlay_opacity)
+        row.addWidget(self.opacity_slider, 1)
+
+        self.opacity_label = QLabel(f"{self.opacity_slider.value()}%")
+        self.opacity_label.setObjectName("Muted")
+        self.opacity_label.setFixedWidth(42)
+        row.addWidget(self.opacity_label)
+
+        self._layout.addLayout(row)
 
     def _build_scroll_content(self):
         self.scroll = QScrollArea()
@@ -260,6 +334,23 @@ class InGameTacticalOverlay(QWidget):
     def enable_capture_exclusion(self):
         exclude_window_from_capture(int(self.winId()))
 
+    def toggle_prefer_frozen(self):
+        self._prefer_frozen = not self._prefer_frozen
+        self.frozen_button.setText("定格优先" if self._prefer_frozen else "实时优先")
+        self.frozen_button.setObjectName("PrimaryButton" if self._prefer_frozen else "")
+        self.frozen_button.style().unpolish(self.frozen_button)
+        self.frozen_button.style().polish(self.frozen_button)
+        self._settings["prefer_frozen"] = self._prefer_frozen
+        _save_settings(self._settings)
+        self.poll_state(force=True)
+
+    def set_overlay_opacity(self, value: int):
+        value = max(60, min(100, int(value)))
+        self.opacity_label.setText(f"{value}%")
+        self.setWindowOpacity(value / 100)
+        self._settings["opacity"] = value
+        _save_settings(self._settings)
+
     def toggle_pause(self):
         self._paused = not self._paused
         self.pause_button.setText("继续" if self._paused else "暂停")
@@ -270,28 +361,54 @@ class InGameTacticalOverlay(QWidget):
 
     def toggle_collapse(self):
         self._collapsed = not self._collapsed
+        self._apply_collapsed_state()
+        self._settings["collapsed"] = self._collapsed
+        _save_settings(self._settings)
+
+    def _apply_collapsed_state(self):
         self.scroll.setVisible(not self._collapsed)
+        self.opacity_caption.setVisible(not self._collapsed)
+        self.opacity_slider.setVisible(not self._collapsed)
+        self.opacity_label.setVisible(not self._collapsed)
         self.collapse_button.setText("+" if self._collapsed else "—")
         if self._collapsed:
             self.resize(self.COLLAPSED_W, self.COLLAPSED_H)
             self.setMinimumSize(self.COLLAPSED_W, self.COLLAPSED_H)
         else:
             self.setMinimumSize(260, 180)
-            self.resize(self.DEFAULT_W, self.DEFAULT_H)
+            self.resize(
+                int(self._settings.get("width") or self.DEFAULT_W),
+                int(self._settings.get("height") or self.DEFAULT_H),
+            )
 
     def poll_state(self, force: bool = False):
         if self._paused and not force:
             return
-        state = read_state()
+        state = self._read_display_state()
         self._last_state = state
         self.render(state)
+
+    def _read_display_state(self) -> dict[str, Any]:
+        live_state = read_state()
+        if not self._prefer_frozen:
+            live_state["_overlay_source"] = "实时"
+            return live_state
+        control = read_control()
+        frozen_state = control.get("frozen_state")
+        if isinstance(frozen_state, dict) and frozen_state.get("timestamp"):
+            state = dict(frozen_state)
+            state["_overlay_source"] = "定格"
+            return state
+        live_state["_overlay_source"] = "实时"
+        return live_state
 
     def render(self, state: dict[str, Any]):
         timestamp = int(state.get("timestamp") or 0)
         role = ROLE_LABELS.get(state.get("role") or state.get("target_role") or "", "未选择")
+        source = state.get("_overlay_source") or "实时"
         if timestamp:
             updated = datetime.fromtimestamp(timestamp).strftime("%H:%M:%S")
-            self.status_label.setText(f"● 已连接  位置：{role}  更新：{updated}")
+            self.status_label.setText(f"● {source}  位置：{role}  更新：{updated}")
         else:
             self.status_label.setText("等待 BP 数据")
 
@@ -422,7 +539,32 @@ class InGameTacticalOverlay(QWidget):
 
     def mouseReleaseEvent(self, event):
         self._drag_pos = None
+        self._save_geometry()
         event.accept()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if not getattr(self, "_collapsed", False):
+            self._settings["width"] = self.width()
+            self._settings["height"] = self.height()
+            _save_settings(self._settings)
+
+    def closeEvent(self, event):
+        self._save_geometry()
+        super().closeEvent(event)
+
+    def _restore_geometry(self):
+        x = int(self._settings.get("x") or DEFAULT_SETTINGS["x"])
+        y = int(self._settings.get("y") or DEFAULT_SETTINGS["y"])
+        self.move(x, y)
+
+    def _save_geometry(self):
+        self._settings["x"] = self.x()
+        self._settings["y"] = self.y()
+        if not self._collapsed:
+            self._settings["width"] = self.width()
+            self._settings["height"] = self.height()
+        _save_settings(self._settings)
 
 
 def main():

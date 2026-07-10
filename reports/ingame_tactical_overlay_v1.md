@@ -63,7 +63,37 @@ python run_ingame_overlay.py
 - 可暂停刷新
 - 可手动刷新
 - 可折叠
+- 保存窗口位置
+- 保存窗口尺寸
+- 保存透明度
+- 支持定格优先 / 实时优先切换
 - 尝试启用 Windows 截图隔离，避免被识别系统截入画面
+
+## 第二步增强
+
+新增配置文件：
+
+- `data/ingame_overlay_settings.json`
+
+保存内容：
+
+```json
+{
+  "x": 80,
+  "y": 80,
+  "width": 360,
+  "height": 520,
+  "opacity": 92,
+  "collapsed": false,
+  "prefer_frozen": true
+}
+```
+
+默认启用 `prefer_frozen`：
+
+- 如果主客户端已经点击 `定格`，局内浮窗优先显示冻结后的 BP 结果。
+- 如果没有冻结结果，则自动显示实时 `live_state.json`。
+- 用户可以在浮窗内点击 `定格优先 / 实时优先` 切换。
 
 ## 是否影响现有功能
 
