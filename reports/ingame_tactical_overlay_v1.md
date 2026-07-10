@@ -84,6 +84,7 @@ python run_ingame_overlay.py
   "width": 360,
   "height": 520,
   "opacity": 92,
+  "background_strength": 48,
   "collapsed": false,
   "prefer_frozen": true,
   "compact_mode": true
@@ -115,6 +116,17 @@ python run_ingame_overlay.py
   - 战术建议
 
 目的：减少局内阅读负担，避免浮窗内容太多影响操作。
+
+## 第四步增强
+
+优化局内可视性：
+
+- 默认背景更透明，减少遮挡游戏画面。
+- 保留清晰文字、边框和重点建议卡片。
+- 新增 `背景` 滑条：
+  - `透明度`：控制整个窗口透明度。
+  - `背景`：控制卡片和面板底色深浅。
+- 背景强度会保存到 `data/ingame_overlay_settings.json`。
 
 ## 是否影响现有功能
 

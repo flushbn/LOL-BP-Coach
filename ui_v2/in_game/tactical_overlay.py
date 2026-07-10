@@ -44,27 +44,28 @@ DEFAULT_SETTINGS = {
     "width": 360,
     "height": 520,
     "opacity": 92,
+    "background_strength": 48,
     "collapsed": False,
     "prefer_frozen": True,
     "compact_mode": True,
 }
 
 
-OVERLAY_STYLE = """
+OVERLAY_STYLE_TEMPLATE = """
 QWidget {
-    background: #080B14;
+    background: transparent;
     color: #E5E7EB;
     font-family: Microsoft YaHei, Segoe UI, Arial;
     font-size: 13px;
 }
 QFrame#Root {
-    background: rgba(12, 18, 33, 238);
-    border: 1px solid #31415E;
+    background: rgba(8, 12, 24, __ROOT_ALPHA__);
+    border: 1px solid rgba(147, 197, 253, __BORDER_ALPHA__);
     border-radius: 14px;
 }
 QFrame#TitleBar {
-    background: #111827;
-    border: 1px solid #263244;
+    background: rgba(15, 23, 42, __TITLE_ALPHA__);
+    border: 1px solid rgba(148, 163, 184, __BORDER_ALPHA__);
     border-radius: 12px;
 }
 QLabel#Title {
@@ -81,44 +82,44 @@ QLabel#SectionTitle {
     font-weight: 800;
 }
 QLabel#Card {
-    background: #111827;
-    border: 1px solid #263244;
+    background: rgba(15, 23, 42, __CARD_ALPHA__);
+    border: 1px solid rgba(148, 163, 184, __BORDER_ALPHA__);
     border-radius: 10px;
     padding: 8px;
     line-height: 150%;
 }
 QLabel#AlertCard {
-    background: #1E1B12;
-    border: 1px solid #854D0E;
+    background: rgba(44, 32, 10, __CARD_ALPHA__);
+    border: 1px solid rgba(251, 191, 36, __BORDER_ALPHA__);
     border-radius: 10px;
     color: #FDE68A;
     padding: 8px;
 }
 QPushButton {
-    background: #1F2937;
+    background: rgba(31, 41, 55, __BUTTON_ALPHA__);
     color: #F8FAFC;
-    border: 1px solid #374151;
+    border: 1px solid rgba(148, 163, 184, __BORDER_ALPHA__);
     border-radius: 8px;
     padding: 5px 9px;
     font-weight: 700;
 }
 QPushButton:hover {
-    background: #334155;
+    background: rgba(51, 65, 85, 210);
 }
 QPushButton#PrimaryButton {
-    background: #2563EB;
-    border-color: #2563EB;
+    background: rgba(37, 99, 235, 210);
+    border-color: rgba(96, 165, 250, 230);
 }
 QScrollArea {
     border: none;
     background: transparent;
 }
 QScrollBar:vertical {
-    background: #0B1020;
+    background: rgba(11, 16, 32, 80);
     width: 8px;
 }
 QScrollBar::handle:vertical {
-    background: #334155;
+    background: rgba(148, 163, 184, 150);
     border-radius: 4px;
     min-height: 32px;
 }
@@ -126,6 +127,26 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     height: 0px;
 }
 """
+
+
+def _build_style(background_strength: int) -> str:
+    strength = max(20, min(100, int(background_strength)))
+    root_alpha = int(65 + strength * 1.35)
+    title_alpha = int(70 + strength * 1.25)
+    card_alpha = int(55 + strength * 1.25)
+    button_alpha = int(75 + strength * 1.1)
+    border_alpha = int(70 + strength * 1.3)
+    replacements = {
+        "__ROOT_ALPHA__": str(min(220, root_alpha)),
+        "__TITLE_ALPHA__": str(min(220, title_alpha)),
+        "__CARD_ALPHA__": str(min(210, card_alpha)),
+        "__BUTTON_ALPHA__": str(min(210, button_alpha)),
+        "__BORDER_ALPHA__": str(min(230, border_alpha)),
+    }
+    style = OVERLAY_STYLE_TEMPLATE
+    for key, value in replacements.items():
+        style = style.replace(key, value)
+    return style
 
 
 def _safe_list(value: Any) -> list:
@@ -193,7 +214,11 @@ class InGameTacticalOverlay(QWidget):
             | Qt.WindowDoesNotAcceptFocus
         )
         self.setAttribute(Qt.WA_ShowWithoutActivating, True)
-        self.setStyleSheet(OVERLAY_STYLE)
+        self._background_strength = max(
+            20,
+            min(100, int(self._settings.get("background_strength") or 48)),
+        )
+        self.setStyleSheet(_build_style(self._background_strength))
         self.setWindowOpacity(max(50, min(100, int(self._settings.get("opacity") or 92))) / 100)
 
         self._drag_pos = None
@@ -277,8 +302,12 @@ class InGameTacticalOverlay(QWidget):
         self._layout.addWidget(title_bar)
 
     def _build_settings_bar(self):
+        box = QVBoxLayout()
+        box.setContentsMargins(2, 0, 2, 0)
+        box.setSpacing(4)
+
         row = QHBoxLayout()
-        row.setContentsMargins(2, 0, 2, 0)
+        row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(8)
 
         self.opacity_caption = QLabel("透明度")
@@ -296,7 +325,28 @@ class InGameTacticalOverlay(QWidget):
         self.opacity_label.setFixedWidth(42)
         row.addWidget(self.opacity_label)
 
-        self._layout.addLayout(row)
+        bg_row = QHBoxLayout()
+        bg_row.setContentsMargins(0, 0, 0, 0)
+        bg_row.setSpacing(8)
+
+        self.background_caption = QLabel("背景")
+        self.background_caption.setObjectName("Muted")
+        bg_row.addWidget(self.background_caption)
+
+        self.background_slider = QSlider(Qt.Horizontal)
+        self.background_slider.setRange(20, 100)
+        self.background_slider.setValue(self._background_strength)
+        self.background_slider.valueChanged.connect(self.set_background_strength)
+        bg_row.addWidget(self.background_slider, 1)
+
+        self.background_label = QLabel(f"{self.background_slider.value()}%")
+        self.background_label.setObjectName("Muted")
+        self.background_label.setFixedWidth(42)
+        bg_row.addWidget(self.background_label)
+
+        box.addLayout(row)
+        box.addLayout(bg_row)
+        self._layout.addLayout(box)
 
     def _build_scroll_content(self):
         self.scroll = QScrollArea()
@@ -382,6 +432,14 @@ class InGameTacticalOverlay(QWidget):
         self._settings["opacity"] = value
         _save_settings(self._settings)
 
+    def set_background_strength(self, value: int):
+        value = max(20, min(100, int(value)))
+        self._background_strength = value
+        self.background_label.setText(f"{value}%")
+        self.setStyleSheet(_build_style(value))
+        self._settings["background_strength"] = value
+        _save_settings(self._settings)
+
     def toggle_pause(self):
         self._paused = not self._paused
         self.pause_button.setText("继续" if self._paused else "暂停")
@@ -401,6 +459,9 @@ class InGameTacticalOverlay(QWidget):
         self.opacity_caption.setVisible(not self._collapsed)
         self.opacity_slider.setVisible(not self._collapsed)
         self.opacity_label.setVisible(not self._collapsed)
+        self.background_caption.setVisible(not self._collapsed)
+        self.background_slider.setVisible(not self._collapsed)
+        self.background_label.setVisible(not self._collapsed)
         self.collapse_button.setText("+" if self._collapsed else "—")
         if self._collapsed:
             self.resize(self.COLLAPSED_W, self.COLLAPSED_H)
