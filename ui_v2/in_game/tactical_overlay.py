@@ -137,7 +137,7 @@ QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
 
 def _build_style(background_strength: int, background_opacity: int = 72) -> str:
     strength = max(20, min(100, int(background_strength)))
-    opacity = max(15, min(100, int(background_opacity)))
+    opacity = max(55, min(100, int(background_opacity)))
     opacity_factor = opacity / 100
     root_alpha = int((18 + strength * 0.95) * opacity_factor)
     title_alpha = int((28 + strength * 1.05) * opacity_factor)
@@ -227,7 +227,7 @@ class InGameTacticalOverlay(QWidget):
             min(100, int(self._settings.get("background_strength") or 36)),
         )
         self._background_opacity = max(
-            15,
+            55,
             min(
                 100,
                 int(
@@ -329,12 +329,12 @@ class InGameTacticalOverlay(QWidget):
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(8)
 
-        self.opacity_caption = QLabel("底色透明")
+        self.opacity_caption = QLabel("底色可见")
         self.opacity_caption.setObjectName("Muted")
         row.addWidget(self.opacity_caption)
 
         self.opacity_slider = QSlider(Qt.Horizontal)
-        self.opacity_slider.setRange(15, 100)
+        self.opacity_slider.setRange(55, 100)
         self.opacity_slider.setValue(self._background_opacity)
         self.opacity_slider.valueChanged.connect(self.set_background_opacity)
         row.addWidget(self.opacity_slider, 1)
@@ -445,7 +445,7 @@ class InGameTacticalOverlay(QWidget):
             widget.setVisible(not self._compact_mode)
 
     def set_background_opacity(self, value: int):
-        value = max(15, min(100, int(value)))
+        value = max(55, min(100, int(value)))
         self._background_opacity = value
         self.opacity_label.setText(f"{value}%")
         self.setWindowOpacity(1.0)
