@@ -11,7 +11,7 @@ from pathlib import Path
 
 APP_NAME = "LoL BP Coach"
 APP_EXE = f"{APP_NAME}.exe"
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 
 ROOT = Path(__file__).resolve().parent
 RELEASE_DIR = ROOT / "release"
@@ -277,7 +277,7 @@ def write_release_docs():
 - 识别失败不会闪退，错误会写入 logs/crash.log 或 logs/recognition.log。
 - 定格按钮可锁定当前推荐，避免 BP 界面变化导致误识别覆盖。
 """,
-        encoding="utf-8",
+        encoding="utf-8-sig",
     )
 
 
@@ -356,8 +356,45 @@ def build_iexpress_installer():
     install_script.write_text(
         rf"""$ErrorActionPreference = "Stop"
 $zip = Join-Path $PSScriptRoot "LoL-BP-Coach-portable-{VERSION}.zip"
-$targetRoot = $env:LOCALAPPDATA
-$target = Join-Path $targetRoot "LoL BP Coach"
+
+function Select-InstallTarget {{
+  $defaultRoot = Join-Path $env:LOCALAPPDATA "Programs"
+  $defaultTarget = Join-Path $defaultRoot "LoL BP Coach"
+  try {{
+    Add-Type -AssemblyName System.Windows.Forms
+    $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+    $dialog.Description = "请选择 LoL BP Coach 的安装位置"
+    $dialog.SelectedPath = $defaultRoot
+    $dialog.ShowNewFolderButton = $true
+    $result = $dialog.ShowDialog()
+    if ($result -ne [System.Windows.Forms.DialogResult]::OK -or [string]::IsNullOrWhiteSpace($dialog.SelectedPath)) {{
+      return $null
+    }}
+    $selected = $dialog.SelectedPath
+  }} catch {{
+    try {{
+      $shellApp = New-Object -ComObject Shell.Application
+      $folder = $shellApp.BrowseForFolder(0, "请选择 LoL BP Coach 的安装位置", 0, 0)
+      if ($null -eq $folder) {{ return $null }}
+      $selected = $folder.Self.Path
+    }} catch {{
+      $selected = $defaultRoot
+    }}
+  }}
+
+  if ([string]::IsNullOrWhiteSpace($selected)) {{
+    return $defaultTarget
+  }}
+  if ((Split-Path -Leaf $selected) -ieq "LoL BP Coach") {{
+    return $selected
+  }}
+  return Join-Path $selected "LoL BP Coach"
+}}
+
+$target = Select-InstallTarget
+if ([string]::IsNullOrWhiteSpace($target)) {{
+  exit 0
+}}
 $tmp = Join-Path $env:TEMP "LoL-BP-Coach-Install"
 if (Test-Path $tmp) {{ Remove-Item -LiteralPath $tmp -Recurse -Force }}
 New-Item -ItemType Directory -Force -Path $tmp | Out-Null
@@ -392,9 +429,28 @@ $shortcut.TargetPath = Join-Path $target "LoL BP Coach.exe"
 $shortcut.WorkingDirectory = $target
 $shortcut.IconLocation = $shortcut.TargetPath
 $shortcut.Save()
+
+$programs = [Environment]::GetFolderPath("Programs")
+$group = Join-Path $programs "LoL BP Coach"
+New-Item -ItemType Directory -Force -Path $group | Out-Null
+$startShortcutPath = Join-Path $group "LoL BP Coach.lnk"
+$startShortcut = $shell.CreateShortcut($startShortcutPath)
+$startShortcut.TargetPath = Join-Path $target "LoL BP Coach.exe"
+$startShortcut.WorkingDirectory = $target
+$startShortcut.IconLocation = $startShortcut.TargetPath
+$startShortcut.Save()
+
+$readme = Join-Path $target "安装位置.txt"
+"LoL BP Coach 已安装到：`r`n$target`r`n`r`n启动方式：`r`n1. 桌面快捷方式：LoL BP Coach`r`n2. 开始菜单：LoL BP Coach`r`n3. 直接运行：$($shortcut.TargetPath)" | Set-Content -LiteralPath $readme -Encoding UTF8
+
+try {{
+  $shell.Popup("LoL BP Coach 安装完成。`n安装位置：$target`n已创建桌面和开始菜单快捷方式。", 8, "LoL BP Coach", 64) | Out-Null
+}} catch {{}}
+
+Start-Process -FilePath "explorer.exe" -ArgumentList "`"$target`""
 Start-Process -FilePath (Join-Path $target "LoL BP Coach.exe")
 """,
-        encoding="utf-8",
+        encoding="utf-8-sig",
     )
 
     shutil.copy2(portable_zip, INSTALLER_DIR / portable_zip.name)
