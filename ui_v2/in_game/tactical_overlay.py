@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import ctypes
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -43,13 +45,39 @@ DEFAULT_SETTINGS = {
     "y": 80,
     "width": 360,
     "height": 520,
-    "opacity": 92,
-    "background_opacity": 72,
-    "background_strength": 36,
+    "opacity": 90,
+    "background_opacity": 100,
+    "background_strength": 50,
     "collapsed": False,
     "prefer_frozen": True,
     "compact_mode": True,
+    "tactical_view_version": 2,
 }
+
+HWND_TOPMOST = -1
+SWP_NOSIZE = 0x0001
+SWP_NOMOVE = 0x0002
+SWP_NOACTIVATE = 0x0010
+SWP_SHOWWINDOW = 0x0040
+
+
+def _enforce_windows_topmost(hwnd: int) -> bool:
+    if os.name != "nt" or not hwnd:
+        return False
+    try:
+        return bool(
+            ctypes.windll.user32.SetWindowPos(
+                int(hwnd),
+                HWND_TOPMOST,
+                0,
+                0,
+                0,
+                0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW,
+            )
+        )
+    except Exception:
+        return False
 
 
 OVERLAY_STYLE_TEMPLATE = """
@@ -170,6 +198,13 @@ def _join_lines(items: list[str], empty: str = "暂无") -> str:
     return "\n".join(valid) if valid else empty
 
 
+def _short_text(value: Any, limit: int = 38) -> str:
+    text = " ".join(str(value or "").split())
+    if len(text) <= limit:
+        return text
+    return text[: max(1, limit - 1)].rstrip(" ") + "..."
+
+
 def _load_settings() -> dict[str, Any]:
     try:
         if SETTINGS_PATH.exists():
@@ -177,6 +212,12 @@ def _load_settings() -> dict[str, Any]:
             if isinstance(data, dict):
                 settings = dict(DEFAULT_SETTINGS)
                 settings.update(data)
+                # Prior builds used `opacity` to brighten or dim the backdrop.
+                # Preserve a readable starting point when migrating to true opacity.
+                if int(data.get("tactical_view_version", 0) or 0) < 2:
+                    settings["opacity"] = 90
+                    settings["compact_mode"] = True
+                    settings["tactical_view_version"] = 2
                 return settings
     except Exception:
         pass
@@ -222,23 +263,15 @@ class InGameTacticalOverlay(QWidget):
             | Qt.WindowDoesNotAcceptFocus
         )
         self.setAttribute(Qt.WA_ShowWithoutActivating, True)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
         self._background_strength = max(
             20,
             min(100, int(self._settings.get("background_strength") or 36)),
         )
-        self._background_opacity = max(
-            55,
-            min(
-                100,
-                int(
-                    self._settings.get("background_opacity")
-                    or self._settings.get("opacity")
-                    or 72
-                ),
-            ),
-        )
+        self._background_opacity = 100
+        self._window_opacity = max(65, min(100, int(self._settings.get("opacity") or 90)))
         self.setStyleSheet(_build_style(self._background_strength, self._background_opacity))
-        self.setWindowOpacity(1.0)
+        self.setWindowOpacity(self._window_opacity / 100)
 
         self._drag_pos = None
         self._paused = False
@@ -267,11 +300,16 @@ class InGameTacticalOverlay(QWidget):
         self._timer.timeout.connect(self.poll_state)
         self._timer.start(500)
 
+        self._topmost_timer = QTimer(self)
+        self._topmost_timer.timeout.connect(self._enforce_topmost)
+        self._topmost_timer.start(1500)
+
         self._restore_geometry()
         if self._collapsed:
             self._apply_collapsed_state()
         self.poll_state()
         QTimer.singleShot(300, self.enable_capture_exclusion)
+        QTimer.singleShot(0, self._enforce_topmost)
 
     def _build_title_bar(self):
         title_bar = QFrame()
@@ -329,14 +367,14 @@ class InGameTacticalOverlay(QWidget):
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(8)
 
-        self.opacity_caption = QLabel("底色可见")
+        self.opacity_caption = QLabel("窗口透明度")
         self.opacity_caption.setObjectName("Muted")
         row.addWidget(self.opacity_caption)
 
         self.opacity_slider = QSlider(Qt.Horizontal)
-        self.opacity_slider.setRange(55, 100)
-        self.opacity_slider.setValue(self._background_opacity)
-        self.opacity_slider.valueChanged.connect(self.set_background_opacity)
+        self.opacity_slider.setRange(65, 100)
+        self.opacity_slider.setValue(self._window_opacity)
+        self.opacity_slider.valueChanged.connect(self.set_overlay_opacity)
         row.addWidget(self.opacity_slider, 1)
 
         self.opacity_label = QLabel(f"{self.opacity_slider.value()}%")
@@ -344,27 +382,7 @@ class InGameTacticalOverlay(QWidget):
         self.opacity_label.setFixedWidth(42)
         row.addWidget(self.opacity_label)
 
-        bg_row = QHBoxLayout()
-        bg_row.setContentsMargins(0, 0, 0, 0)
-        bg_row.setSpacing(8)
-
-        self.background_caption = QLabel("背景")
-        self.background_caption.setObjectName("Muted")
-        bg_row.addWidget(self.background_caption)
-
-        self.background_slider = QSlider(Qt.Horizontal)
-        self.background_slider.setRange(20, 100)
-        self.background_slider.setValue(self._background_strength)
-        self.background_slider.valueChanged.connect(self.set_background_strength)
-        bg_row.addWidget(self.background_slider, 1)
-
-        self.background_label = QLabel(f"{self.background_slider.value()}%")
-        self.background_label.setObjectName("Muted")
-        self.background_label.setFixedWidth(42)
-        bg_row.addWidget(self.background_label)
-
         box.addLayout(row)
-        box.addLayout(bg_row)
         self._layout.addLayout(box)
 
     def _build_scroll_content(self):
@@ -416,6 +434,16 @@ class InGameTacticalOverlay(QWidget):
     def enable_capture_exclusion(self):
         exclude_window_from_capture(int(self.winId()))
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        QTimer.singleShot(0, self._enforce_topmost)
+
+    def _enforce_topmost(self):
+        if not self.isVisible():
+            return
+        self.raise_()
+        _enforce_windows_topmost(int(self.winId()))
+
     def toggle_prefer_frozen(self):
         self._prefer_frozen = not self._prefer_frozen
         self.frozen_button.setText("定格优先" if self._prefer_frozen else "实时优先")
@@ -445,22 +473,20 @@ class InGameTacticalOverlay(QWidget):
             widget.setVisible(not self._compact_mode)
 
     def set_background_opacity(self, value: int):
-        value = max(55, min(100, int(value)))
-        self._background_opacity = value
-        self.opacity_label.setText(f"{value}%")
-        self.setWindowOpacity(1.0)
-        self.setStyleSheet(_build_style(self._background_strength, self._background_opacity))
-        self._settings["background_opacity"] = value
-        self._settings["opacity"] = value
-        _save_settings(self._settings)
+        self.set_overlay_opacity(value)
 
     def set_overlay_opacity(self, value: int):
-        self.set_background_opacity(value)
+        value = max(65, min(100, int(value)))
+        self._window_opacity = value
+        self.opacity_label.setText(f"{value}%")
+        self.setWindowOpacity(value / 100)
+        self._settings["opacity"] = value
+        self._settings["tactical_view_version"] = 2
+        _save_settings(self._settings)
 
     def set_background_strength(self, value: int):
         value = max(20, min(100, int(value)))
         self._background_strength = value
-        self.background_label.setText(f"{value}%")
         self.setStyleSheet(_build_style(value, self._background_opacity))
         self._settings["background_strength"] = value
         _save_settings(self._settings)
@@ -484,9 +510,6 @@ class InGameTacticalOverlay(QWidget):
         self.opacity_caption.setVisible(not self._collapsed)
         self.opacity_slider.setVisible(not self._collapsed)
         self.opacity_label.setVisible(not self._collapsed)
-        self.background_caption.setVisible(not self._collapsed)
-        self.background_slider.setVisible(not self._collapsed)
-        self.background_label.setVisible(not self._collapsed)
         self.collapse_button.setText("+" if self._collapsed else "—")
         if self._collapsed:
             self.resize(self.COLLAPSED_W, self.COLLAPSED_H)
@@ -530,11 +553,11 @@ class InGameTacticalOverlay(QWidget):
             self.status_label.setText("等待 BP 数据")
 
         self.draft_label.setText(self._format_draft(state))
-        self.key_plan_label.setText(self._format_key_plan(state))
-        self.lane_label.setText(self._format_lanes(state))
-        self.team_label.setText(self._format_team_comparison(state))
-        self.advice_label.setText(self._format_advice(state))
-        self.compact_label.setText(self._format_compact(state))
+        self.key_plan_label.setText(self._format_key_plan_brief(state))
+        self.lane_label.setText(self._format_lanes_brief(state))
+        self.team_label.setText(self._format_team_comparison_brief(state))
+        self.advice_label.setText(self._format_advice_brief(state))
+        self.compact_label.setText(self._format_compact_brief(state))
 
     def _format_compact(self, state: dict[str, Any]) -> str:
         coach = _safe_dict(state.get("coach"))
@@ -721,6 +744,77 @@ class InGameTacticalOverlay(QWidget):
         if not lines:
             return "暂无战术建议。"
         return "\n".join([f"✓ {item}" for item in lines])
+
+    def _format_compact_brief(self, state: dict[str, Any]) -> str:
+        coach = _safe_dict(state.get("coach"))
+        macro = _safe_dict(coach.get("macro_plan"))
+        lanes = [lane for lane in _safe_list(_safe_dict(coach.get("lane_state")).get("lanes")) if isinstance(lane, dict)]
+        primary_side = macro.get("primary_side") or "待判断"
+        primary_lane = macro.get("primary_lane") or "待判断"
+        lines = [f"主节奏：{primary_side} / {primary_lane}"]
+
+        key_lane = next((lane for lane in lanes if "主攻" in str(lane.get("priority") or "")), None)
+        key_lane = key_lane or (lanes[0] if lanes else None)
+        if key_lane:
+            label = key_lane.get("label") or key_lane.get("lane") or "路线"
+            lane_state = key_lane.get("state") or "均势"
+            action = key_lane.get("jungle_action") or key_lane.get("advice") or "稳住视野后再找机会"
+            lines.append(f"关键路：{label} {lane_state} - {_short_text(action, 30)}")
+
+        advice = self._collect_advice_lines(state, limit=2)
+        if advice:
+            lines.extend(f"• {_short_text(item, 34)}" for item in advice)
+        else:
+            lines.extend(f"• {_short_text(item, 34)}" for item in _safe_list(macro.get("summary"))[:2])
+        return _join_lines(lines, "等待 BP 数据")
+
+    def _format_key_plan_brief(self, state: dict[str, Any]) -> str:
+        macro = _safe_dict(_safe_dict(state.get("coach")).get("macro_plan"))
+        if not macro:
+            return "暂无节奏计划"
+        lines = [f"主节奏：{macro.get('primary_side') or '待判断'} / {macro.get('primary_lane') or '待判断'}"]
+        lines.extend(f"✓ {_short_text(item)}" for item in _safe_list(macro.get("summary"))[:2])
+        lines.extend(f"资源：{_short_text(item)}" for item in _safe_list(macro.get("objectives"))[:1])
+        return _join_lines(lines)
+
+    def _format_lanes_brief(self, state: dict[str, Any]) -> str:
+        lanes = _safe_list(_safe_dict(_safe_dict(state.get("coach")).get("lane_state")).get("lanes"))
+        lines = []
+        for lane in lanes[:4]:
+            if not isinstance(lane, dict):
+                continue
+            label = lane.get("label") or lane.get("lane") or "路线"
+            state_text = lane.get("state") or "均势"
+            priority = lane.get("priority") or "观察"
+            action = lane.get("jungle_action") or lane.get("advice") or "稳住发育"
+            lines.append(f"{label}：{state_text}｜{priority}｜{_short_text(action, 30)}")
+        return _join_lines(lines, "暂无路线强弱数据")
+
+    def _format_team_comparison_brief(self, state: dict[str, Any]) -> str:
+        coach = _safe_dict(state.get("coach"))
+        ally = _safe_dict(coach.get("ally"))
+        enemy = _safe_dict(coach.get("enemy"))
+        comparison = _safe_dict(coach.get("comparison"))
+        if not ally and not enemy:
+            return "暂无阵容分析"
+        dimensions = (("frontline", "前排"), ("engage", "开团"), ("dps", "持续输出"), ("late", "后期"))
+        result = []
+        for key, label in dimensions:
+            ally_grade = ally.get(key) or "-"
+            enemy_grade = enemy.get(key) or "-"
+            diff = {
+                "ally_advantage": "我方优",
+                "ally_big_advantage": "我方大优",
+                "enemy_advantage": "敌方优",
+                "enemy_big_advantage": "敌方大优",
+                "even": "均势",
+            }.get(comparison.get(key), "")
+            result.append(f"{label} {ally_grade}/{enemy_grade} {diff}".strip())
+        return "\n".join(result)
+
+    def _format_advice_brief(self, state: dict[str, Any]) -> str:
+        advice = self._collect_advice_lines(state, limit=3)
+        return "\n".join(f"✓ {_short_text(item)}" for item in advice) if advice else "暂无战术建议"
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:

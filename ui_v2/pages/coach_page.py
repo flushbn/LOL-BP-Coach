@@ -86,7 +86,7 @@ class CoachPage(QWidget):
         self._render_side(self.ally_grades, coach.get("ally", {}) or {}, "等待己方阵容分析...")
         self._render_side(self.enemy_grades, coach.get("enemy", {}) or {}, "等待敌方阵容分析...")
         self._render_comparison(coach.get("comparison", {}) or {})
-        self._render_advice(coach)
+        self._render_advice_brief(coach)
 
     def _build_group(self, title: str) -> QGroupBox:
         group = QGroupBox(title)
@@ -164,6 +164,26 @@ class CoachPage(QWidget):
 
         text = "\n".join(f"✓ {item}" for item in dict.fromkeys(advice_lines))
         self._set_text_preserving_scroll(self.advice, text or "暂无战术建议")
+
+    def _render_advice_brief(self, coach: dict):
+        raw = coach.get("advice", "")
+        lines: list[str] = []
+        if isinstance(raw, list):
+            lines.extend(str(item) for item in raw if item)
+        elif raw:
+            lines.extend(str(raw).splitlines())
+        lines.extend(str(item) for item in (coach.get("lane_state", {}) or {}).get("summary", []) if item)
+        lines.extend(str(item) for item in (coach.get("macro_plan", {}) or {}).get("summary", []) if item)
+
+        selected: list[str] = []
+        for line in dict.fromkeys(lines):
+            text = " ".join(line.split())
+            if not text:
+                continue
+            selected.append(text[:45].rstrip("，。；;、 ") + ("..." if len(text) > 45 else ""))
+            if len(selected) >= 3:
+                break
+        self._set_text_preserving_scroll(self.advice, "\n".join(f"✓ {item}" for item in selected) or "暂无战术建议")
 
     @staticmethod
     def _set_text_preserving_scroll(widget: QTextEdit, text: str):

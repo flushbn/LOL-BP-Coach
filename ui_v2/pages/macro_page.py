@@ -49,9 +49,9 @@ class MacroPage(QWidget):
     def render(self, state: dict):
         coach = state.get("coach", {}) or {}
         if self.mode in ("all", "lane"):
-            self._render_lane_state(coach)
+            self._render_lane_state_brief(coach)
         if self.mode in ("all", "plan"):
-            self._render_macro_plan(coach)
+            self._render_macro_plan_brief(coach)
 
     def _build_group(self, title: str) -> QGroupBox:
         group = QGroupBox(title)
@@ -146,6 +146,42 @@ class MacroPage(QWidget):
             )
 
         self._set_text_preserving_scroll(self.lane_state, "\n\n".join(chunks))
+
+    def _render_macro_plan_brief(self, coach: dict):
+        plan = coach.get("macro_plan", {}) or {}
+        if not plan:
+            self._set_text_preserving_scroll(self.macro_plan, "暂无节奏计划")
+            return
+        lines = [f"主节奏：{plan.get('primary_side') or '待判断'} / {plan.get('primary_lane') or '待判断'}"]
+        lines.extend(f"✓ {self._brief(item)}" for item in (plan.get("summary", []) or [])[:2])
+        risk = (plan.get("risk_alerts", []) or [])[:1]
+        objective = (plan.get("objectives", []) or [])[:1]
+        if risk:
+            lines.append(f"提醒：{self._brief(risk[0])}")
+        elif objective:
+            lines.append(f"资源：{self._brief(objective[0])}")
+        self._set_text_preserving_scroll(self.macro_plan, "\n".join(lines))
+
+    def _render_lane_state_brief(self, coach: dict):
+        lanes = (coach.get("lane_state", {}) or {}).get("lanes", []) or []
+        if not lanes:
+            self._set_text_preserving_scroll(self.lane_state, "暂无路线强弱分析")
+            return
+        lines: list[str] = []
+        for lane in lanes[:4]:
+            if not isinstance(lane, dict):
+                continue
+            label = lane.get("label") or lane.get("lane") or "路线"
+            state = lane.get("state") or "均势"
+            priority = lane.get("priority") or "观察"
+            action = lane.get("jungle_action") or lane.get("advice") or "稳住发育"
+            lines.append(f"{label}：{state}｜{priority}\n→ {self._brief(action, 42)}")
+        self._set_text_preserving_scroll(self.lane_state, "\n".join(lines) or "暂无路线强弱分析")
+
+    @staticmethod
+    def _brief(value, limit: int = 46) -> str:
+        text = " ".join(str(value or "").split())
+        return text if len(text) <= limit else text[:limit - 1].rstrip("，。；;、 ") + "..."
 
     @staticmethod
     def _set_text_preserving_scroll(widget: QTextEdit, text: str):
