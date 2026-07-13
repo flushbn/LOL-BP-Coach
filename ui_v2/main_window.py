@@ -32,7 +32,6 @@ from ui_v2.pages.selected_champions_page import SelectedChampionsPage
 from ui_v2.pages.update_page import UpdatePage
 from ui_v2.state_reader import LIVE_STATE_PATH, read_state
 from ui_v2.in_game.tactical_overlay import InGameTacticalOverlay
-from analysis.data_patch_manager import DataPatchManager
 from analysis.draft_session_control import pause_state, resume_updates, start_new_game, write_live_state
 from utils.champion_names import champion_display_name
 from utils.window_capture_exclusion import exclude_window_from_capture
@@ -93,13 +92,23 @@ QLabel#DetectionStatus {
     border-radius: 12px;
     padding: 8px 12px;
 }
-QLabel#PatchNotice {
+QFrame#PatchNotice {
     background: #3A2A12;
-    color: #FACC15;
     border: 1px solid #7A5A20;
     border-radius: 12px;
-    padding: 8px 12px;
+}
+QLabel#PatchNoticeText {
+    color: #FACC15;
     font-weight: 700;
+}
+QPushButton#PatchUpdateButton {
+    background: #D97706;
+    color: #FFFFFF;
+    border-radius: 8px;
+    padding: 7px 12px;
+}
+QPushButton#PatchUpdateButton:hover {
+    background: #F59E0B;
 }
 QLabel#PageTitle {
     color: #F9FAFB;
@@ -251,7 +260,8 @@ class MainWindow(QMainWindow):
         self.ingame_overlay: InGameTacticalOverlay | None = None
 
         self.update_page = UpdatePage()
-        self.update_page.status_changed.connect(self.check_patch_notice)
+        self.update_page.patch_status_ready.connect(self._apply_patch_status)
+        self.update_page.status_changed.connect(self.update_page.refresh_status)
         self.pages = [
             ("英雄推荐", RecommendPage()),
             ("对线推荐", LanePage()),
@@ -286,9 +296,19 @@ class MainWindow(QMainWindow):
         self.detected_status.setMaximumHeight(40)
         shell_layout.addWidget(self.detected_status)
 
-        self.patch_notice = QLabel("")
+        self.patch_notice = QFrame()
         self.patch_notice.setObjectName("PatchNotice")
-        self.patch_notice.setWordWrap(True)
+        patch_notice_layout = QHBoxLayout(self.patch_notice)
+        patch_notice_layout.setContentsMargins(12, 8, 10, 8)
+        patch_notice_layout.setSpacing(12)
+        self.patch_notice_label = QLabel("")
+        self.patch_notice_label.setObjectName("PatchNoticeText")
+        self.patch_notice_label.setWordWrap(True)
+        patch_notice_layout.addWidget(self.patch_notice_label, 1)
+        self.patch_update_button = QPushButton("立即更新")
+        self.patch_update_button.setObjectName("PatchUpdateButton")
+        self.patch_update_button.clicked.connect(self.open_update_page)
+        patch_notice_layout.addWidget(self.patch_update_button)
         self.patch_notice.hide()
         shell_layout.addWidget(self.patch_notice)
 
@@ -628,17 +648,24 @@ class MainWindow(QMainWindow):
         return f"识别状态: {message} | 己方: {ally_text} | 敌方: {enemy_text} | Ban: {bans_text}"
 
     def check_patch_notice(self):
-        try:
-            status = DataPatchManager().get_status()
-            if status.get("outdated"):
-                current = status.get("current_patch", "unknown")
-                latest = status.get("latest_patch", "unknown")
-                self.patch_notice.setText(f"检测到新版本数据，建议更新：当前 {current} / 最新 {latest}")
-                self.patch_notice.show()
-            else:
-                self.patch_notice.hide()
-        except Exception:
+        self.update_page.refresh_status()
+
+    def _apply_patch_status(self, status: dict):
+        if not status.get("outdated"):
             self.patch_notice.hide()
+            return
+        current = status.get("current_patch", "unknown")
+        latest = status.get("latest_patch", "unknown")
+        self.patch_notice_label.setText(f"检测到英雄数据新版本：本地 {current}，最新 {latest}。建议更新后再进行 BP 推荐。")
+        self.patch_notice.show()
+
+    def open_update_page(self):
+        for index, (_, page) in enumerate(self.pages):
+            if page is self.update_page:
+                self.nav.setCurrentRow(index)
+                self.stack.setCurrentIndex(index)
+                self.update_page.refresh_status()
+                return
 
     def _role_label(self, role: str) -> str:
         for role_id, label in ROLES:

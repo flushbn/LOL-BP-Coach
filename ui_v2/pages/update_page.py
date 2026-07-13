@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QThread, Signal
+from PySide6.QtCore import QObject, QThread, QTimer, Signal
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -49,14 +49,33 @@ class UpdateWorker(QObject):
         self.done.emit(result)
 
 
+class PatchStatusWorker(QObject):
+    done = Signal(dict)
+
+    def run(self):
+        try:
+            self.done.emit(DataPatchManager().get_status())
+        except Exception as exc:
+            self.done.emit({
+                "current_patch": "unknown",
+                "latest_patch": "unknown",
+                "outdated": False,
+                "error": str(exc),
+                "local_patches": [],
+            })
+
+
 class UpdatePage(QWidget):
     status_changed = Signal()
+    patch_status_ready = Signal(dict)
 
     def __init__(self):
         super().__init__()
         self.manager = DataPatchManager()
         self.thread: QThread | None = None
         self.worker: UpdateWorker | None = None
+        self.status_thread: QThread | None = None
+        self.status_worker: PatchStatusWorker | None = None
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(18, 18, 18, 18)
@@ -105,13 +124,31 @@ class UpdatePage(QWidget):
         self.output.setPlaceholderText("更新日志与状态会显示在这里")
         layout.addWidget(self.output, 1)
 
-        self.refresh_status()
+        QTimer.singleShot(0, self.refresh_status)
 
     def render(self, state: dict):
         return
 
     def refresh_status(self):
-        status = self.manager.get_status()
+        if self.status_thread and self.status_thread.isRunning():
+            return
+        self.status_thread = QThread(self)
+        self.status_worker = PatchStatusWorker()
+        self.status_worker.moveToThread(self.status_thread)
+        self.status_thread.started.connect(self.status_worker.run)
+        self.status_worker.done.connect(self._apply_status)
+        self.status_worker.done.connect(self.patch_status_ready)
+        self.status_worker.done.connect(self.status_thread.quit)
+        self.status_worker.done.connect(self.status_worker.deleteLater)
+        self.status_thread.finished.connect(self.status_thread.deleteLater)
+        self.status_thread.finished.connect(self._clear_status_worker)
+        self.status_thread.start()
+
+    def _clear_status_worker(self):
+        self.status_thread = None
+        self.status_worker = None
+
+    def _apply_status(self, status: dict):
         current = status.get("current_patch", "unknown")
         latest = status.get("latest_patch", "unknown")
         outdated = status.get("outdated", False)
