@@ -51,7 +51,7 @@ DEFAULT_SETTINGS = {
     "collapsed": False,
     "prefer_frozen": True,
     "compact_mode": True,
-    "tactical_view_version": 2,
+    "tactical_view_version": 3,
 }
 
 HWND_TOPMOST = -1
@@ -212,12 +212,12 @@ def _load_settings() -> dict[str, Any]:
             if isinstance(data, dict):
                 settings = dict(DEFAULT_SETTINGS)
                 settings.update(data)
-                # Prior builds used `opacity` to brighten or dim the backdrop.
-                # Preserve a readable starting point when migrating to true opacity.
-                if int(data.get("tactical_view_version", 0) or 0) < 2:
+                # Version 3 makes only the backdrop transparent. Text and icons
+                # remain fully opaque for readability during a match.
+                if int(data.get("tactical_view_version", 0) or 0) < 3:
                     settings["opacity"] = 90
                     settings["compact_mode"] = True
-                    settings["tactical_view_version"] = 2
+                    settings["tactical_view_version"] = 3
                 return settings
     except Exception:
         pass
@@ -268,10 +268,12 @@ class InGameTacticalOverlay(QWidget):
             20,
             min(100, int(self._settings.get("background_strength") or 36)),
         )
-        self._background_opacity = 100
-        self._window_opacity = max(65, min(100, int(self._settings.get("opacity") or 90)))
+        self._background_opacity = max(
+            65,
+            min(100, int(self._settings.get("opacity") or 90)),
+        )
         self.setStyleSheet(_build_style(self._background_strength, self._background_opacity))
-        self.setWindowOpacity(self._window_opacity / 100)
+        self.setWindowOpacity(1.0)
 
         self._drag_pos = None
         self._paused = False
@@ -367,13 +369,13 @@ class InGameTacticalOverlay(QWidget):
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(8)
 
-        self.opacity_caption = QLabel("窗口透明度")
+        self.opacity_caption = QLabel("背景透明度")
         self.opacity_caption.setObjectName("Muted")
         row.addWidget(self.opacity_caption)
 
         self.opacity_slider = QSlider(Qt.Horizontal)
         self.opacity_slider.setRange(65, 100)
-        self.opacity_slider.setValue(self._window_opacity)
+        self.opacity_slider.setValue(self._background_opacity)
         self.opacity_slider.valueChanged.connect(self.set_overlay_opacity)
         row.addWidget(self.opacity_slider, 1)
 
@@ -477,11 +479,12 @@ class InGameTacticalOverlay(QWidget):
 
     def set_overlay_opacity(self, value: int):
         value = max(65, min(100, int(value)))
-        self._window_opacity = value
+        self._background_opacity = value
         self.opacity_label.setText(f"{value}%")
-        self.setWindowOpacity(value / 100)
+        self.setStyleSheet(_build_style(self._background_strength, value))
+        self.setWindowOpacity(1.0)
         self._settings["opacity"] = value
-        self._settings["tactical_view_version"] = 2
+        self._settings["tactical_view_version"] = 3
         _save_settings(self._settings)
 
     def set_background_strength(self, value: int):

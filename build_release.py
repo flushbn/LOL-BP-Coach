@@ -11,7 +11,7 @@ from pathlib import Path
 
 APP_NAME = "LoL BP Coach"
 APP_EXE = f"{APP_NAME}.exe"
-VERSION = "0.2.4"
+VERSION = "0.2.5"
 
 ROOT = Path(__file__).resolve().parent
 RELEASE_DIR = ROOT / "release"
