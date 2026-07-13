@@ -11,14 +11,13 @@ from core.role_filter import RoleFilter
 from analysis.lolalytics_client import LolalyticsClient
 from analysis.lane_bonus import find_enemy_lane_champion, get_lane_bonus
 from analysis.personalized_recommender import get_comfort_bonus
-from analysis.data_trust_layer import get_composite_trust_weight, get_sources_confidence
+from analysis.data_trust_layer import get_sources_confidence, get_trust_score
 from analysis.patch_notes_engine import PatchNotesEngine
 from utils.champion_names import champion_display_name
 
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
-
 
 class RecommendationEngine:
     """V2 engine with refined scoring: Counter*0.35 + Meta*0.35 + Role*0.20 + Synergy*0.10."""
@@ -114,25 +113,7 @@ class RecommendationEngine:
     def _role_score(self, champion: str, target_role: str) -> int:
         if not target_role:
             return 100
-        pos_map = {
-            "TOP": "TOP",
-            "Top": "TOP",
-            "JUNGLE": "JUNGLE",
-            "Jungle": "JUNGLE",
-            "MID": "MIDDLE",
-            "MIDDLE": "MIDDLE",
-            "Mid": "MIDDLE",
-            "ADC": "BOTTOM",
-            "BOTTOM": "BOTTOM",
-            "SUPPORT": "UTILITY",
-            "UTILITY": "UTILITY",
-            "Support": "UTILITY",
-        }
-        riot_pos = pos_map.get(target_role, "")
-        if not riot_pos:
-            return 50
-        roles = self._role_data.get(champion, {})
-        pct = roles.get(riot_pos, 0)
+        pct = self.role_filter.get_role_percent(champion, target_role)
         if pct >= 70:
             return 100
         if pct >= 50:
@@ -146,25 +127,11 @@ class RecommendationEngine:
     def _is_mainstream_role(self, champion: str, target_role: str) -> bool:
         if not target_role:
             return True
-        role_map = {
-            "TOP": "Top",
-            "JUNGLE": "Jungle",
-            "MID": "Mid",
-            "MIDDLE": "Mid",
-            "ADC": "ADC",
-            "BOTTOM": "ADC",
-            "SUPPORT": "Support",
-            "UTILITY": "Support",
-        }
-        normalized_role = role_map.get(target_role, target_role)
-        roles = self._mainstream_roles.get(champion)
-        if not roles:
-            return True
-        return any(normalized_role.lower() == role.lower() for role in roles)
+        return self.role_filter.can_play(champion, target_role)
 
     # --- MetaScore (refined) ---
-    def _meta_score(self, champion: str) -> int:
-        details = self.meta.get_details(champion)
+    def _meta_score(self, champion: str, target_role: Optional[str] = None) -> int:
+        details = self.meta.get_details(champion, target_role)
         if not details:
             return 50
         wr = details.get("win_rate", 0)
@@ -188,10 +155,10 @@ class RecommendationEngine:
         top_n: int = 10,
         pick_slot: int = 0,
     ) -> List[Tuple[str, int, Dict[str, float]]]:
-        all_counter = self.counter.analyze(enemy_picks)
-        max_ctr = max(all_counter.values()) if all_counter else 1
+        all_counter = self.counter.analyze(enemy_picks, target_role)
 
         excluded = set(ally_picks)
+        excluded.update(enemy_picks)
         if bans:
             excluded.update(bans)
 
@@ -208,17 +175,13 @@ class RecommendationEngine:
         for champ in list(candidates):
             if champ in excluded:
                 continue
-            if not self.meta_filter.is_viable(champ):
+            if not self.meta_filter.is_viable(champ, target_role):
                 continue
 
-            ctr_raw = all_counter.get(champ, 0)
-            ctr_score = self._norm(ctr_raw, max_ctr)
-
-            # V3.5: Counter Compression (reduce counter domination)
-            ctr_score = 50 + round(ctr_score * 0.5)
+            ctr_score = round(all_counter.get(champ, 50))
 
             # V2: refined MetaScore
-            meta_score = self._meta_score(champ)
+            meta_score = self._meta_score(champ, target_role)
 
             # V2: RoleScore
             role_score = self._role_score(champ, target_role) if target_role else 100
@@ -261,7 +224,7 @@ class RecommendationEngine:
                 syn_score = 50  # Future SynergyAnalyzer
 
             # V3.5: Viability Penalty
-            details = self.meta.get_details(champ)
+            details = self.meta.get_details(champ, target_role)
             viability = details.get("viability", 50) if details else 50
             if viability < 40:
                 viability_penalty = 20
@@ -332,9 +295,10 @@ class RecommendationEngine:
             _lane_info = get_lane_bonus(champ, _ROLE_TO_BONUS.get(target_role,""), _lane_enemy, self._lolalytics_client) if _lane_enemy else {"lane_bonus":0,"lane_reason":""}
             _comfort_info = get_comfort_bonus(champ)
             _patch_reason = self._patch_notes.get_champion_patch_reason(champ)
-            data_trust_weight = get_composite_trust_weight()
-            raw_final = round(ctr_score * 0.35 + meta_score * 0.35 + role_score * 0.20 + syn_score * 0.10 - viability_penalty + mechanic_bonus + comp_fit_bonus + v6_bonus + draft_bonus + _lane_info["lane_bonus"] + _comfort_info["comfort_bonus"])
-            final = round(raw_final * data_trust_weight)
+            trusted_synergy = 50 + (syn_score - 50) * get_trust_score("synergy")
+            data_trust_weight = 1.0
+            raw_final = round(ctr_score * 0.35 + meta_score * 0.35 + role_score * 0.20 + trusted_synergy * 0.10 - viability_penalty + mechanic_bonus + comp_fit_bonus + v6_bonus + draft_bonus + _lane_info["lane_bonus"] + _comfort_info["comfort_bonus"])
+            final = raw_final
 
             results.append((champ, final, {
                 "raw_final_score": raw_final,
@@ -349,7 +313,8 @@ class RecommendationEngine:
                 "counter": ctr_score,
                 "meta": meta_score,
                 "role": role_score,
-                "synergy": syn_score,
+                "synergy": round(trusted_synergy),
+                "synergy_raw": syn_score,
                 "team_comp": tc_score,
                 "mechanic_bonus": mechanic_bonus,
                 "comp_fit": comp_fit_bonus,

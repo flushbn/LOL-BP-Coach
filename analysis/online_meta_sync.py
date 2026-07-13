@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import statistics
@@ -73,6 +73,7 @@ class OnlineMetaSync:
         synergy = self.build_synergy(meta, counters)
 
         self._write_json("meta_data.json", meta)
+        self._write_role_indexes(meta)
         self._write_json("counter_data.json", counters)
         self._write_json("synergy_data.json", synergy)
         self._write_report(meta, counters, synergy, elapsed=time.time() - started)
@@ -149,6 +150,7 @@ class OnlineMetaSync:
             },
         }
         self._write_json("meta_data.json", meta)
+        self._write_role_indexes(meta)
         self._write_full_meta_report(meta, elapsed=time.time() - started)
         return {"patch": self.patch, "output_dir": str(self.output_dir), **meta["coverage"]}
 
@@ -184,13 +186,20 @@ class OnlineMetaSync:
         progress: Callable[[int, str], None] | None = None,
     ) -> dict[str, Any]:
         progress = progress or (lambda value, message: None)
-        champions = sorted(meta.get("champions", {}).keys() or self._load_champion_roles().keys())
-        total = len(champions) or 1
+        jobs = [
+            (role, champion)
+            for champion, payload in sorted(meta.get("champions", {}).items())
+            for role in sorted(payload.get("roles", {}))
+            if role in ROLE_MAP
+        ]
+        if not jobs:
+            jobs = [(self._best_role_for_champion(champion, meta), champion) for champion in sorted(self._load_champion_roles())]
+        total = len(jobs) or 1
         result: dict[str, dict[str, Any]] = {}
+        role_matchups: dict[str, dict[str, dict[str, Any]]] = {role: {} for role in ROLE_MAP}
         failed: list[dict[str, str]] = []
 
-        for index, champion in enumerate(champions, 1):
-            role = self._best_role_for_champion(champion, meta)
+        for index, (role, champion) in enumerate(jobs, 1):
             lane = ROLE_MAP.get(role, "middle")
             progress(round(index / total * 100), f"更新克制数据: {champion} {role} ({index}/{total})")
             rows = self.client.get_counters(champion, lane=lane, tier=self.tier) or []
@@ -200,18 +209,21 @@ class OnlineMetaSync:
                 if not opponent or opponent == champion:
                     continue
                 delta = float(row.get("delta", 0.0) or 0.0)
+                games = int(row.get("games", 0) or 0)
                 pairs[opponent] = {
                     "role": role,
                     "winrate_delta": round(delta, 2),
-                    "counter_score": round(clamp(50 + delta * 5), 2),
-                    "games": int(row.get("games", 0) or 0),
+                    "counter_score": self._counter_score(delta, games),
+                    "games": games,
                     "source": "lolalytics_counters",
                 }
             if not pairs:
                 pairs = self._build_counter_matchup_fallback(champion, role, lane, meta)
             if not pairs:
                 failed.append({"champion": champion, "role": role})
-            result[champion] = pairs
+            role_matchups.setdefault(role, {})[champion] = pairs
+            if role == self._best_role_for_champion(champion, meta):
+                result[champion] = pairs
 
         return {
             "patch": self.patch,
@@ -219,13 +231,15 @@ class OnlineMetaSync:
             "tier": self.tier,
             "generated_at": int(time.time()),
             "coverage": {
-                "champions": len(champions),
+                "champions": len(meta.get("champions", {})),
+                "role_entries": len(jobs),
                 "synced_champions": len([champion for champion, pairs in result.items() if pairs]),
-                "pairs": sum(len(pairs) for pairs in result.values()),
+                "pairs": sum(len(pairs) for candidates in role_matchups.values() for pairs in candidates.values()),
                 "failed": len(failed),
             },
             "failed": failed,
             "champions": result,
+            "role_matchups": role_matchups,
         }
 
     def _build_counter_matchup_fallback(
@@ -255,7 +269,7 @@ class OnlineMetaSync:
             pairs[opponent] = {
                 "role": role,
                 "winrate_delta": round(delta, 2),
-                "counter_score": round(clamp(50 + delta * 5), 2),
+                "counter_score": self._counter_score(delta, games),
                 "games": games,
                 "source": "lolalytics_matchup_fallback",
             }
@@ -363,15 +377,57 @@ class OnlineMetaSync:
                 data = json.loads(path.read_text(encoding="utf-8"))
                 champion_data = data.get("data", data)
                 for champion_id, info in champion_data.items():
-                    known[canonical_name(champion_id).lower()] = champion_id
+                    known.setdefault(canonical_name(champion_id).lower(), champion_id)
                     if isinstance(info, dict):
                         for key in ("name", "title", "id"):
                             value = info.get(key)
                             if value:
-                                known[canonical_name(value).lower()] = champion_id
+                                known.setdefault(canonical_name(value).lower(), champion_id)
             except Exception:
                 continue
         return known
+
+    def _write_role_indexes(self, meta: dict[str, Any]) -> dict[str, int]:
+        """Refresh role gates from the same patch-scoped Lolalytics dataset."""
+        role_data: dict[str, dict[str, int]] = {}
+        champion_roles: dict[str, list[str]] = {}
+        riot_role = {"TOP": "TOP", "JUNGLE": "JUNGLE", "MID": "MIDDLE", "ADC": "BOTTOM", "SUPPORT": "UTILITY"}
+        display_role = {"TOP": "Top", "JUNGLE": "Jungle", "MID": "Mid", "ADC": "ADC", "SUPPORT": "Support"}
+
+        merged_entries: dict[str, dict[str, dict[str, Any]]] = {}
+        for raw_champion, payload in meta.get("champions", {}).items():
+            champion = self._resolve_champion(raw_champion) or raw_champion
+            entries = payload.get("roles", {}) if isinstance(payload, dict) else {}
+            target = merged_entries.setdefault(champion, {})
+            for role, entry in entries.items():
+                if role not in riot_role or not isinstance(entry, dict):
+                    continue
+                previous = target.get(role)
+                if previous is None or int(entry.get("games", 0) or 0) > int(previous.get("games", 0) or 0):
+                    target[role] = entry
+
+        for champion, entries in merged_entries.items():
+            games_by_role = {role: max(0, int(entry.get("games", 0) or 0)) for role, entry in entries.items()}
+            total_games = sum(games_by_role.values())
+            if total_games <= 0:
+                continue
+            percentages = {
+                riot_role[role]: round(games / total_games * 100)
+                for role, games in games_by_role.items()
+                if games > 0
+            }
+            if not percentages:
+                continue
+            role_data[champion] = percentages
+            champion_roles[champion] = [
+                display_role[role]
+                for role, games in games_by_role.items()
+                if games / total_games * 100 >= 10
+            ]
+
+        (ROOT / "data" / "role_data.json").write_text(json.dumps(role_data, ensure_ascii=False, indent=2), encoding="utf-8")
+        (ROOT / "data" / "champion_roles.json").write_text(json.dumps(champion_roles, ensure_ascii=False, indent=2), encoding="utf-8")
+        return {"champions": len(role_data), "roles": sum(len(roles) for roles in champion_roles.values())}
 
     def _load_champion_roles(self, include_offrole_threshold: int = 10) -> dict[str, list[str]]:
         champion_roles: dict[str, set[str]] = {}
@@ -825,4 +881,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

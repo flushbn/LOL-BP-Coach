@@ -3,9 +3,9 @@
   "source": "tag_inferred_full",
   "generated_at": 1783328035,
   "coverage": {
-    "champions": 174,
-    "synced_champions": 174,
-    "pairs": 1392
+    "champions": 173,
+    "synced_champions": 173,
+    "pairs": 1385
   },
   "champions": {
     "Aatrox": {
@@ -59,7 +59,7 @@
       }
     },
     "Ahri": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -121,7 +121,7 @@
         "reason": "控制链 + 爆发衔接",
         "source": "tag_inferred_full"
       },
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 73.18,
         "sample": "tag_inferred",
         "reason": "控制链 + 爆发衔接",
@@ -259,7 +259,7 @@
       }
     },
     "Ambessa": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -459,7 +459,7 @@
       }
     },
     "Aphelios": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -515,7 +515,7 @@
         "reason": "先手控制 + 输出跟进",
         "source": "tag_inferred_full"
       },
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -559,7 +559,7 @@
       }
     },
     "AurelionSol": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -609,7 +609,7 @@
       }
     },
     "Aurora": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -1059,7 +1059,7 @@
       }
     },
     "Camille": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -1315,7 +1315,7 @@
         "reason": "先手控制 + 输出跟进",
         "source": "tag_inferred_full"
       },
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -1471,7 +1471,7 @@
         "reason": "控制链 + 爆发衔接",
         "source": "tag_inferred_full"
       },
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 73.18,
         "sample": "tag_inferred",
         "reason": "控制链 + 爆发衔接",
@@ -1658,7 +1658,7 @@
         "source": "tag_inferred_full"
       }
     },
-    "FiddleSticks": {
+    "Fiddlesticks": {
       "Nocturne": {
         "synergy_score": 80.13,
         "sample": "tag_inferred",
@@ -1706,34 +1706,8 @@
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
         "source": "tag_inferred_full"
-      }
-    },
-    "Fiddlesticks": {
-      "Pyke": {
-        "synergy_score": 80.09,
-        "sample": "tag_inferred",
-        "reason": "先手控制 + 输出跟进",
-        "source": "tag_inferred_full"
-      },
-      "Ashe": {
-        "synergy_score": 80.04,
-        "sample": "tag_inferred",
-        "reason": "先手控制 + 输出跟进",
-        "source": "tag_inferred_full"
-      },
-      "Jhin": {
-        "synergy_score": 80.04,
-        "sample": "tag_inferred",
-        "reason": "先手控制 + 输出跟进",
-        "source": "tag_inferred_full"
       },
       "Ahri": {
-        "synergy_score": 79.97,
-        "sample": "tag_inferred",
-        "reason": "先手控制 + 输出跟进",
-        "source": "tag_inferred_full"
-      },
-      "Irelia": {
         "synergy_score": 79.97,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -2409,7 +2383,7 @@
       }
     },
     "Irelia": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -2709,7 +2683,7 @@
       }
     },
     "Jhin": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -3121,7 +3095,7 @@
         "reason": "控制链 + 爆发衔接",
         "source": "tag_inferred_full"
       },
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 73.18,
         "sample": "tag_inferred",
         "reason": "控制链 + 爆发衔接",
@@ -3521,7 +3495,7 @@
         "reason": "控制链 + 爆发衔接",
         "source": "tag_inferred_full"
       },
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 73.18,
         "sample": "tag_inferred",
         "reason": "控制链 + 爆发衔接",
@@ -3759,7 +3733,7 @@
       }
     },
     "Locke": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 73.18,
         "sample": "tag_inferred",
         "reason": "控制链 + 爆发衔接",
@@ -5059,7 +5033,7 @@
       }
     },
     "Pantheon": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -5159,7 +5133,7 @@
       }
     },
     "Pyke": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -5209,7 +5183,7 @@
       }
     },
     "Qiyana": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 78.18,
         "sample": "tag_inferred",
         "reason": "控制链 + 爆发衔接",
@@ -5222,12 +5196,6 @@
         "source": "tag_inferred_full"
       },
       "Amumu": {
-        "synergy_score": 77.82,
-        "sample": "tag_inferred",
-        "reason": "控制链 + 爆发衔接",
-        "source": "tag_inferred_full"
-      },
-      "Fiddlesticks": {
         "synergy_score": 77.82,
         "sample": "tag_inferred",
         "reason": "控制链 + 爆发衔接",
@@ -5633,7 +5601,7 @@
         "reason": "控制链 + 爆发衔接",
         "source": "tag_inferred_full"
       },
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 78.18,
         "sample": "tag_inferred",
         "reason": "控制链 + 爆发衔接",
@@ -5650,16 +5618,10 @@
         "sample": "tag_inferred",
         "reason": "控制链 + 爆发衔接",
         "source": "tag_inferred_full"
-      },
-      "Fiddlesticks": {
-        "synergy_score": 77.82,
-        "sample": "tag_inferred",
-        "reason": "控制链 + 爆发衔接",
-        "source": "tag_inferred_full"
       }
     },
     "Riven": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -7109,7 +7071,7 @@
       }
     },
     "Tryndamere": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -7359,7 +7321,7 @@
       }
     },
     "Varus": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -7909,7 +7871,7 @@
       }
     },
     "Xayah": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 80.18,
         "sample": "tag_inferred",
         "reason": "先手控制 + 输出跟进",
@@ -8409,7 +8371,7 @@
       }
     },
     "Zed": {
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "synergy_score": 78.18,
         "sample": "tag_inferred",
         "reason": "控制链 + 爆发衔接",
@@ -8422,12 +8384,6 @@
         "source": "tag_inferred_full"
       },
       "Amumu": {
-        "synergy_score": 77.82,
-        "sample": "tag_inferred",
-        "reason": "控制链 + 爆发衔接",
-        "source": "tag_inferred_full"
-      },
-      "Fiddlesticks": {
         "synergy_score": 77.82,
         "sample": "tag_inferred",
         "reason": "控制链 + 爆发衔接",

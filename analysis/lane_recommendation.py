@@ -12,6 +12,7 @@ from typing import List, Optional
 from analysis.lolalytics_client import LolalyticsClient
 from analysis.role_inference_engine import RoleInferenceEngine
 from analysis.lane_bonus import _load_local_counter_data, _local_matchup
+from core.meta_analyzer import MetaAnalyzer
 
 
 class LaneRecommendation:
@@ -47,16 +48,22 @@ class LaneRecommendation:
         with open(base.parent / "data" / "role_data.json", encoding="utf-8") as f:
             self._role_data = json.load(f)
 
-        # viability_score: global champion viability
-        with open(base.parent / "data" / "meta_data.json", encoding="utf-8") as f:
-            self._meta_data = json.load(f)
+        self._meta_analyzer = MetaAnalyzer()
 
     # ---- Score helpers ----
 
     @staticmethod
-    def _matchup_score(delta: float) -> float:
+    def _matchup_score(delta: float, games: int = 0) -> float:
         """Normalize delta to 0-100 scale."""
-        return max(0.0, min(100.0, round(50.0 + delta * 5.0, 1)))
+        if games <= 0:
+            confidence = 0.4
+        elif games < 500:
+            confidence = 0.4 + games / 500 * 0.4
+        elif games < 1500:
+            confidence = 0.8
+        else:
+            confidence = 1.0
+        return max(0.0, min(100.0, round(50.0 + delta * 5.0 * confidence, 1)))
 
     @staticmethod
     def _sample_score(games: int) -> float:
@@ -77,33 +84,27 @@ class LaneRecommendation:
         entry = self._role_data.get(champion, {})
         return float(entry.get(role_key, 0))
 
-    def _get_viability_score(self, champion: str) -> float:
-        entry = self._meta_data.get(champion, {})
-        v = entry.get("viability")
-        return float(v) if v is not None else 50.0
+    def _get_viability_score(self, champion: str, role_key: str) -> float:
+        role = {"TOP": "TOP", "JUNGLE": "JUNGLE", "MIDDLE": "MID", "BOTTOM": "ADC", "UTILITY": "SUPPORT"}.get(role_key, role_key)
+        return float(self._meta_analyzer.get_viability(champion, role))
 
     def _get_candidates(self, role: str) -> List[str]:
         """Return sorted champions that can play the given role (per champion_data.json)."""
         entry = self.ROLE_MAP.get(role)
         if not entry:
             return []
-        data_role, _, _ = entry
-        result = []
-        for champ, info in self._champion_data.items():
-            roles = info.get("roles", [])
-            if any(r.lower() == data_role for r in roles):
-                result.append(champ)
-        return sorted(result)
+        _, role_key, _ = entry
+        return sorted(champion for champion, roles in self._role_data.items() if float(roles.get(role_key, 0) or 0) >= 10)
 
     # ---- Scoring ----
 
     def _v1_lane_score(self, delta: float, games: int) -> float:
         """Original V2 scoring (for comparison)."""
-        return round(self._matchup_score(delta) * 0.8 + self._sample_score(games) * 0.2, 1)
+        return round(self._matchup_score(delta, games) * 0.8 + self._sample_score(games) * 0.2, 1)
 
-    def _v21_lane_score(self, delta: float, role_score: float, viability_score: float) -> float:
+    def _v21_lane_score(self, delta: float, games: int, role_score: float, viability_score: float) -> float:
         """V2.1 scoring with role + viability."""
-        ms = self._matchup_score(delta)
+        ms = self._matchup_score(delta, games)
         return round(ms * 0.6 + role_score * 0.2 + viability_score * 0.2, 1)
 
     # ---- Fetch one ----
@@ -119,7 +120,7 @@ class LaneRecommendation:
             delta = matchup.get("delta", 0.0)
             games = matchup.get("games", 0)
             role_score = self._get_role_score(champ, role_key)
-            viability_score = self._get_viability_score(champ)
+            viability_score = self._get_viability_score(champ, role_key)
 
             return {
                 "champion": champ,
@@ -128,7 +129,7 @@ class LaneRecommendation:
                 "role_score": role_score,
                 "viability_score": viability_score,
                 "v1_score": self._v1_lane_score(delta, games),
-                "v21_score": self._v21_lane_score(delta, role_score, viability_score),
+                "v21_score": self._v21_lane_score(delta, games, role_score, viability_score),
             }
         except Exception:
             return None

@@ -1,98 +1,135 @@
-﻿import json
+import json
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from utils.champion_names import canonical_champion_key
+
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+_ROLE_MAP = {
+    "TOP": "Top",
+    "JUNGLE": "Jungle",
+    "MID": "Mid",
+    "MIDDLE": "Mid",
+    "ADC": "ADC",
+    "BOTTOM": "ADC",
+    "SUPPORT": "Support",
+    "UTILITY": "Support",
+}
+_RIOT_ROLE_MAP = {"Top": "TOP", "Jungle": "JUNGLE", "Mid": "MIDDLE", "ADC": "BOTTOM", "Support": "UTILITY"}
 
 
 class RoleFilter:
-    """Filter champion pool by role / position.
-
-    Uses role_data.json (from Riot API match stats) as primary source,
-    falls back to champion_roles.json (manual).
-    """
+    """Use the current patch's role distribution before legacy role lists."""
 
     VALID_ROLES = {"Top", "Jungle", "Mid", "ADC", "Support"}
-    POS_MAP = {
-        "TOP": "Top", "JUNGLE": "Jungle", "MIDDLE": "Mid",
-        "BOTTOM": "ADC", "UTILITY": "Support",
-    }
 
     def __init__(self, data_path: Optional[Path] = None):
-        if data_path is None:
-            data_path = PROJECT_ROOT / "data" / "champion_roles.json"
-        # Load Riot stats-based role data
-        self._role_stats: Dict[str, Dict[str, int]] = {}
-        stats_path = PROJECT_ROOT / "data" / "role_data.json"
-        if stats_path.exists():
-            with open(stats_path, "r", encoding="utf-8") as f:
-                raw = json.load(f)
-            for champ, pos_pct in raw.items():
-                entry = {}
-                for riot_pos, pct in pos_pct.items():
-                    mapped = self.POS_MAP.get(riot_pos)
-                    if mapped and pct >= 10:
-                        entry[mapped] = pct
-                if entry:
-                    self._role_stats[champ] = entry
+        self._role_stats = self._load_patch_role_stats()
+        if not self._role_stats:
+            self._role_stats = self._load_legacy_role_stats()
 
-        # Fallback to manual data
-        if not data_path.exists():
-            raise FileNotFoundError(f"Role data not found: {data_path}")
-        with open(data_path, "r", encoding="utf-8") as f:
-            self._role_data: Dict[str, List[str]] = json.load(f)
+        path = data_path or PROJECT_ROOT / "data" / "champion_roles.json"
+        self._role_data: Dict[str, List[str]] = {}
+        if path.exists():
+            try:
+                self._role_data = json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                pass
 
-        self._cn_to_en: Dict[str, str] = {}
+    @staticmethod
+    def _patch_meta_path() -> Path:
+        data_dir = PROJECT_ROOT / "data"
         try:
-            dt_path = PROJECT_ROOT / "data" / "zh_CN" / "champion.json"
-            if dt_path.exists():
-                with open(dt_path, "r", encoding="utf-8") as f:
-                    dt = json.load(f)
-                for eng_key, info in dt.get("data", {}).items():
-                    self._cn_to_en[info["name"]] = eng_key
+            patch = json.loads((data_dir / "patch_version.json").read_text(encoding="utf-8")).get("current_patch")
+            path = data_dir / str(patch) / "meta_data.json"
+            if patch and path.exists():
+                return path
         except Exception:
             pass
+        return data_dir / "meta_data.json"
+
+    def _load_patch_role_stats(self) -> Dict[str, Dict[str, int]]:
+        try:
+            raw = json.loads(self._patch_meta_path().read_text(encoding="utf-8"))
+            champions = raw.get("champions", {})
+        except Exception:
+            return {}
+
+        result: Dict[str, Dict[str, int]] = {}
+        for raw_champion, payload in champions.items():
+            roles = payload.get("roles", {}) if isinstance(payload, dict) else {}
+            weighted = []
+            for raw_role, entry in roles.items():
+                display_role = _ROLE_MAP.get(str(raw_role).upper())
+                if display_role and isinstance(entry, dict):
+                    weighted.append((display_role, max(0, int(entry.get("games", 0) or 0))))
+            total_games = sum(games for _, games in weighted)
+            if total_games <= 0:
+                continue
+            champion = canonical_champion_key(raw_champion)
+            result[champion] = {
+                role: round(games / total_games * 100)
+                for role, games in weighted
+                if games > 0
+            }
+        return result
+
+    def _load_legacy_role_stats(self) -> Dict[str, Dict[str, int]]:
+        path = PROJECT_ROOT / "data" / "role_data.json"
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            return {}
+        result: Dict[str, Dict[str, int]] = {}
+        for champion, positions in raw.items():
+            entry = {}
+            for riot_role, percentage in positions.items():
+                role = _ROLE_MAP.get(str(riot_role).upper())
+                if role and float(percentage or 0) >= 10:
+                    entry[role] = int(percentage)
+            if entry:
+                result[canonical_champion_key(champion)] = entry
+        return result
 
     def normalize_name(self, name: str) -> str:
-        if name in self._role_data:
-            return name
-        if name in self._cn_to_en:
-            eng = self._cn_to_en[name]
-            if eng in self._role_data:
-                return eng
-        for key in self._role_data:
-            if key.lower() == name.lower():
-                return key
-        return name
+        key = canonical_champion_key(name)
+        if key in self._role_stats or key in self._role_data:
+            return key
+        lowered = key.lower()
+        for champion in set(self._role_stats) | set(self._role_data):
+            if champion.lower() == lowered:
+                return champion
+        return key
 
-    def get_roles(self, champion: str) -> list:
-        """Return list of roles a champion can play."""
-        rd = self._role_data.get(champion, {})
-        return [k for k, v in rd.items() if v >= 10]
-
-    def get_candidates(self, role: str) -> List[str]:
-        valid = [r.lower() for r in self.VALID_ROLES]
-        if role.lower() not in valid:
-            return []
-        # Primary: role_data.json (Riot stats)
-        candidates = [
-            name for name, roles in self._role_stats.items()
-            if role.lower() in (r.lower() for r in roles)
-        ]
-        # Fallback: champion_roles.json for champs not in stats
-        for name, roles in self._role_data.items():
-            if name not in self._role_stats:
-                if any(role.lower() == r.lower() for r in roles):
-                    candidates.append(name)
-        return sorted(candidates)
+    def get_role_percent(self, champion_name: str, role: str) -> int:
+        key = self.normalize_name(champion_name)
+        display_role = _ROLE_MAP.get(str(role).upper(), role)
+        return int(self._role_stats.get(key, {}).get(display_role, 0))
 
     def get_roles(self, champion_name: str) -> List[str]:
         key = self.normalize_name(champion_name)
         if key in self._role_stats:
-            return list(self._role_stats[key].keys())
+            return list(self._role_stats[key])
         return self._role_data.get(key, [])
 
+    def get_candidates(self, role: str) -> List[str]:
+        display_role = _ROLE_MAP.get(str(role).upper(), role)
+        if display_role not in self.VALID_ROLES:
+            return []
+        candidates = [champion for champion, roles in self._role_stats.items() if roles.get(display_role, 0) >= 10]
+        for champion, roles in self._role_data.items():
+            if champion not in self._role_stats and display_role in roles:
+                candidates.append(champion)
+        return sorted(set(candidates))
+
     def can_play(self, champion_name: str, role: str) -> bool:
-        return any(role.lower() == r.lower() for r in self.get_roles(champion_name))
+        display_role = _ROLE_MAP.get(str(role).upper(), role)
+        return display_role in self.get_roles(champion_name)
 
-
+    def export_riot_role_data(self) -> Dict[str, Dict[str, int]]:
+        return {
+            champion: {_RIOT_ROLE_MAP[role]: percentage for role, percentage in roles.items() if role in _RIOT_ROLE_MAP}
+            for champion, roles in self._role_stats.items()
+        }

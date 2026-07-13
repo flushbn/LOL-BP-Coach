@@ -1,5 +1,6 @@
 {
   "Aatrox": [
+    "Jungle",
     "Top"
   ],
   "Ahri": [
@@ -10,21 +11,23 @@
     "Top"
   ],
   "Akshan": [
-    "Mid",
-    "Top"
+    "Mid"
   ],
   "Alistar": [
     "Support"
   ],
   "Ambessa": [
-    "Top",
-    "Jungle"
+    "Jungle",
+    "Top"
   ],
   "Amumu": [
-    "Jungle"
+    "Jungle",
+    "Support"
   ],
   "Anivia": [
-    "Mid"
+    "Mid",
+    "Support",
+    "Top"
   ],
   "Annie": [
     "Mid"
@@ -33,10 +36,10 @@
     "ADC"
   ],
   "Ashe": [
-    "ADC",
-    "Support"
+    "ADC"
   ],
   "AurelionSol": [
+    "ADC",
     "Mid"
   ],
   "Aurora": [
@@ -56,7 +59,7 @@
     "Support"
   ],
   "Brand": [
-    "Jungle",
+    "ADC",
     "Mid",
     "Support"
   ],
@@ -70,6 +73,7 @@
     "ADC"
   ],
   "Camille": [
+    "Support",
     "Top"
   ],
   "Cassiopeia": [
@@ -77,33 +81,34 @@
     "Top"
   ],
   "Chogath": [
-    "Top",
-    "Mid"
+    "Mid",
+    "Top"
   ],
   "Corki": [
-    "Mid",
-    "ADC"
+    "ADC",
+    "Mid"
   ],
   "Darius": [
     "Top"
   ],
   "Diana": [
-    "Mid",
-    "Jungle"
+    "Jungle",
+    "Mid"
   ],
   "DrMundo": [
-    "Top",
-    "Jungle"
+    "Jungle",
+    "Top"
   ],
   "Draven": [
     "ADC"
   ],
   "Ekko": [
-    "Mid",
-    "Jungle"
+    "Jungle",
+    "Mid"
   ],
   "Elise": [
-    "Jungle"
+    "Jungle",
+    "Support"
   ],
   "Evelynn": [
     "Jungle"
@@ -112,7 +117,8 @@
     "ADC"
   ],
   "Fiddlesticks": [
-    "Jungle"
+    "Jungle",
+    "Support"
   ],
   "Fiora": [
     "Top"
@@ -121,11 +127,11 @@
     "Mid"
   ],
   "Galio": [
-    "Mid"
+    "Mid",
+    "Support"
   ],
   "Gangplank": [
-    "Top",
-    "Mid"
+    "Top"
   ],
   "Garen": [
     "Top"
@@ -134,16 +140,16 @@
     "Top"
   ],
   "Gragas": [
-    "Top",
     "Jungle",
-    "Mid"
+    "Mid",
+    "Top"
   ],
   "Graves": [
     "Jungle"
   ],
   "Gwen": [
-    "Top",
-    "Jungle"
+    "Jungle",
+    "Top"
   ],
   "Hecarim": [
     "Jungle"
@@ -153,14 +159,16 @@
     "Top"
   ],
   "Hwei": [
-    "Mid"
+    "ADC",
+    "Mid",
+    "Support"
   ],
   "Illaoi": [
     "Top"
   ],
   "Irelia": [
-    "Top",
-    "Mid"
+    "Mid",
+    "Top"
   ],
   "Ivern": [
     "Jungle"
@@ -169,16 +177,15 @@
     "Support"
   ],
   "JarvanIV": [
+    "Jungle"
+  ],
+  "Jax": [
     "Jungle",
     "Top"
   ],
-  "Jax": [
-    "Top",
-    "Jungle"
-  ],
   "Jayce": [
-    "Top",
-    "Mid"
+    "Jungle",
+    "Top"
   ],
   "Jhin": [
     "ADC"
@@ -196,12 +203,11 @@
     "ADC"
   ],
   "Karma": [
-    "Support",
-    "Mid"
+    "Support"
   ],
   "Karthus": [
-    "Jungle",
-    "Mid"
+    "ADC",
+    "Jungle"
   ],
   "Kassadin": [
     "Mid"
@@ -210,15 +216,15 @@
     "Mid"
   ],
   "Kayle": [
-    "Top",
-    "Mid"
+    "Mid",
+    "Top"
   ],
   "Kayn": [
     "Jungle"
   ],
   "Kennen": [
-    "Top",
-    "Mid"
+    "Mid",
+    "Top"
   ],
   "Khazix": [
     "Jungle"
@@ -230,10 +236,12 @@
     "Top"
   ],
   "KogMaw": [
-    "ADC"
+    "ADC",
+    "Mid"
   ],
   "Leblanc": [
-    "Mid"
+    "Mid",
+    "Support"
   ],
   "LeeSin": [
     "Jungle"
@@ -242,40 +250,44 @@
     "Support"
   ],
   "Lillia": [
-    "Jungle",
-    "Top"
+    "Jungle"
   ],
   "Lissandra": [
+    "Mid",
+    "Top"
+  ],
+  "Locke": [
     "Mid"
   ],
   "Lucian": [
-    "ADC",
-    "Mid"
+    "ADC"
   ],
   "Lulu": [
     "Support"
   ],
   "Lux": [
-    "Support",
-    "Mid"
+    "Mid",
+    "Support"
   ],
   "Malphite": [
-    "Top",
-    "Mid"
+    "Mid",
+    "Top"
   ],
   "Malzahar": [
     "Mid"
   ],
   "Maokai": [
     "Jungle",
-    "Top",
-    "Support"
+    "Support",
+    "Top"
   ],
   "MasterYi": [
     "Jungle"
   ],
   "Mel": [
-    "Mid"
+    "ADC",
+    "Mid",
+    "Support"
   ],
   "Milio": [
     "Support"
@@ -284,17 +296,17 @@
     "ADC"
   ],
   "MonkeyKing": [
-    "Top",
-    "Jungle"
+    "Jungle",
+    "Top"
   ],
   "Mordekaiser": [
     "Top"
   ],
   "Morgana": [
-    "Support",
-    "Mid"
+    "Support"
   ],
   "Naafiri": [
+    "Jungle",
     "Mid"
   ],
   "Nami": [
@@ -320,11 +332,12 @@
     "Jungle"
   ],
   "Nunu": [
-    "Jungle"
+    "Jungle",
+    "Mid"
   ],
   "Olaf": [
-    "Top",
-    "Jungle"
+    "Jungle",
+    "Top"
   ],
   "Orianna": [
     "Mid"
@@ -333,22 +346,25 @@
     "Top"
   ],
   "Pantheon": [
-    "Top",
-    "Mid",
     "Jungle",
-    "Support"
+    "Mid",
+    "Support",
+    "Top"
   ],
   "Poppy": [
-    "Top",
-    "Jungle"
+    "Jungle",
+    "Support",
+    "Top"
   ],
   "Pyke": [
     "Support"
   ],
   "Qiyana": [
+    "Jungle",
     "Mid"
   ],
   "Quinn": [
+    "Jungle",
     "Top"
   ],
   "Rakan": [
@@ -376,8 +392,7 @@
     "Top"
   ],
   "Rumble": [
-    "Top",
-    "Mid"
+    "Top"
   ],
   "Ryze": [
     "Mid",
@@ -387,7 +402,8 @@
     "ADC"
   ],
   "Sejuani": [
-    "Jungle"
+    "Jungle",
+    "Top"
   ],
   "Senna": [
     "ADC",
@@ -395,35 +411,36 @@
   ],
   "Seraphine": [
     "ADC",
-    "Support",
-    "Mid"
+    "Support"
   ],
   "Sett": [
     "Top"
   ],
   "Shaco": [
-    "Jungle"
+    "Jungle",
+    "Support"
   ],
   "Shen": [
+    "Support",
     "Top"
   ],
   "Shyvana": [
-    "Jungle",
-    "Top"
+    "Jungle"
   ],
   "Singed": [
     "Top"
   ],
   "Sion": [
-    "Top",
-    "Mid"
+    "Mid",
+    "Top"
   ],
   "Sivir": [
     "ADC"
   ],
   "Skarner": [
-    "Top",
-    "Jungle"
+    "Jungle",
+    "Support",
+    "Top"
   ],
   "Smolder": [
     "ADC"
@@ -435,31 +452,31 @@
     "Support"
   ],
   "Swain": [
-    "Support",
+    "ADC",
     "Mid",
-    "Top"
+    "Support"
   ],
   "Sylas": [
-    "Mid",
-    "Top"
+    "Jungle",
+    "Mid"
   ],
   "Syndra": [
     "Mid"
   ],
   "TahmKench": [
-    "Top",
-    "Support"
+    "Support",
+    "Top"
   ],
   "Taliyah": [
     "Jungle",
     "Mid"
   ],
   "Talon": [
+    "Jungle",
     "Mid"
   ],
   "Taric": [
-    "Support",
-    "Top"
+    "Support"
   ],
   "Teemo": [
     "Top"
@@ -468,12 +485,11 @@
     "Support"
   ],
   "Tristana": [
-    "ADC",
-    "Mid"
+    "ADC"
   ],
   "Trundle": [
-    "Top",
-    "Jungle"
+    "Jungle",
+    "Top"
   ],
   "Tryndamere": [
     "Top"
@@ -482,28 +498,29 @@
     "Mid"
   ],
   "Twitch": [
-    "ADC",
-    "Jungle"
+    "ADC"
   ],
   "Udyr": [
-    "Top",
-    "Jungle"
+    "Jungle",
+    "Top"
   ],
   "Urgot": [
     "Top"
   ],
   "Varus": [
     "ADC",
-    "Mid"
+    "Top"
   ],
   "Vayne": [
-    "Top",
-    "ADC"
+    "ADC",
+    "Top"
   ],
   "Veigar": [
+    "ADC",
     "Mid"
   ],
   "Velkoz": [
+    "ADC",
     "Mid",
     "Support"
   ],
@@ -511,8 +528,7 @@
     "Mid"
   ],
   "Vi": [
-    "Jungle",
-    "Top"
+    "Jungle"
   ],
   "Viego": [
     "Jungle"
@@ -521,16 +537,16 @@
     "Mid"
   ],
   "Vladimir": [
-    "Top",
-    "Mid"
+    "Mid",
+    "Top"
   ],
   "Volibear": [
-    "Top",
-    "Jungle"
+    "Jungle",
+    "Top"
   ],
   "Warwick": [
-    "Top",
-    "Jungle"
+    "Jungle",
+    "Top"
   ],
   "Xayah": [
     "ADC"
@@ -544,24 +560,24 @@
     "Top"
   ],
   "Yasuo": [
-    "Top",
-    "Mid"
+    "Mid",
+    "Top"
   ],
   "Yone": [
-    "Top",
-    "Mid"
+    "Mid",
+    "Top"
   ],
   "Yorick": [
     "Top"
   ],
   "Yunara": [
-    "Mid"
+    "ADC"
   ],
   "Yuumi": [
     "Support"
   ],
   "Zaahen": [
-    "Mid",
+    "Jungle",
     "Top"
   ],
   "Zac": [
@@ -569,23 +585,25 @@
     "Top"
   ],
   "Zed": [
+    "Jungle",
     "Mid"
   ],
   "Zeri": [
     "ADC"
   ],
   "Ziggs": [
+    "ADC",
     "Mid"
   ],
   "Zilean": [
-    "Support",
-    "Mid"
+    "Support"
   ],
   "Zoe": [
-    "Mid"
+    "Mid",
+    "Support"
   ],
   "Zyra": [
-    "Support",
-    "Mid"
+    "Jungle",
+    "Support"
   ]
 }

@@ -1125,7 +1125,7 @@
         "role": "JUNGLE",
         "source": "lolalytics_live"
       },
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "winrate": 52.89,
         "pickrate": 2.1,
         "banrate": 1.0,
@@ -1135,19 +1135,6 @@
         "meta_score": 27.27,
         "champion": "FiddleSticks",
         "display_name": "FiddleSticks",
-        "role": "JUNGLE",
-        "source": "lolalytics_live"
-      },
-      "Fiddlesticks": {
-        "winrate": 52.89,
-        "pickrate": 2.1,
-        "banrate": 1.0,
-        "tier": "B",
-        "games": 29515,
-        "sample_confidence": 1.0,
-        "meta_score": 27.27,
-        "champion": "Fiddlesticks",
-        "display_name": "Fiddlesticks",
         "role": "JUNGLE",
         "source": "lolalytics_live"
       },
@@ -1972,7 +1959,7 @@
         "role": "MID",
         "source": "lolalytics_live"
       },
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "winrate": 53.57,
         "pickrate": 0.09,
         "banrate": 1.0,
@@ -3445,7 +3432,7 @@
         "role": "SUPPORT",
         "source": "lolalytics_live"
       },
-      "FiddleSticks": {
+      "Fiddlesticks": {
         "winrate": 51.55,
         "pickrate": 0.54,
         "banrate": 1.0,
@@ -4933,7 +4920,7 @@
       "best_role": "ADC",
       "best_meta_score": 29.72
     },
-    "FiddleSticks": {
+    "Fiddlesticks": {
       "roles": {
         "JUNGLE": {
           "winrate": 52.89,
@@ -4977,25 +4964,6 @@
       },
       "best_role": "MID",
       "best_meta_score": 32.76
-    },
-    "Fiddlesticks": {
-      "roles": {
-        "JUNGLE": {
-          "winrate": 52.89,
-          "pickrate": 2.1,
-          "banrate": 1.0,
-          "tier": "B",
-          "games": 29515,
-          "sample_confidence": 1.0,
-          "meta_score": 27.27,
-          "champion": "Fiddlesticks",
-          "display_name": "Fiddlesticks",
-          "role": "JUNGLE",
-          "source": "lolalytics_live"
-        }
-      },
-      "best_role": "JUNGLE",
-      "best_meta_score": 27.27
     },
     "Fiora": {
       "roles": {
@@ -9071,9 +9039,9 @@
   },
   "failed": [],
   "coverage": {
-    "known_champions": 174,
-    "synced_champions": 174,
-    "synced_role_entries": 308,
+    "known_champions": 173,
+    "synced_champions": 173,
+    "synced_role_entries": 307,
     "failed_role_entries": 0
   }
 }

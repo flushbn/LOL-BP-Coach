@@ -4,9 +4,9 @@
   "tier": "emerald",
   "generated_at": 1783327912,
   "coverage": {
-    "champions": 174,
-    "synced_champions": 174,
-    "pairs": 8769,
+    "champions": 173,
+    "synced_champions": 173,
+    "pairs": 8765,
     "failed": 0
   },
   "failed": [],
@@ -11704,7 +11704,7 @@
         "source": "lolalytics_counters"
       }
     },
-    "FiddleSticks": {
+    "Fiddlesticks": {
       "Locke": {
         "role": "MID",
         "winrate_delta": 5.1,
@@ -11844,9 +11844,7 @@
         "counter_score": 50.0,
         "games": 26,
         "source": "lolalytics_matchup_fallback"
-      }
-    },
-    "Fiddlesticks": {
+      },
       "Ambessa": {
         "role": "JUNGLE",
         "winrate_delta": -5.2,
@@ -11966,13 +11964,6 @@
         "games": 0,
         "source": "lolalytics_counters"
       },
-      "Sylas": {
-        "role": "JUNGLE",
-        "winrate_delta": 2.7,
-        "counter_score": 63.5,
-        "games": 0,
-        "source": "lolalytics_counters"
-      },
       "Nocturne": {
         "role": "JUNGLE",
         "winrate_delta": 4.7,
@@ -12040,13 +12031,6 @@
         "role": "JUNGLE",
         "winrate_delta": 3.6,
         "counter_score": 68.0,
-        "games": 0,
-        "source": "lolalytics_counters"
-      },
-      "Diana": {
-        "role": "JUNGLE",
-        "winrate_delta": 4.5,
-        "counter_score": 72.5,
         "games": 0,
         "source": "lolalytics_counters"
       },
@@ -12162,13 +12146,6 @@
         "games": 0,
         "source": "lolalytics_counters"
       },
-      "Zed": {
-        "role": "JUNGLE",
-        "winrate_delta": 7.5,
-        "counter_score": 87.5,
-        "games": 0,
-        "source": "lolalytics_counters"
-      },
       "Jax": {
         "role": "JUNGLE",
         "winrate_delta": 12.6,
@@ -12180,13 +12157,6 @@
         "role": "JUNGLE",
         "winrate_delta": 13.5,
         "counter_score": 100,
-        "games": 0,
-        "source": "lolalytics_counters"
-      },
-      "Locke": {
-        "role": "JUNGLE",
-        "winrate_delta": 7.3,
-        "counter_score": 86.5,
         "games": 0,
         "source": "lolalytics_counters"
       }

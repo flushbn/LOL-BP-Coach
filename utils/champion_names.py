@@ -14,6 +14,43 @@ def _normalize(name: str) -> str:
 
 
 @lru_cache(maxsize=1)
+def _load_champion_keys() -> dict[str, str]:
+    keys: dict[str, str] = {}
+    for path in (ROOT / "data" / "zh_CN" / "champion.json", ROOT / "champion.json"):
+        try:
+            if not path.exists():
+                continue
+            payload: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+            for champion_id, info in payload.get("data", {}).items():
+                for value in (champion_id, info.get("name", ""), info.get("title", "")):
+                    normalized = _normalize(value)
+                    if normalized:
+                        keys.setdefault(normalized, champion_id)
+        except Exception:
+            continue
+
+    aliases = {
+        "fiddlesticks": "Fiddlesticks",
+        "monkeyking": "MonkeyKing",
+        "wukong": "MonkeyKing",
+        "kaisa": "Kaisa",
+        "belveth": "Belveth",
+        "ksante": "KSante",
+    }
+    for alias, champion_id in aliases.items():
+        keys.setdefault(alias, champion_id)
+    return keys
+
+
+def canonical_champion_key(name: str | None) -> str:
+    """Return the stable internal champion key used by current data files."""
+    text = str(name or "").strip()
+    if not text:
+        return ""
+    return _load_champion_keys().get(_normalize(text), text)
+
+
+@lru_cache(maxsize=1)
 def _load_name_maps() -> tuple[dict[str, str], dict[str, str]]:
     direct: dict[str, str] = {}
     normalized: dict[str, str] = {}

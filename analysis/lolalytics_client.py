@@ -86,15 +86,6 @@ class LolalyticsClient:
                     return raw
             except Exception:
                 pass
-        # Fallback: old flat directory (backward compat)
-        legacy = self.CACHE_BASE / f'{key}.json'
-        if legacy.exists():
-            try:
-                age = time.time() - legacy.stat().st_mtime
-                if age < self.CACHE_TTL:
-                    return json.loads(legacy.read_text(encoding='utf-8'))
-            except Exception:
-                pass
         return None
 
     def _cache_set(self, key, data, patch=None):
@@ -140,14 +131,13 @@ class LolalyticsClient:
         for patch_dir in self.CACHE_BASE.iterdir():
             if not patch_dir.is_dir():
                 continue
-            for f in patch_dir.iterdir():
-                if f.suffix == '.json':
-                    try:
-                        if f.stat().st_mtime < cutoff:
-                            f.unlink()
-                            removed += 1
-                    except Exception:
-                        pass
+            for f in patch_dir.rglob('*.json'):
+                try:
+                    if f.stat().st_mtime < cutoff:
+                        f.unlink()
+                        removed += 1
+                except Exception:
+                    pass
         return removed
 
     def _fetch(self, url, timeout=15):
@@ -287,7 +277,12 @@ class LolalyticsClient:
                 wr2 = float(texts[i+2].strip())
                 delta = round(wr1 - wr2, 1)
                 name = t.replace('&#39;', chr(39)).replace('&amp;', '&')
-                results.append({'champion': name, 'delta': delta})
+                games = 0
+                for candidate in texts[i + 3:min(i + 13, len(texts))]:
+                    compact = candidate.strip().replace(',', '')
+                    if compact.isdigit():
+                        games = max(games, int(compact))
+                results.append({'champion': name, 'delta': delta, 'games': games})
                 i += 13
             else:
                 i += 1

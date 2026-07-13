@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from analysis.lolalytics_client import LolalyticsClient
 from analysis.role_inference_engine import RoleInferenceEngine
+from utils.champion_names import canonical_champion_key
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
@@ -76,7 +77,10 @@ def _load_local_counter_data() -> dict:
         try:
             if path.exists():
                 raw = json.loads(path.read_text(encoding="utf-8"))
-                _LOCAL_COUNTER_CACHE = raw.get("champions", raw)
+                _LOCAL_COUNTER_CACHE = {
+                    "champions": raw.get("champions", raw),
+                    "role_matchups": raw.get("role_matchups", {}),
+                }
                 return _LOCAL_COUNTER_CACHE
         except Exception:
             continue
@@ -85,6 +89,7 @@ def _load_local_counter_data() -> dict:
 
 
 def _lookup_key(data: dict, name: str) -> Optional[str]:
+    name = canonical_champion_key(name)
     if not name:
         return None
     if name in data:
@@ -98,11 +103,15 @@ def _lookup_key(data: dict, name: str) -> Optional[str]:
 
 def _local_matchup(champion: str, opponent: str, role: str) -> Optional[dict]:
     data = _load_local_counter_data()
-    champion_key = _lookup_key(data, champion)
+    expected_role = _ROLE_TO_COUNTER_ROLE.get(role)
+    role_matchups = data.get("role_matchups", {}) if isinstance(data, dict) else {}
+    role_data = role_matchups.get(expected_role, {}) if expected_role else {}
+    source_data = role_data or data.get("champions", data)
+    champion_key = _lookup_key(source_data, champion)
     if not champion_key:
         return None
 
-    opponents = data.get(champion_key, {}) or {}
+    opponents = source_data.get(champion_key, {}) or {}
     opponent_key = _lookup_key(opponents, opponent)
     if not opponent_key:
         return None
@@ -111,7 +120,6 @@ def _local_matchup(champion: str, opponent: str, role: str) -> Optional[dict]:
     if not isinstance(payload, dict):
         return None
 
-    expected_role = _ROLE_TO_COUNTER_ROLE.get(role)
     payload_role = str(payload.get("role", "")).upper()
     if expected_role and payload_role and payload_role != expected_role:
         return None
@@ -157,7 +165,17 @@ def find_enemy_lane_champion(
     return None
 
 
-def _delta_to_bonus(delta: float) -> int:
+def _sample_confidence(games: int) -> float:
+    if games <= 0:
+        return 0.4
+    if games < 500:
+        return 0.4 + games / 500 * 0.4
+    if games < 1500:
+        return 0.8
+    return 1.0
+
+
+def _delta_to_bonus(delta: float, games: int = 0) -> int:
     if delta >= 5.0:
         return 5
     elif delta >= 3.0:
@@ -174,14 +192,25 @@ def _delta_to_bonus(delta: float) -> int:
         return -5
 
 
+def _apply_sample_confidence(bonus: int, games: int) -> int:
+    if bonus == 0 or games >= 500:
+        return bonus
+    adjusted = round(abs(bonus) * _sample_confidence(games))
+    return (1 if bonus > 0 else -1) * max(1, adjusted)
+
+
 def _bonus_to_reason(bonus: int) -> str:
     return {
         5: "强势克制敌方对位",
+        4: "强势对位优势",
         3: "对位优势",
+        2: "对位优势",
         1: "对位略优",
         0: "对位均势",
         -1: "对位略劣",
+        -2: "对位劣势",
         -3: "对位劣势",
+        -4: "明显对位劣势",
         -5: "被敌方明显克制",
     }.get(bonus, "")
 
@@ -211,8 +240,11 @@ def get_lane_bonus(
         if matchup is None:
             return {"lane_bonus": 0, "lane_reason": ""}
         delta = matchup.get("delta", 0.0)
-        bonus = _delta_to_bonus(delta)
+        games = int(matchup.get("games", 0) or 0)
+        bonus = _apply_sample_confidence(_delta_to_bonus(delta, games), games)
         reason = _bonus_to_reason(bonus)
+        if games < 500 and reason:
+            reason = f"{reason}（样本待验证）"
         return {"lane_bonus": bonus, "lane_reason": reason}
     except Exception:
         return {"lane_bonus": 0, "lane_reason": ""}
