@@ -8,7 +8,10 @@ if getattr(sys, "frozen", False):
 else:
     BASE = Path(__file__).resolve().parent
 sys.path.insert(0, str(BASE))
-sys.path.insert(0, str(BASE / "core"))
+
+# Repair missing or stale CA bundle paths before the update modules import requests.
+from utils.network_certificates import configure_ca_bundle
+configure_ca_bundle(BASE)
 
 # Init crash handler
 from utils.crash_handler import init_crash_log

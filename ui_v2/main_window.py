@@ -25,9 +25,11 @@ from PySide6.QtWidgets import (
 from ui_v2.pages.coach_page import CoachPage
 from ui_v2.pages.lane_page import LanePage
 from ui_v2.pages.macro_page import MacroPage
+from ui_v2.pages.meta_strength_page import MetaStrengthPage
 from ui_v2.pages.player_page import PlayerPage
 from ui_v2.pages.patch_notes_page import PatchNotesPage
 from ui_v2.pages.recommend_page import RecommendPage
+from ui_v2.pages.recognition_page import RecognitionPage
 from ui_v2.pages.selected_champions_page import SelectedChampionsPage
 from ui_v2.pages.update_page import UpdatePage
 from ui_v2.state_reader import LIVE_STATE_PATH, read_state
@@ -263,6 +265,8 @@ class MainWindow(QMainWindow):
         self.update_page.patch_status_ready.connect(self._apply_patch_status)
         self.update_page.status_changed.connect(self.update_page.refresh_status)
         self.pages = [
+            ("版本强势", MetaStrengthPage()),
+            ("BP 识别", RecognitionPage()),
             ("英雄推荐", RecommendPage()),
             ("对线推荐", LanePage()),
             ("已选英雄", SelectedChampionsPage()),

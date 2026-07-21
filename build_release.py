@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 import zipfile
 import importlib.util
 from pathlib import Path
@@ -11,7 +12,7 @@ from pathlib import Path
 
 APP_NAME = "LoL BP Coach"
 APP_EXE = f"{APP_NAME}.exe"
-VERSION = "0.2.5"
+VERSION = "0.3.6"
 
 ROOT = Path(__file__).resolve().parent
 RELEASE_DIR = ROOT / "release"
@@ -44,6 +45,7 @@ RUNTIME_FILES = [
 
 DATA_DIRS = [
     "16.13",
+    "16.14",
     "cache",
     "cache_seed",
     "patch_notes",
@@ -133,10 +135,24 @@ def main() -> int:
 def clean():
     for path in (BUILD_DIR, STAGING_DIR, RELEASE_DIR):
         if path.exists():
-            shutil.rmtree(path)
+            _remove_tree(path)
     RELEASE_DIR.mkdir(parents=True, exist_ok=True)
     for spec in ROOT.glob("*.spec"):
         spec.unlink()
+
+
+def _remove_tree(path: Path) -> None:
+    """Retry Windows cleanup when an indexer briefly recreates a directory."""
+    last_error = None
+    for _ in range(5):
+        try:
+            if path.exists():
+                shutil.rmtree(path)
+            return
+        except OSError as error:
+            last_error = error
+            time.sleep(1)
+    raise last_error
 
 
 def prepare_staging():

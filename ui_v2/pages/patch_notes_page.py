@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from html import escape
 
@@ -119,6 +119,7 @@ class PatchNotesPage(QWidget):
         self.content_layout.setContentsMargins(0, 0, 0, 0)
         self.content_layout.setSpacing(10)
 
+
         self.hero_changes = self._section("英雄改动")
         self.item_changes = self._section("装备改动")
         self.rune_changes = self._section("符文改动")
@@ -234,4 +235,3 @@ class PatchNotesPage(QWidget):
         for old, new in sorted(TEXT_REPLACEMENTS.items(), key=lambda item: len(item[0]), reverse=True):
             result = result.replace(old, new)
         return result
-

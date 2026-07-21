@@ -1,0 +1,104 @@
+{
+  "patch": "16.14",
+  "riot_patch": "26.14",
+  "source": "Riot Games official patch notes",
+  "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-14-notes/",
+  "published_at": "2026-07-14",
+  "champion_changes": [
+    {
+      "champion": "Azir",
+      "type": "adjust",
+      "description": "W 的部分符文与装备命中交互修正，R 现在可以击退野怪。",
+      "impact_tags": ["mid", "damage_over_time"]
+    },
+    {
+      "champion": "Corki",
+      "type": "buff",
+      "description": "攻击力成长提高，R 可通过暴击更快缩短充能时间。",
+      "impact_tags": ["adc", "mid", "scaling"]
+    },
+    {
+      "champion": "Garen",
+      "type": "nerf",
+      "description": "R 的基础真实伤害下调。",
+      "impact_tags": ["top", "burst"]
+    },
+    {
+      "champion": "Jayce",
+      "type": "nerf",
+      "description": "被动移速与锤形态的额外双抗下调。",
+      "impact_tags": ["top", "mid", "poke"]
+    },
+    {
+      "champion": "Locke",
+      "type": "nerf",
+      "description": "Q 的蓄力时间、伤害与 W 灰色生命值上限下调。",
+      "impact_tags": ["top", "mid", "burst"]
+    },
+    {
+      "champion": "Mordekaiser",
+      "type": "buff",
+      "description": "E 伤害与法强加成提高，R 的属性偷取提高。",
+      "impact_tags": ["top", "frontline", "duel"]
+    },
+    {
+      "champion": "Nami",
+      "type": "buff",
+      "description": "E 每次命中的基础伤害提高。",
+      "impact_tags": ["support", "poke"]
+    },
+    {
+      "champion": "Senna",
+      "type": "nerf",
+      "description": "被动暴击伤害修正与 Q 法强减速、治疗加成下调。",
+      "impact_tags": ["support", "adc", "scaling"]
+    },
+    {
+      "champion": "Seraphine",
+      "type": "nerf",
+      "description": "Q 的法强加成下调。",
+      "impact_tags": ["support", "adc", "burst"]
+    },
+    {
+      "champion": "Yunara",
+      "type": "buff",
+      "description": "攻击力成长提高。",
+      "impact_tags": ["adc", "scaling"]
+    }
+  ],
+  "item_changes": [
+    {
+      "item": "不朽之路",
+      "type": "nerf",
+      "description": "高生命值时的伤害增幅与低生命值时的治疗、护盾、回复增幅下调。",
+      "impact_tags": ["top", "mid", "sustain"]
+    },
+    {
+      "item": "原生质束带",
+      "type": "nerf",
+      "description": "价格提高，早期额外生命值与治疗效果下调。",
+      "impact_tags": ["frontline", "sustain"]
+    },
+    {
+      "item": "海克斯科技火箭腰带",
+      "type": "adjust",
+      "description": "法强下调、生命值提高，主动冷却时间延长并调整合成路径。",
+      "impact_tags": ["mid", "engage", "burst"]
+    }
+  ],
+  "rune_changes": [],
+  "system_changes": [
+    {
+      "name": "蓝色增益",
+      "type": "buff",
+      "description": "在 1、6、11 级提供逐级提高的技能急速。",
+      "impact_tags": ["jungle", "mid"]
+    }
+  ],
+  "meta_impacts": [
+    "上路与中路的杰斯、盖伦削弱，莫德凯撒获得直接战斗力加强。",
+    "下路方面库奇与芸芸的后期输出上升，赛娜与萨勒芬妮的强度受到压制。",
+    "辅助娜美获得小幅加强，蓝色增益改动提升依赖技能急速的中野争夺价值。",
+    "火箭腰带与续航类装备调整会影响部分法师、前排英雄的出装顺序。"
+  ]
+}

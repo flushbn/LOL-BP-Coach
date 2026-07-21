@@ -31,6 +31,7 @@ class LolalyticsClient:
         if cache_base:
             self.CACHE_BASE = Path(cache_base)
         self.CACHE_BASE.mkdir(parents=True, exist_ok=True)
+        self.last_error = ""
         self._session = requests.Session()
         self._session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -40,12 +41,23 @@ class LolalyticsClient:
         if patch:
             self._current_patch = patch
         else:
-            self._current_patch = self._detect_patch()
+            self._current_patch = self._read_local_patch() or self._detect_patch()
 
     def get_current_patch(self):
         if not self._current_patch:
-            self._current_patch = self._detect_patch()
+            self._current_patch = self._read_local_patch() or self._detect_patch()
         return self._current_patch
+
+    @staticmethod
+    def _read_local_patch():
+        patch_file = Path(__file__).resolve().parent.parent / "data" / "patch_version.json"
+        try:
+            patch = json.loads(patch_file.read_text(encoding="utf-8")).get("current_patch")
+            if patch:
+                return str(patch)
+        except (OSError, ValueError, AttributeError):
+            pass
+        return None
 
     def _detect_patch(self):
         try:
@@ -145,8 +157,22 @@ class LolalyticsClient:
             r = self._session.get(url, timeout=timeout)
             r.raise_for_status()
             return html.fromstring(r.content)
-        except Exception:
+        except requests.RequestException as exc:
+            self._set_request_error(exc)
             return None
+
+    def _set_request_error(self, error):
+        response = getattr(error, "response", None)
+        status_code = getattr(response, "status_code", None)
+        if status_code == 403:
+            self.last_error = "Lolalytics blocked this network request (HTTP 403 / Cloudflare)"
+        elif status_code:
+            self.last_error = f"Lolalytics returned HTTP {status_code}"
+        else:
+            self.last_error = f"Lolalytics request failed: {error}"
+
+    def get_last_error(self):
+        return self.last_error
 
     def _normalize(self, name):
         name = name.lower().strip()
@@ -482,7 +508,8 @@ class LolalyticsClient:
         try:
             r = self._session.get(url, timeout=15)
             r.raise_for_status()
-        except Exception:
+        except requests.RequestException as exc:
+            self._set_request_error(exc)
             return None
         texts = self._extract_ssr_texts(r.text)
         skip = {'list', 'GLOBAL', 'Home', 'Tier List', 'Leaderboard', 'Counters'}
@@ -497,4 +524,6 @@ class LolalyticsClient:
             elif current_tier and t[0].isupper() and len(t) < 25:
                 champs.append({'name': t, 'tier': current_tier})
                 if limit and len(champs) >= limit: break
+        if not champs:
+            self.last_error = "Lolalytics returned no tier entries for this patch"
         return champs

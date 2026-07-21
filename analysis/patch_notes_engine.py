@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 from pathlib import Path
@@ -59,7 +59,136 @@ class PatchNotesEngine:
             "meta_impacts": self._notes.get("meta_impacts", []),
             "rising": rising,
             "falling": falling,
+            "role_strengths": self.get_role_strengths(),
         }
+
+    def get_role_strengths(
+        self,
+        limit: int = 10,
+        minimum_games: int = 500,
+        minimum_pickrate: float = 1.0,
+        minimum_role_share: float = 0.1,
+    ) -> dict[str, list[dict[str, Any]]]:
+        path = self.data_dir / self.patch / "meta_data.json"
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+        champion_catalog = self._load_champion_catalog()
+        expected_role = {
+            "TOP": "top",
+            "JUNGLE": "jungle",
+            "MID": "mid",
+            "ADC": "adc",
+            "SUPPORT": "support",
+        }
+
+        result: dict[str, list[dict[str, Any]]] = {}
+        for role, entries in payload.get("roles", {}).items():
+            if not isinstance(entries, dict):
+                continue
+            rows = []
+            for champion, entry in entries.items():
+                if not isinstance(entry, dict):
+                    continue
+                games = int(entry.get("games", 0) or 0)
+                pickrate = float(entry.get("pickrate", entry.get("pick_rate", 0)) or 0)
+                catalog_entry = champion_catalog.get(champion, {})
+                catalog_roles = {str(item).lower() for item in catalog_entry.get("roles", [])}
+                catalog_tags = {str(item).lower() for item in catalog_entry.get("tags", [])}
+                if expected_role.get(role) not in catalog_roles:
+                    continue
+                if role == "ADC" and "marksman" not in catalog_tags:
+                    continue
+                champion_roles = payload.get("champions", {}).get(champion, {}).get("roles", {})
+                total_games = sum(
+                    int(role_entry.get("games", 0) or 0)
+                    for role_entry in champion_roles.values()
+                    if isinstance(role_entry, dict)
+                )
+                role_share = games / total_games if total_games else 0
+                if (
+                    games < minimum_games
+                    or pickrate < minimum_pickrate
+                    or role_share < minimum_role_share
+                ):
+                    continue
+                rows.append({
+                    "champion": champion,
+                    "winrate": float(entry.get("winrate", entry.get("win_rate", 0)) or 0),
+                    "games": games,
+                    "pickrate": pickrate,
+                    "role_share": role_share,
+                    "source": str(entry.get("source", "")),
+                })
+            fresh_rows = [row for row in rows if "firecrawl" in row["source"]]
+            ranked = fresh_rows if len(fresh_rows) >= limit else rows
+            result[role] = sorted(
+                ranked,
+                key=lambda row: (row["winrate"], row["games"]),
+                reverse=True,
+            )[:limit]
+        return result
+
+    def _load_champion_catalog(self) -> dict[str, dict[str, Any]]:
+        path = ROOT / "champion_data.json"
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            return data if isinstance(data, dict) else {}
+        except (OSError, ValueError):
+            return {}
+
+    def get_unconventional_role_strengths(
+        self,
+        limit: int = 4,
+        minimum_games: int = 500,
+        minimum_pickrate: float = 0.1,
+    ) -> dict[str, list[dict[str, Any]]]:
+        path = self.data_dir / self.patch / "meta_data.json"
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+
+        champion_catalog = self._load_champion_catalog()
+        expected_role = {
+            "TOP": "top",
+            "JUNGLE": "jungle",
+            "MID": "mid",
+            "ADC": "adc",
+            "SUPPORT": "support",
+        }
+        result: dict[str, list[dict[str, Any]]] = {}
+        for role, entries in payload.get("roles", {}).items():
+            rows = []
+            for champion, entry in (entries or {}).items():
+                if not isinstance(entry, dict):
+                    continue
+                games = int(entry.get("games", 0) or 0)
+                pickrate = float(entry.get("pickrate", entry.get("pick_rate", 0)) or 0)
+                if games < minimum_games or pickrate < minimum_pickrate:
+                    continue
+                catalog_entry = champion_catalog.get(champion, {})
+                catalog_roles = {str(item).lower() for item in catalog_entry.get("roles", [])}
+                catalog_tags = {str(item).lower() for item in catalog_entry.get("tags", [])}
+                mainstream = expected_role.get(role) in catalog_roles
+                if role == "ADC":
+                    mainstream = mainstream and "marksman" in catalog_tags
+                if mainstream or "firecrawl" not in str(entry.get("source", "")):
+                    continue
+                rows.append({
+                    "champion": champion,
+                    "winrate": float(entry.get("winrate", entry.get("win_rate", 0)) or 0),
+                    "games": games,
+                    "pickrate": pickrate,
+                    "source": str(entry.get("source", "")),
+                })
+            result[role] = sorted(
+                rows,
+                key=lambda row: (row["winrate"], row["games"]),
+                reverse=True,
+            )[:limit]
+        return result
 
     def get_champion_patch_reason(self, champion: str) -> str:
         change = self._change_index.get(_champion_key(champion))
@@ -184,4 +313,3 @@ class PatchNotesEngine:
             return int(parts[0]), int(parts[1])
         except Exception:
             return 0, 0
-
