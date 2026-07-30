@@ -14,7 +14,10 @@ data/*/snapshots/
 !img/champion/*.png
 dist/
 build/
+build_release_temp/
+build_release_staging/
 release/
+*.spec
 demo*/
 *.rar
 *.zip
