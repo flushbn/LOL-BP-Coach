@@ -9,6 +9,8 @@ from typing import Callable
 import requests
 
 from analysis.data_patch_manager import DATA_DIR, ROOT, DataPatchManager, normalize_patch
+from analysis.data_snapshot_manager import DataSnapshotManager
+from analysis.github_data_package import GitHubDataPackageClient
 from analysis.lolalytics_client import LolalyticsClient
 from analysis.online_meta_sync import OnlineMetaSync
 
@@ -61,6 +63,9 @@ class DataUpdateService:
             progress(65, "更新 Lolalytics cache")
             self.update_lolalytics_data(latest_patch)
 
+            progress(72, "Saving patch data snapshot")
+            snapshot = self.capture_data_snapshot(latest_patch, source=source)
+
             progress(80, "清理旧缓存")
             removed_cache = self.rebuild_cache(latest_patch)
 
@@ -72,6 +77,7 @@ class DataUpdateService:
                 "patch": normalize_patch(latest_patch),
                 "source": source,
                 "fallback_files": fallback_files,
+                "snapshot": snapshot,
                 "removed_cache": removed_cache,
                 "icons": icon_result,
                 "patch_info": info,
@@ -92,6 +98,46 @@ class DataUpdateService:
         client.clean_old_cache(max_days=30)
         self.manager.ensure_patch_cache(patch)
         return {"patch": patch, "cache_dir": str(client._cache_dir(patch))}
+
+    def capture_data_snapshot(self, patch: str | None = None, source: str = "manual_sync") -> dict:
+        patch = normalize_patch(patch or self.manager.get_current_patch())
+        return DataSnapshotManager(DATA_DIR).capture(patch, source=source)
+
+    def get_github_data_status(self) -> dict:
+        current_patch = self.manager.get_current_patch()
+        return GitHubDataPackageClient(DATA_DIR).get_remote_status(current_patch)
+
+    def update_from_github(self, progress: Callable[[int, str], None] | None = None) -> dict:
+        progress = progress or (lambda value, message: None)
+        current_patch = self.manager.get_current_patch()
+        progress(5, "Checking verified GitHub data package")
+        client = GitHubDataPackageClient(DATA_DIR)
+        remote = client.get_remote_status(current_patch)
+        target_patch = str(remote.get("latest_patch") or current_patch)
+        if remote.get("available") and not remote.get("update_available") and target_patch == current_patch:
+            progress(100, "Verified GitHub data is already current")
+            return {"ok": True, "unchanged": True, "patch": current_patch, "remote": remote}
+
+        progress(20, "Saving current patch snapshot")
+        try:
+            self.capture_data_snapshot(current_patch, source="pre_github_update")
+        except (OSError, ValueError, FileNotFoundError, json.JSONDecodeError):
+            pass
+
+        progress(40, "Downloading verified Meta, Counter and Synergy data")
+        result = client.update(preferred_patch=target_patch)
+        patch = normalize_patch(result["patch"])
+        progress(82, "Validating and activating data package")
+        snapshot = self.capture_data_snapshot(patch, source="github_verified_package")
+        patch_info = self.manager.write_patch_info(
+            patch,
+            source="github_verified_package",
+            latest_patch=target_patch,
+        )
+        result.update({"ok": True, "snapshot": snapshot, "patch_info": patch_info})
+        self._log("GITHUB_DATA_PACKAGE_SUCCESS", result)
+        progress(100, "Verified GitHub data package is active")
+        return result
 
     def update_full_lolalytics_meta(
         self,
@@ -118,8 +164,9 @@ class DataUpdateService:
         progress(3, "?????????????")
         meta_result = sync.build_full_meta(progress=lambda value, message: progress(3 + round(value * 0.42), message))
         detail_result = sync.build_full_detail_data(progress=lambda value, message: progress(45 + round(value * 0.53), message))
+        snapshot = self.capture_data_snapshot(patch, source="lolalytics_full_data")
         self.manager.write_patch_info(patch, source="lolalytics_full_data", latest_patch=patch)
-        result = {"patch": patch, "meta": meta_result, "detail": detail_result}
+        result = {"patch": patch, "meta": meta_result, "detail": detail_result, "snapshot": snapshot}
         self._log("FULL_LOLALYTICS_DATA_SUCCESS", result)
         progress(100, "????? / ?? / ???????")
         return result

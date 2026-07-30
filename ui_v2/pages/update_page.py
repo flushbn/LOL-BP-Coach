@@ -31,7 +31,7 @@ class UpdateWorker(QObject):
         service = DataUpdateService()
         try:
             if self.action == "all":
-                result = service.update_all_data(progress=self.progress.emit, online=True)
+                result = service.update_from_github(progress=self.progress.emit)
             elif self.action == "lolalytics":
                 self.progress.emit(5, "开始更新全英雄 Lolalytics 数据")
                 result = {"ok": True, **service.update_full_lolalytics_data(self.patch, progress=self.progress.emit)}
@@ -54,7 +54,13 @@ class PatchStatusWorker(QObject):
 
     def run(self):
         try:
-            self.done.emit(DataPatchManager().get_status())
+            manager = DataPatchManager()
+            status = manager.get_status()
+            try:
+                status["github_data"] = DataUpdateService(manager).get_github_data_status()
+            except Exception as exc:
+                status["github_data"] = {"available": False, "error": str(exc)}
+            self.done.emit(status)
         except Exception as exc:
             self.done.emit({
                 "current_patch": "unknown",
@@ -89,9 +95,19 @@ class UpdatePage(QWidget):
         self.latest_label = QLabel("最新版本: 检查中")
         self.status_label = QLabel("状态: 检查中")
         self.status_label.setObjectName("CoachGrades")
+        self.data_snapshot_label = QLabel("\u6570\u636e\u91c7\u6837: \u68c0\u67e5\u4e2d")
+        self.data_freshness_label = QLabel("")
+        self.data_freshness_label.setObjectName("CoachGrades")
+        self.data_freshness_label.setWordWrap(True)
+        self.github_data_label = QLabel("GitHub: \u68c0\u67e5\u4e2d")
+        self.github_data_label.setObjectName("CoachGrades")
+        self.github_data_label.setWordWrap(True)
         layout.addWidget(self.current_label)
         layout.addWidget(self.latest_label)
         layout.addWidget(self.status_label)
+        layout.addWidget(self.data_snapshot_label)
+        layout.addWidget(self.data_freshness_label)
+        layout.addWidget(self.github_data_label)
 
         patch_row = QHBoxLayout()
         patch_row.addWidget(QLabel("切换 Patch"))
@@ -160,6 +176,48 @@ class UpdatePage(QWidget):
             self.status_label.setText("状态: 已过期，建议更新")
         else:
             self.status_label.setText("状态: 已是最新")
+
+        freshness = status.get("data_freshness", {})
+        latest_snapshot = freshness.get("latest_snapshot", {})
+        if not freshness.get("available"):
+            self.data_snapshot_label.setText("\u6570\u636e\u91c7\u6837: \u6682\u65e0\u5df2\u9a8c\u8bc1\u5feb\u7167")
+            self.data_freshness_label.setText("\u8bf7\u5728\u4e0b\u4e00\u6b21\u6210\u529f\u540c\u6b65\u540e\u751f\u6210\u5feb\u7167\u3002")
+        else:
+            captured_at = str(latest_snapshot.get("captured_at", "")).replace("T", " ")[:16]
+            snapshot_count = int(freshness.get("snapshot_count", 0) or 0)
+            age_hours = freshness.get("age_hours")
+            self.data_snapshot_label.setText(
+                f"\u6570\u636e\u91c7\u6837: {captured_at or '\u672a\u77e5'}  |  \u5feb\u7167 {snapshot_count} \u4efd"
+            )
+            if freshness.get("stale"):
+                age_text = f"{age_hours / 24:.1f}\u5929" if isinstance(age_hours, (int, float)) else "\u672a\u77e5"
+                self.data_freshness_label.setText(
+                    f"\u6570\u636e\u5df2\u8d85\u8fc7\u5efa\u8bae\u5237\u65b0\u5468\u671f\uff08\u5f53\u524d {age_text}\uff09\uff0c\u5efa\u8bae\u540c\u6b65\u672c\u7248\u672c\u6570\u636e\u3002"
+                )
+                if not status.get("error") and not outdated:
+                    self.status_label.setText("\u72b6\u6001: \u7248\u672c\u6700\u65b0\uff0c\u4f46\u6570\u636e\u9700\u8981\u5237\u65b0")
+            else:
+                self.data_freshness_label.setText("\u6570\u636e\u5904\u4e8e\u5efa\u8bae\u5237\u65b0\u5468\u671f\u5185\u3002")
+
+        github_data = status.get("github_data", {})
+        if github_data.get("available"):
+            latest_patch = str(github_data.get("latest_patch", current))
+            published_at = str(github_data.get("published_at", "")).replace("T", " ")[:16]
+            if github_data.get("update_available") or latest_patch != current:
+                self.github_data_label.setText(
+                    f"GitHub: \u5df2\u53d1\u5e03\u5df2\u9a8c\u8bc1\u6570\u636e {latest_patch}\uff08{published_at or '\u672a\u77e5'}\uff09\uff0c\u53ef\u70b9\u51fb\u4e00\u952e\u66f4\u65b0\u3002"
+                )
+            else:
+                self.github_data_label.setText(
+                    f"GitHub: \u5df2\u662f\u5df2\u9a8c\u8bc1\u6570\u636e {current}\uff08{published_at or '\u672a\u77e5'}\uff09\u3002"
+                )
+                if freshness.get("stale"):
+                    self.data_freshness_label.setText(
+                        "\u5f53\u524d\u6570\u636e\u91c7\u6837\u5df2\u8fc7\u671f\uff0c\u6b63\u5728\u7b49\u5f85\u7ef4\u62a4\u7aef\u53d1\u5e03\u65b0\u5feb\u7167\u3002"
+                    )
+        else:
+            error = str(github_data.get("error", "\u6682\u65e0\u53ef\u7528\u6570\u636e\u5305"))
+            self.github_data_label.setText(f"GitHub: \u65e0\u6cd5\u68c0\u67e5\u5df2\u9a8c\u8bc1\u6570\u636e\uff08{error}\uff09")
 
         self.patch_combo.clear()
         patches = status.get("local_patches", [])

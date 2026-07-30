@@ -7,6 +7,8 @@ from typing import Any
 
 import requests
 
+from analysis.data_snapshot_manager import DataSnapshotManager
+
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
@@ -77,12 +79,22 @@ class DataPatchManager:
             latest = self.get_latest_patch()
         except Exception as exc:
             error = str(exc)
+        snapshot_manager = DataSnapshotManager(self.data_dir)
+        snapshot_status = snapshot_manager.get_status(current)
+        if not snapshot_status.get("available") and current not in ("", "unknown"):
+            try:
+                source = str(self.read_patch_info().get("source") or "local_existing_data")
+                snapshot_manager.capture(current, source=source)
+                snapshot_status = snapshot_manager.get_status(current)
+            except (OSError, ValueError, FileNotFoundError, json.JSONDecodeError):
+                pass
         return {
             "current_patch": current,
             "latest_patch": latest,
             "outdated": latest not in ("", "unknown") and current != latest,
             "error": error,
             "local_patches": self.list_local_patches(),
+            "data_freshness": snapshot_status,
         }
 
     def switch_patch(self, patch: str):

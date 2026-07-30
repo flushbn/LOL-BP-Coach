@@ -7,6 +7,8 @@ logs/
 config/
 data/cache/
 data/backups/
+data/.staging/
+data/*/snapshots/
 *.log
 *.png
 !img/champion/*.png
