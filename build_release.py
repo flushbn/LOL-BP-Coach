@@ -59,6 +59,7 @@ DATA_FILES = [
     "champion_roles.json",
     "counter_data.json",
     "counter_data_v2.json",
+    "data_package_index.json",
     "jungle_support_data.json",
     "meta_data.json",
     "patch_version.json",
