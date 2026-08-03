@@ -10,7 +10,7 @@ import requests
 
 from analysis.data_patch_manager import DATA_DIR, ROOT, DataPatchManager, normalize_patch
 from analysis.data_snapshot_manager import DataSnapshotManager
-from analysis.github_data_package import GitHubDataPackageClient
+from analysis.github_data_package import DataPackageError, GitHubDataPackageClient
 from analysis.lolalytics_client import LolalyticsClient
 from analysis.online_meta_sync import OnlineMetaSync
 
@@ -105,39 +105,72 @@ class DataUpdateService:
 
     def get_github_data_status(self) -> dict:
         current_patch = self.manager.get_current_patch()
-        return GitHubDataPackageClient(DATA_DIR).get_remote_status(current_patch)
+        status = GitHubDataPackageClient(DATA_DIR).get_remote_status(current_patch)
+        try:
+            game_patch = self.manager.get_latest_patch()
+            status["game_latest_patch"] = game_patch
+            package_patch = str(status.get("latest_patch", "unknown"))
+            status["package_pending"] = self._patch_key(package_patch) < self._patch_key(game_patch)
+        except Exception as exc:
+            status["game_patch_error"] = str(exc)
+        return status
 
     def update_from_github(self, progress: Callable[[int, str], None] | None = None) -> dict:
         progress = progress or (lambda value, message: None)
         current_patch = self.manager.get_current_patch()
-        progress(5, "Checking verified GitHub data package")
-        client = GitHubDataPackageClient(DATA_DIR)
-        remote = client.get_remote_status(current_patch)
-        target_patch = str(remote.get("latest_patch") or current_patch)
-        if remote.get("available") and not remote.get("update_available") and target_patch == current_patch:
-            progress(100, "Verified GitHub data is already current")
-            return {"ok": True, "unchanged": True, "patch": current_patch, "remote": remote}
-
-        progress(20, "Saving current patch snapshot")
         try:
-            self.capture_data_snapshot(current_patch, source="pre_github_update")
-        except (OSError, ValueError, FileNotFoundError, json.JSONDecodeError):
-            pass
+            progress(5, "Checking verified GitHub data package")
+            client = GitHubDataPackageClient(DATA_DIR)
+            remote = self.get_github_data_status()
+            target_patch = str(remote.get("latest_patch") or current_patch)
+            if remote.get("package_pending"):
+                result = {
+                    "ok": True,
+                    "unchanged": True,
+                    "pending_package": True,
+                    "patch": current_patch,
+                    "remote": remote,
+                }
+                self._log("GITHUB_DATA_PACKAGE_PENDING", result)
+                progress(100, "The next patch data package has not been published yet")
+                return result
+            if remote.get("available") and not remote.get("update_available") and target_patch == current_patch:
+                progress(100, "Verified GitHub data is already current")
+                return {"ok": True, "unchanged": True, "patch": current_patch, "remote": remote}
 
-        progress(40, "Downloading verified Meta, Counter and Synergy data")
-        result = client.update(preferred_patch=target_patch)
-        patch = normalize_patch(result["patch"])
-        progress(82, "Validating and activating data package")
-        snapshot = self.capture_data_snapshot(patch, source="github_verified_package")
-        patch_info = self.manager.write_patch_info(
-            patch,
-            source="github_verified_package",
-            latest_patch=target_patch,
-        )
-        result.update({"ok": True, "snapshot": snapshot, "patch_info": patch_info})
-        self._log("GITHUB_DATA_PACKAGE_SUCCESS", result)
-        progress(100, "Verified GitHub data package is active")
-        return result
+            progress(20, "Saving current patch snapshot")
+            try:
+                self.capture_data_snapshot(current_patch, source="pre_github_update")
+            except (OSError, ValueError, FileNotFoundError, json.JSONDecodeError):
+                pass
+
+            progress(40, "Downloading verified Meta, Counter and Synergy data")
+            result = client.update(preferred_patch=target_patch)
+            patch = normalize_patch(result["patch"])
+            progress(82, "Validating and activating data package")
+            snapshot = self.capture_data_snapshot(patch, source="github_verified_package")
+            patch_info = self.manager.write_patch_info(
+                patch,
+                source="github_verified_package",
+                latest_patch=target_patch,
+            )
+            result.update({"ok": True, "snapshot": snapshot, "patch_info": patch_info})
+            self._log("GITHUB_DATA_PACKAGE_SUCCESS", result)
+            progress(100, "Verified GitHub data package is active")
+            return result
+        except (DataPackageError, OSError, ValueError, requests.RequestException) as exc:
+            result = {"ok": False, "patch": current_patch, "error": str(exc)}
+            self._log("GITHUB_DATA_PACKAGE_FAILED", result)
+            progress(100, f"Verified data update failed: {exc}")
+            return result
+
+    @staticmethod
+    def _patch_key(patch: str) -> tuple[int, int]:
+        parts = str(patch).split(".")
+        try:
+            return int(parts[0]), int(parts[1])
+        except (ValueError, IndexError):
+            return 0, 0
 
     def update_full_lolalytics_meta(
         self,

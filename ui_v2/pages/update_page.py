@@ -32,10 +32,6 @@ class UpdateWorker(QObject):
         try:
             if self.action == "all":
                 result = service.update_from_github(progress=self.progress.emit)
-            elif self.action == "lolalytics":
-                self.progress.emit(5, "开始更新全英雄 Lolalytics 数据")
-                result = {"ok": True, **service.update_full_lolalytics_data(self.patch, progress=self.progress.emit)}
-                self.progress.emit(100, "全英雄 Lolalytics 数据已完成")
             elif self.action == "cache":
                 self.progress.emit(30, "重建缓存目录")
                 removed = service.rebuild_cache(self.patch)
@@ -119,15 +115,13 @@ class UpdatePage(QWidget):
         layout.addLayout(patch_row)
 
         buttons = QHBoxLayout()
-        self.update_button = QPushButton("一键更新")
+        self.update_button = QPushButton("同步 GitHub 已验证数据")
         self.update_button.clicked.connect(lambda: self.run_action("all"))
-        self.lolalytics_button = QPushButton("更新全英雄在线数据（含装备）")
-        self.lolalytics_button.clicked.connect(lambda: self.run_action("lolalytics"))
         self.cache_button = QPushButton("重建缓存")
         self.cache_button.clicked.connect(lambda: self.run_action("cache"))
         self.log_button = QPushButton("查看更新日志")
         self.log_button.clicked.connect(self.load_log)
-        for button in (self.update_button, self.lolalytics_button, self.cache_button, self.log_button):
+        for button in (self.update_button, self.cache_button, self.log_button):
             buttons.addWidget(button)
         layout.addLayout(buttons)
 
@@ -200,7 +194,13 @@ class UpdatePage(QWidget):
                 self.data_freshness_label.setText("\u6570\u636e\u5904\u4e8e\u5efa\u8bae\u5237\u65b0\u5468\u671f\u5185\u3002")
 
         github_data = status.get("github_data", {})
-        if github_data.get("available"):
+        if github_data.get("package_pending"):
+            game_patch = github_data.get("game_latest_patch", "\u672a\u77e5")
+            package_patch = github_data.get("latest_patch", "\u672a\u77e5")
+            self.github_data_label.setText(
+                f"GitHub: \u6e38\u620f\u5df2\u5230 {game_patch}\uff0c\u5df2\u9a8c\u8bc1\u6570\u636e\u6682\u53ea\u53d1\u5e03\u5230 {package_patch}\uff0c\u7b49\u5f85\u7ef4\u62a4\u7aef\u540c\u6b65\u3002"
+            )
+        elif github_data.get("available"):
             latest_patch = str(github_data.get("latest_patch", current))
             published_at = str(github_data.get("published_at", "")).replace("T", " ")[:16]
             if github_data.get("update_available") or latest_patch != current:
@@ -279,5 +279,5 @@ class UpdatePage(QWidget):
             self.output.setPlainText("暂无更新日志")
 
     def set_buttons_enabled(self, enabled: bool):
-        for button in (self.update_button, self.lolalytics_button, self.cache_button, self.switch_button):
+        for button in (self.update_button, self.cache_button, self.switch_button):
             button.setEnabled(enabled)

@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
 REPOSITORY = "flushbn/LOL-BP-Coach"
 RAW_BASE_URL = f"https://raw.githubusercontent.com/{REPOSITORY}/main"
+RAW_FALLBACK_URL = f"https://github.com/{REPOSITORY}/raw/main"
 INDEX_PATH = "data/data_package_index.json"
 PACKAGE_FILES = ("meta_data.json", "counter_data.json", "synergy_data.json")
 
@@ -26,9 +27,9 @@ class DataPackageError(RuntimeError):
 class GitHubDataPackageClient:
     """Downloads maintainer-verified BP data from the public GitHub repository."""
 
-    def __init__(self, data_dir: Path | None = None, base_url: str = RAW_BASE_URL):
+    def __init__(self, data_dir: Path | None = None, base_url: str | None = None):
         self.data_dir = Path(data_dir) if data_dir else DATA_DIR
-        self.base_url = base_url.rstrip("/")
+        self.base_urls = [base_url.rstrip("/")] if base_url else [RAW_BASE_URL, RAW_FALLBACK_URL]
         self.session = requests.Session()
         self.session.headers.update({
             "Accept": "application/json",
@@ -170,8 +171,7 @@ class GitHubDataPackageClient:
 
     def _request_json(self, path: str) -> dict[str, Any]:
         try:
-            response = self.session.get(f"{self.base_url}/{path.lstrip('/')}", timeout=20)
-            response.raise_for_status()
+            response = self._request(path, timeout=12)
             payload = response.json()
         except (requests.RequestException, ValueError) as exc:
             raise DataPackageError(f"GitHub data request failed: {exc}") from exc
@@ -181,11 +181,27 @@ class GitHubDataPackageClient:
 
     def _request_bytes(self, path: str) -> bytes:
         try:
-            response = self.session.get(f"{self.base_url}/{path.lstrip('/')}", timeout=45)
-            response.raise_for_status()
+            response = self._request(path, timeout=35)
             return response.content
         except requests.RequestException as exc:
             raise DataPackageError(f"GitHub data download failed: {exc}") from exc
+
+    def _request(self, path: str, timeout: int) -> requests.Response:
+        errors: list[str] = []
+        relative_path = path.lstrip("/")
+        for base_url in self.base_urls:
+            url = f"{base_url}/{relative_path}"
+            for attempt in range(2):
+                try:
+                    response = self.session.get(url, timeout=timeout)
+                    response.raise_for_status()
+                    return response
+                except requests.RequestException as exc:
+                    errors.append(f"{base_url}: {exc}")
+                    if attempt == 0:
+                        time.sleep(0.8)
+        detail = errors[-1] if errors else "unknown network error"
+        raise DataPackageError(f"GitHub data service is unavailable: {detail}")
 
     @staticmethod
     def _read_json(path: Path) -> dict[str, Any]:
