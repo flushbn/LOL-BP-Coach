@@ -215,6 +215,7 @@ def build_pyinstaller():
         "--windowed",
         "--noconfirm",
         "--clean",
+        "--noupx",
         "--name",
         APP_NAME,
         "--distpath",
