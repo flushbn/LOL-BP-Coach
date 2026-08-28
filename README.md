@@ -2,7 +2,7 @@
 
 LoL BP Coach 是一个面向《英雄联盟》BP 阶段的 Windows 桌面辅助工具。它通过截图识别客户端 BP 信息，在 PySide6 单窗口中提供英雄推荐、对线分析、阵容战术与个人数据面板。
 
-> 当前发布版本：`v0.3.11`
+> 当前发布版本：`v0.3.12`
 > 当前数据版本：`16.17`（Riot 官方公告版本：`26.17`）
 
 ## 核心功能
@@ -20,7 +20,7 @@ LoL BP Coach 是一个面向《英雄联盟》BP 阶段的 Windows 桌面辅助�
 ## 安装与使用
 
 1. 前往 [Releases](https://github.com/flushbn/LOL-BP-Coach/releases) 下载最新安装包。
-2. 运行 `LoL-BP-Coach-Setup-0.3.11.exe`，选择安装位置。
+2. 运行 `LoL-BP-Coach-Setup-0.3.12.exe`，选择安装位置。
 3. 启动 **LoL BP Coach**，先选择自己的分路。
 4. 打开英雄联盟客户端并进入 BP 界面。
 5. 点击“启动识别”，等待界面刷新推荐。
