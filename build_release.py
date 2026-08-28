@@ -273,6 +273,12 @@ def build_pyinstaller():
 
     print("Building PyInstaller release...")
     subprocess.run(command, cwd=str(ROOT), check=True)
+    # The development runtime exposes Poppler ICU DLLs on PATH. They are
+    # incompatible with the ICU ABI expected by PySide6 and must not ship.
+    for name in ("icuuc.dll", "icudt78.dll", "icuin.dll"):
+        bundled = DIST_DIR / "_internal" / name
+        if bundled.exists():
+            bundled.unlink()
     generated_spec = ROOT / f"{APP_NAME}.spec"
     if generated_spec.exists():
         shutil.copy2(generated_spec, ROOT / "release.spec")
