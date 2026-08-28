@@ -12,7 +12,7 @@ from pathlib import Path
 
 APP_NAME = "LoL BP Coach"
 APP_EXE = f"{APP_NAME}.exe"
-VERSION = "0.3.13"
+VERSION = "0.3.14"
 
 ROOT = Path(__file__).resolve().parent
 RELEASE_DIR = ROOT / "release"
@@ -130,6 +130,7 @@ def main() -> int:
     make_portable_zip()
     build_iexpress_installer()
     maybe_build_installer()
+    create_local_shortcut()
     print_release_summary()
     return 0
 
@@ -370,6 +371,19 @@ def maybe_build_installer():
     subprocess.run([str(iscc), str(INSTALLER_DIR / "LoL-BP-Coach.iss")], check=True)
 
 
+def create_local_shortcut():
+    """Point the developer machine at the replaceable release directory."""
+    desktop = Path(os.environ.get("USERPROFILE", "")) / "Desktop"
+    if not desktop.exists():
+        desktop = Path.home() / "Desktop"
+    target = DIST_DIR / APP_EXE
+    if not target.exists():
+        return
+    shortcut_path = desktop / "英雄联盟BP助手（本机版）.lnk"
+    script = f"$s=New-Object -ComObject WScript.Shell; $l=$s.CreateShortcut('{shortcut_path}'); $l.TargetPath='{target}'; $l.WorkingDirectory='{DIST_DIR}'; $l.IconLocation='{target},0'; $l.Description='英雄联盟 BP 助手本机版'; $l.Save()"
+    subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script], check=False)
+
+
 def build_iexpress_installer():
     from shutil import which
 
@@ -501,9 +515,9 @@ CAB_ResvCodeSigning=0
 RebootMode=N
 InstallPrompt=
 DisplayLicense=
-FinishMessage=LoL BP Coach installation finished.
+FinishMessage=英雄联盟 BP 助手安装完成。
 TargetName={setup_exe}
-FriendlyName=LoL BP Coach Installer
+FriendlyName=英雄联盟 BP 助手安装程序
 AppLaunched=powershell.exe -NoProfile -ExecutionPolicy Bypass -File install_release.ps1
 PostInstallCmd=<None>
 AdminQuietInstCmd=
