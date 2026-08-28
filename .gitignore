@@ -1,6 +1,7 @@
 ﻿__pycache__/
 *.pyc
 .env
+.firecrawl-*/
 .venv/
 venv/
 logs/

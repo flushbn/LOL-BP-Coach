@@ -5,8 +5,10 @@ import json
 import shutil
 import time
 import uuid
+from base64 import b64decode
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 import requests
 
@@ -16,6 +18,7 @@ DATA_DIR = ROOT / "data"
 REPOSITORY = "flushbn/LOL-BP-Coach"
 RAW_BASE_URL = f"https://raw.githubusercontent.com/{REPOSITORY}/main"
 RAW_FALLBACK_URL = f"https://github.com/{REPOSITORY}/raw/main"
+CONTENTS_API_URL = f"https://api.github.com/repos/{REPOSITORY}/contents"
 INDEX_PATH = "data/data_package_index.json"
 PACKAGE_FILES = ("meta_data.json", "counter_data.json", "synergy_data.json")
 
@@ -180,11 +183,40 @@ class GitHubDataPackageClient:
         return payload
 
     def _request_bytes(self, path: str) -> bytes:
+        """Fetch committed file bytes through GitHub's Contents API.
+
+        The raw CDN normalizes CRLF JSON to LF, which invalidates manifests
+        created from the checked-in package bytes on Windows.
+        """
+        relative_path = quote(path.lstrip("/"), safe="/")
+        url = f"{CONTENTS_API_URL}/{relative_path}?ref=main"
+        errors: list[str] = []
         try:
-            response = self._request(path, timeout=35)
-            return response.content
-        except requests.RequestException as exc:
-            raise DataPackageError(f"GitHub data download failed: {exc}") from exc
+            for attempt in range(2):
+                try:
+                    response = self.session.get(url, timeout=35)
+                    response.raise_for_status()
+                    payload = response.json()
+                    encoded = payload.get("content") if isinstance(payload, dict) else None
+                    if not isinstance(encoded, str) or payload.get("encoding") != "base64":
+                        blob_url = payload.get("git_url") if isinstance(payload, dict) else None
+                        if not isinstance(blob_url, str) or not blob_url:
+                            raise DataPackageError("GitHub returned an invalid file payload.")
+                        blob_response = self.session.get(blob_url, timeout=35)
+                        blob_response.raise_for_status()
+                        blob_payload = blob_response.json()
+                        encoded = blob_payload.get("content") if isinstance(blob_payload, dict) else None
+                        if not isinstance(encoded, str) or blob_payload.get("encoding") != "base64":
+                            raise DataPackageError("GitHub returned an invalid file payload.")
+                    return b64decode(encoded)
+                except (requests.RequestException, ValueError, TypeError) as exc:
+                    errors.append(str(exc))
+                    if attempt == 0:
+                        time.sleep(0.8)
+        except DataPackageError:
+            raise
+        detail = errors[-1] if errors else "unknown network error"
+        raise DataPackageError(f"GitHub data download failed: {detail}")
 
     def _request(self, path: str, timeout: int) -> requests.Response:
         errors: list[str] = []
