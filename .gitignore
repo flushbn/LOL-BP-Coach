@@ -2,6 +2,7 @@
 *.pyc
 .env
 .firecrawl-*/
+.firecrawl/
 .venv/
 venv/
 logs/
