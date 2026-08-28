@@ -276,12 +276,25 @@ def build_package() -> dict[str, Any]:
     }
 
 
+def configure(patch: str, base_patch: str | None = None) -> None:
+    global PATCH, OUTPUT_DIR, BASE_PATCH_DIR, SOURCE_DIR
+    PATCH = patch
+    OUTPUT_DIR = ROOT / "data" / PATCH
+    BASE_PATCH_DIR = ROOT / "data" / (base_patch or "16.14")
+    SOURCE_DIR = ROOT / f".firecrawl-{PATCH}"
+    if not BASE_PATCH_DIR.exists():
+        raise FileNotFoundError(f"Base patch data is missing: {BASE_PATCH_DIR}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--patch", default=PATCH)
+    parser.add_argument("--base-patch", default="16.14")
     parser.add_argument("--fetch-tierlists", action="store_true")
     parser.add_argument("--fetch-counters", action="store_true")
     parser.add_argument("--build", action="store_true")
     arguments = parser.parse_args()
+    configure(arguments.patch, arguments.base_patch)
     if arguments.fetch_tierlists:
         scrape_tierlists()
     if arguments.fetch_counters:

@@ -12,7 +12,7 @@ from pathlib import Path
 
 APP_NAME = "LoL BP Coach"
 APP_EXE = f"{APP_NAME}.exe"
-VERSION = "0.3.9"
+VERSION = "0.3.10"
 
 ROOT = Path(__file__).resolve().parent
 RELEASE_DIR = ROOT / "release"
@@ -46,6 +46,7 @@ RUNTIME_FILES = [
 DATA_DIRS = [
     "16.13",
     "16.14",
+    "16.17",
     "cache",
     "cache_seed",
     "patch_notes",

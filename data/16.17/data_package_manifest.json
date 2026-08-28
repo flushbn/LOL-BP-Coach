@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "patch": "16.17",
+  "published_at": "2026-08-28T03:53:52.579194+00:00",
+  "source": "firecrawl_lolalytics_validated",
+  "content_hash": "69cc947a3bff021a0b3b0614cac271d7f7189f9a12bcdc004e976dc5a18798fe",
+  "files": {
+    "meta_data.json": {
+      "path": "data/16.17/meta_data.json",
+      "size": 255381,
+      "sha256": "28fa135898bbe41ebd9080c7868c2fb6dd3881695c4ec52bf3275d6a332e0875"
+    },
+    "counter_data.json": {
+      "path": "data/16.17/counter_data.json",
+      "size": 2344859,
+      "sha256": "d00729e044a21602f415923eff6127cecbe3d0e3b92d87fb63513ce2c778dc64"
+    },
+    "synergy_data.json": {
+      "path": "data/16.17/synergy_data.json",
+      "size": 260342,
+      "sha256": "5f19702c71cf86068cdfc2e24a8b2aca96daa0638c6bce2a22a3c356aa5d08e8"
+    }
+  }
+}
