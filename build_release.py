@@ -200,6 +200,10 @@ def write_support_files():
         + "\n",
         encoding="utf-8",
     )
+    (STAGING_DIR / "qt_dll_path.py").write_text(
+        """import os\nfrom pathlib import Path\n\n_base = Path(__file__).resolve().parent\nfor _folder in (_base / 'PySide6', _base / 'shiboken6', _base):\n    if _folder.exists():\n        try:\n            os.add_dll_directory(str(_folder))\n        except (AttributeError, OSError):\n            pass\n        os.environ['PATH'] = str(_folder) + os.pathsep + os.environ.get('PATH', '')\n""",
+        encoding="utf-8",
+    )
 
 
 def build_pyinstaller():
@@ -217,6 +221,8 @@ def build_pyinstaller():
         str(RELEASE_DIR),
         "--workpath",
         str(BUILD_DIR),
+        "--runtime-hook",
+        str(ROOT / "utils" / "qt_dll_path.py"),
     ]
 
     for directory in RUNTIME_DIRS:
