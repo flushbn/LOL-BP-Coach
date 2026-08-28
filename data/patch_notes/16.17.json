@@ -1,0 +1,151 @@
+{
+  "patch": "16.17",
+  "riot_patch": "26.17",
+  "source": "Riot Games official patch notes",
+  "source_url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-17-notes/",
+  "champion_changes": [
+    {
+      "champion": "Aurelion Sol",
+      "type": "buff",
+      "description": "Aurelion Sol has come out the loser of last patch's mage adjustments, so we are giving him a buff to help him out. In particular, we are buffing his W cooldown so he can use it a bit more freely rather than only when a reset is likely. This should also make it a bit more clear to players that W is typically the stronger second skill to max, rather than E. Q - Breath of Light",
+      "impact_tags": [
+        "champions"
+      ]
+    },
+    {
+      "champion": "Cho'Gath",
+      "type": "nerf",
+      "description": "Cho's early game has lost pizzazz with Hail of Blades and Hextech Rocketbelt nerfs, so we are making it up with a bit of early damage when he does get those autos off.",
+      "impact_tags": [
+        "early",
+        "damage"
+      ]
+    },
+    {
+      "champion": "Graves",
+      "type": "nerf",
+      "description": "Graves has had a number of indirect buffs over the last few patches and this has put him in a pretty strong spot. We are looking to soften a bit of his ability to snowball the game with high AD builds. Q - End of the Line",
+      "impact_tags": [
+        "champions"
+      ]
+    },
+    {
+      "champion": "Irelia",
+      "type": "adjust",
+      "description": "Irelia is one of League’s highest stakes snowballing dependant skirmishers, but we feel like even when ahead she is failing to scale into a real carry threat",
+      "impact_tags": [
+        "champions"
+      ]
+    },
+    {
+      "champion": "LeBlanc",
+      "type": "nerf",
+      "description": "With the previous version of Statikk Shiv that drove nerfing her AS ratios no longer in the game, we’re bringing these closer to a typical champion’s baseline. Simultaneously, having some room for power, we are giving her some AP ratio buffs to make sure she's still interested primarily in AP assassination builds.",
+      "impact_tags": [
+        "champions"
+      ]
+    },
+    {
+      "champion": "Nasus",
+      "type": "adjust",
+      "description": "Nasus top has been able to benefit from the shift in his stacking paradigm. We are happy to see our favorite dog get his fill of treats, but want to make sure that we keep his power within reasonable bounds, therefore we are going to be tapping down some of Nasus' top specific strengths, like persistently lifestealing off of minions.",
+      "impact_tags": [
+        "top"
+      ]
+    },
+    {
+      "champion": "Nocturne",
+      "type": "adjust",
+      "description": "Nocturne has been sitting in a pretty strong state across skill levels for a while. We are excited about the opportunities that open up when Nocturne unlocks his ult, but want to add a bit more personal risk to him accessing that high moment.",
+      "impact_tags": [
+        "champions"
+      ]
+    },
+    {
+      "champion": "Qiyana",
+      "type": "adjust",
+      "description": "Qiyana's play has moved out of primarily mid to jungle. While we are happy to support her as a jungler, mid is where she’s been underwhelming recently .",
+      "impact_tags": [
+        "jungle",
+        "mid",
+        "support"
+      ]
+    },
+    {
+      "champion": "Thresh",
+      "type": "adjust",
+      "description": "Thresh has been quietly sitting at a high winrate and picking up playrate over the year.",
+      "impact_tags": [
+        "champions"
+      ]
+    },
+    {
+      "champion": "Trundle",
+      "type": "adjust",
+      "description": "Sometimes you just wanna club your opponents to death, and while Trundle has been a resilient utility pick for his pillar and ult, we feel his personal clubbing power has actually been a bit limp.",
+      "impact_tags": [
+        "champions"
+      ]
+    },
+    {
+      "champion": "Vayne",
+      "type": "adjust",
+      "description": "We believe Vayne may need larger scope work in the future to help out her bot lane, but for now are prioritizing constraining her top lane power. These changes should impact her up there more than in bot lane.",
+      "impact_tags": [
+        "top",
+        "bot"
+      ]
+    },
+    {
+      "champion": "Xerath",
+      "type": "nerf",
+      "description": "Xerath has rested slightly high in power both mid and bot, and after last patch's adjustments to mages has come out on top in mid lane compared to others. Given his extremely high ban rate in certain regions, he's due a light nerf.",
+      "impact_tags": [
+        "top",
+        "mid",
+        "bot"
+      ]
+    },
+    {
+      "champion": "Yasuo",
+      "type": "adjust",
+      "description": "While Yasuo has definitely been able to snowball and carry games, we believe that similar to Irelia, he is too reliant on snowballing rather than just being a proper scaling carry. We also want to encourage him to prioritize early crit strike builds over Blade of the Ruined King, so we are reducing his crit damage penalty which will simultaneously encourage this as well help him scale without significantly impacting his early game snowball.",
+      "impact_tags": [
+        "early",
+        "scaling",
+        "damage"
+      ]
+    },
+    {
+      "champion": "Yone",
+      "type": "adjust",
+      "description": "Similar to Yasuo, Yone has also been an excessively snowball reliant carry, though less so. Bros stay together.",
+      "impact_tags": [
+        "champions"
+      ]
+    }
+  ],
+  "item_changes": [
+    {
+      "champion": "Stormrazor",
+      "type": "adjust",
+      "description": "Stormrazor almost had its time in the sun earlier this year, but has ended up remaining second fiddle.",
+      "impact_tags": [
+        "items"
+      ],
+      "item": "Stormrazor"
+    },
+    {
+      "champion": "Sundered Sky",
+      "type": "nerf",
+      "description": "Last patch’s Sundered Sky nerf was a step in the right direction, but landed a bit under-target given all of the other moving pieces of that patch.",
+      "impact_tags": [
+        "items"
+      ],
+      "item": "Sundered Sky"
+    }
+  ],
+  "rune_changes": [],
+  "system_changes": [],
+  "meta_impacts": []
+}

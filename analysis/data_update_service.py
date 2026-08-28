@@ -13,6 +13,7 @@ from analysis.data_snapshot_manager import DataSnapshotManager
 from analysis.github_data_package import DataPackageError, GitHubDataPackageClient
 from analysis.lolalytics_client import LolalyticsClient
 from analysis.online_meta_sync import OnlineMetaSync
+from analysis.patch_notes_downloader import PatchNotesDownloadError, PatchNotesDownloader
 
 
 LOG_PATH = ROOT / "logs" / "update.log"
@@ -71,6 +72,7 @@ class DataUpdateService:
 
             progress(92, "写入 patch 信息")
             info = self.manager.write_patch_info(latest_patch, source=source, latest_patch=latest_patch)
+            patch_notes = self._download_patch_notes(latest_patch)
 
             result = {
                 "ok": True,
@@ -81,6 +83,7 @@ class DataUpdateService:
                 "removed_cache": removed_cache,
                 "icons": icon_result,
                 "patch_info": info,
+                "patch_notes": patch_notes,
             }
             self._log("SUCCESS", result)
             progress(100, "更新完成")
@@ -155,6 +158,8 @@ class DataUpdateService:
                 latest_patch=target_patch,
             )
             result.update({"ok": True, "snapshot": snapshot, "patch_info": patch_info})
+            progress(90, "下载 Riot 版本公告")
+            result["patch_notes"] = self._download_patch_notes(patch)
             self._log("GITHUB_DATA_PACKAGE_SUCCESS", result)
             progress(100, "Verified GitHub data package is active")
             return result
@@ -171,6 +176,17 @@ class DataUpdateService:
             return int(parts[0]), int(parts[1])
         except (ValueError, IndexError):
             return 0, 0
+
+    def _download_patch_notes(self, patch: str) -> dict:
+        try:
+            result = PatchNotesDownloader(DATA_DIR).download(patch)
+            result["ok"] = True
+            self._log("PATCH_NOTES_SUCCESS", result)
+            return result
+        except PatchNotesDownloadError as exc:
+            result = {"ok": False, "patch": normalize_patch(patch), "error": str(exc)}
+            self._log("PATCH_NOTES_FAILED", result)
+            return result
 
     def update_full_lolalytics_meta(
         self,
